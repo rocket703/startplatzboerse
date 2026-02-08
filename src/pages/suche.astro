@@ -117,14 +117,14 @@ import Footer from '../components/Footer.astro';
 
     /* FIXIERTER BLOCK UNTER LOGO */
     .sticky-unit {
-        position: fixed;
+        position: absolute;
         top: var(--header-h);
         left: 0;
         right: 0;
         z-index: 990;
-        background: rgba(5, 5, 5, 0.96);
-        backdrop-filter: blur(15px);
-        border-bottom: 1px solid rgba(255,255,255,0.08);
+        background: transparent;
+        backdrop-filter: none;
+        border-bottom: none;
         padding: 12px 0;
     }
 
@@ -202,7 +202,7 @@ import Footer from '../components/Footer.astro';
     .r-btn { background: transparent; border: none; color: #ff5252; font-size: 13px; font-weight: 700; cursor: pointer; }
 
     .status-line { text-align: center; margin-top: 10px; }
-    #res-count { font-size: 9px; color: #333; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; }
+    #res-count { font-size: 9px; color: rgba(0, 188, 212, 0.6); text-transform: uppercase; font-weight: 900; letter-spacing: 1px; }
 
     /* RESULTS GRID */
     .feed { width: 100%; display: flex; flex-direction: column; align-items: center; padding: 0 15px 100px; }
@@ -218,7 +218,7 @@ import Footer from '../components/Footer.astro';
 
     .e-card {
         background: #111; padding: 22px; border-radius: 20px;
-        border: 1px solid rgba(255,255,255,0.08); color: white;
+        border: 5px solid rgba(255,255,255,0.08); color: white;
     }
     .c-top { display: flex; justify-content: space-between; margin-bottom: 10px; }
     .c-tag { color: var(--cyan); font-weight: 900; font-size: 10px; text-transform: uppercase; }
