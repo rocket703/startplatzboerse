@@ -53,7 +53,7 @@ serve(async (req) => {
               "${record.content}"
             </div>
             <p>Klicke auf den Button, um direkt zu antworten:</p>
-            <a href="https://deine-seite.com/dashboard" 
+            <a href="<a href="https://startplatzboerse.vercel.app/chat?id=${record.conversation_id}"
                style="background: #00bcd4; color: black; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; margin-top: 10px;">
                Zum Chat wechseln
             </a>
