@@ -54,7 +54,7 @@ const { data: listings, error } = await supabase
 
        <div class="event-grid">
   {listings && listings.map((item) => (
-    <a href={`/listing/${item.id}`} style="text-decoration: none; display: block;">
+    <a href={`/listing/${item.id}?from=index`} style="text-decoration: none; display: block;">
       <EventCard 
         category={item.category}
         title={item.event_name}
@@ -171,20 +171,36 @@ const { data: listings, error } = await supabase
     h2 { font-size: 2.8rem; color: white; font-weight: 900; margin-top: 10px; letter-spacing: -1px; }
     .view-all { color: #00bcd4; text-decoration: none; font-weight: 600; border-bottom: 1px solid transparent; transition: 0.3s; }
     .view-all:hover { border-bottom-color: #00bcd4; }
-
-    .event-grid {
+.event-grid {
     display: grid;
-    /* 1. Nutze auto-fit statt auto-fill, das verhält sich bei wenig Karten besser */
-    grid-template-columns: repeat(auto-fit, minmax(300px, 450px)); 
-    
-    /* 2. Zentriert die Spalten im Container */
-    justify-content: center; 
-    
-    /* 3. Zentriert die Karten innerhalb ihrer Grid-Zelle */
-    justify-items: center; 
-    
-    gap: 30px;
+    /* 2 Spalten auf Desktop */
+    grid-template-columns: repeat(2, 1fr); 
+    /* Der Abstand (die "Luft") zwischen den Karten */
+    gap: 30px; 
     width: 100%;
+    max-width: 1200px;
+    margin: 40px auto; /* Abstand nach oben/unten */
+    padding: 0 20px;
+    box-sizing: border-box;
 }
 
+/* WICHTIG: Der Link-Tag muss das Grid-Verhalten weitergeben */
+.card-link {
+    text-decoration: none;
+    display: flex; /* Zwingt den Link, die volle Grid-Breite zu nutzen */
+    width: 100%;
+    transition: transform 0.3s ease;
+}
+
+.card-link:hover {
+    transform: translateY(-5px);
+}
+
+/* MOBIL: Auf Smartphones wieder untereinander */
+@media (max-width: 768px) {
+    .event-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+}
 </style>

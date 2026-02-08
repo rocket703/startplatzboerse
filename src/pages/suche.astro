@@ -1,137 +1,306 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Footer from '../components/Footer.astro';
-
-// Button Logik
-const btnText = "STARTSEITE";
-const letters = btnText.split("");
 ---
 
 <Layout title="Suche | startplatzboerse.com">
-  <div class="suche-wrapper">
-    
-    <div class="main-content">
-      <div class="icon-container">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-      </div>
+    <main class="page-base">
+        
+        <div class="sticky-unit">
+            <div class="unit-inner">
+                <div class="action-bar">
+                    <div class="search-wrap">
+                        <svg class="icon-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                            <circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path>
+                        </svg>
+                        <input type="text" id="main-search" placeholder="Event suchen..." autocomplete="off" />
+                    </div>
+                    
+                    <button id="filter-toggle" class="t-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"></path>
+                        </svg>
+                    </button>
+                </div>
 
-      <div class="text-group">
-        <span class="badge">In Entwicklung</span>
-        <h1>Suche in Arbeit</h1>
-        <p>Wir arbeiten an einer blitzschnellen Suche für deine Startplätze. Bald verfügbar.</p>
-      </div>
+                <div id="filter-drawer" class="drawer">
+                    <div class="drawer-content">
+                        
+                        <div class="f-section">
+                            <label>Sportart</label>
+                            <div class="p-scroll">
+                                <button class="pill active" data-cat="">Alle</button>
+                                <button class="pill" data-cat="Radrennen">Radrennen</button>
+                                <button class="pill" data-cat="Laufen">Laufen</button>
+                                <button class="pill" data-cat="Triathlon">Triathlon</button>
+                                <button class="pill" data-cat="Hyrox">Hyrox</button>
+                            </div>
+                        </div>
 
-      <div class="loader-track">
-        <div class="loader-fill"></div>
-      </div>
+                        <div class="f-section">
+                            <label>Standort & Umkreis</label>
+                            <div class="loc-row">
+                                <input type="text" id="city-input" placeholder="Stadt..." />
+                                <select id="range-select">
+                                    <option value="0">Ort</option>
+                                    <option value="50">+50km</option>
+                                    <option value="100">+100km</option>
+                                </select>
+                            </div>
+                        </div>
 
-      <div class="btn-box">
-        <a href="/" class="stark-btn" alt={btnText}>
-          {letters.map((l) => (
-            <i>{l === " " ? "\u00A0" : l}</i>
-          ))}
-        </a>
-      </div>
-    </div>
+                        <div class="f-section grid-2">
+                            <div>
+                                <label>Preis bis (€)</label>
+                                <input type="number" id="max-price" placeholder="Max" />
+                            </div>
+                            <div>
+                                <label>Distanz (km)</label>
+                                <input type="number" id="max-dist" placeholder="Max" />
+                            </div>
+                        </div>
 
-  </div>
-  <Footer />
+                        <div class="f-actions">
+                            <button id="reset-btn" class="r-btn">Zurücksetzen</button>
+                            <button id="apply-btn" class="a-btn">Anwenden</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="status-line">
+                    <span id="res-count">Events werden geladen...</span>
+                </div>
+            </div>
+        </div>
+
+        <section class="feed">
+            <div id="results-grid" class="grid-layout">
+                </div>
+        </section>
+
+    </main>
+    <Footer />
 </Layout>
 
 <style is:global>
-  /* --- LAYOUT BASICS --- */
-  :root { 
-    --dark-bg: #050505; 
-    --cyan: #00bcd4; 
-    --text-muted: #888; 
-  }
-  
-  .suche-wrapper {
-    min-height: 85dvh; display: flex; flex-direction: column; align-items: center;
-    justify-content: center; padding: 100px 20px 40px; background: var(--dark-bg); box-sizing: border-box;
-  }
-  .main-content { width: 100%; max-width: 400px; text-align: center; display: flex; flex-direction: column; align-items: center; }
-  .icon-container { width: 60px; height: 60px; color: var(--cyan); margin-bottom: 24px; }
-  .badge { color: var(--cyan); font-size: 12px; text-transform: uppercase; font-weight: 900; letter-spacing: 2px; background: rgba(0, 188, 212, 0.1); padding: 6px 16px; border-radius: 50px; margin-bottom: 16px; display: inline-block; }
-  h1 { font-size: 32px; font-weight: 800; color: white; margin: 0 0 12px 0; }
-  p { color: var(--text-muted); font-size: 16px; line-height: 1.5; margin: 0 0 32px 0; }
-  .loader-track { width: 100%; max-width: 250px; height: 3px; background: #1a1a1a; border-radius: 10px; margin-bottom: 48px; overflow: hidden; }
-  .loader-fill { width: 40%; height: 100%; background: var(--cyan); box-shadow: 0 0 10px var(--cyan); animation: loading 2s ease-in-out infinite alternate; }
-  @keyframes loading { from { transform: translateX(-50%); } to { transform: translateX(200%); } }
+    :root {
+        --cyan: #00bcd4;
+        --header-h: 80px;
+        --filter-h: 80px;
+        --bg: #050505;
+    }
 
-  /* --- DER ÜBERARBEITETE BUTTON --- */
-  .stark-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 50px;
-    position: relative;
-    padding: 0 25px;
-    font-size: 18px;
-    text-transform: uppercase;
-    border: 1px solid rgba(255,255,255,0.1); /* Normaler Rand */
-    background-color: var(--cyan); /* Cyan Farbe */
-    border-radius: 12px;
-    overflow: hidden;
-    transition: 0.2s ease;
-    text-decoration: none;
-    cursor: pointer;
-    min-width: 200px;
-  }
+    /* Damit der Content nicht unter den fixierten Filtern verschwindet */
+    .page-base {
+        background: var(--bg);
+        min-height: 100dvh;
+        padding-top: calc(var(--header-h) + var(--filter-h) + 30px);
+    }
 
-  .stark-btn:before {
-    content: attr(alt);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: absolute;
-    inset: 0;
-    font-size: 15px;
-    font-weight: bold;
-    color: black; /* Schwarz auf Cyan für bessere Lesbarkeit */
-    letter-spacing: 4px;
-    opacity: 1;
-  }
+    /* FIXIERTER BLOCK UNTER LOGO */
+    .sticky-unit {
+        position: fixed;
+        top: var(--header-h);
+        left: 0;
+        right: 0;
+        z-index: 990;
+        background: rgba(5, 5, 5, 0.96);
+        backdrop-filter: blur(15px);
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        padding: 12px 0;
+    }
 
-  .stark-btn:active {
-    transform: scale(0.98); /* Normaler Klick-Effekt statt 3D-Sprung */
-  }
+    .unit-inner {
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 0 15px;
+    }
 
-  .stark-btn:hover:before {
-    transition: all .0s;
-    transform: translateY(100%);
-    opacity: 0;
-  }
+    .action-bar {
+        display: flex;
+        gap: 10px;
+    }
 
-  .stark-btn i {
-    color: black; /* Buchstaben auch schwarz */
-    font-size: 15px;
-    font-weight: bold;
-    letter-spacing: 4px;
-    font-style: normal;
-    transition: all 2s ease;
-    transform: translateY(-20px);
-    opacity: 0;
-  }
+    .search-wrap {
+        flex: 1;
+        background: #121212;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        padding: 0 12px;
+    }
 
-  .stark-btn:hover i {
-    transition: all .2s ease;
-    transform: translateY(0px);
-    opacity: 1;
-  }
+    .icon-s { width: 18px; color: var(--cyan); }
+    #main-search {
+        background: transparent; border: none; color: white;
+        padding: 12px 8px; font-size: 16px; width: 100%; outline: none;
+    }
 
-  /* Die Delays bleiben exakt gleich */
-  .stark-btn i:nth-child(1) { transition-delay: 0.045s; }
-  .stark-btn i:nth-child(2) { transition-delay: calc(0.045s * 3); }
-  .stark-btn i:nth-child(3) { transition-delay: calc(0.045s * 4); }
-  .stark-btn i:nth-child(4) { transition-delay: calc(0.045s * 5); }
-  .stark-btn i:nth-child(5) { transition-delay: calc(0.045s * 6); }
-  .stark-btn i:nth-child(6) { transition-delay: calc(0.045s * 7); }
-  .stark-btn i:nth-child(7) { transition-delay: calc(0.045s * 8); }
-  .stark-btn i:nth-child(8) { transition-delay: calc(0.045s * 9); }
-  .stark-btn i:nth-child(9) { transition-delay: calc(0.045s * 10); }
-  .stark-btn i:nth-child(10) { transition-delay: calc(0.045s * 11); }
+    .t-btn {
+        background: #121212; border: 1px solid rgba(255,255,255,0.1);
+        color: white; border-radius: 14px; width: 48px; height: 48px;
+        display: flex; align-items: center; justify-content: center; cursor: pointer;
+    }
+    .t-btn.active { background: var(--cyan); color: black; }
+
+    /* DRAWER */
+    .drawer {
+        max-height: 0; overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        opacity: 0;
+    }
+    .drawer.open {
+        max-height: 500px; opacity: 1; padding-top: 20px;
+    }
+
+    .f-section { margin-bottom: 18px; }
+    .f-section label {
+        display: block; color: #444; font-size: 10px;
+        text-transform: uppercase; font-weight: 900; margin-bottom: 8px;
+    }
+
+    .p-scroll { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+    .pill {
+        background: #1a1a1a; border: 1px solid rgba(255,255,255,0.05); color: #666;
+        padding: 8px 16px; border-radius: 100px; font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer;
+    }
+    .pill.active { background: var(--cyan); color: black; }
+
+    .loc-row, .grid-2 { display: flex; gap: 8px; }
+    .grid-2 > div { flex: 1; }
+
+    input[type="text"], input[type="number"], select {
+        background: #1a1a1a; border: 1px solid rgba(255,255,255,0.08);
+        color: white; padding: 12px; border-radius: 12px; width: 100%; outline: none; font-size: 16px;
+    }
+
+    .f-actions {
+        display: flex; justify-content: space-between; align-items: center;
+        padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .a-btn { background: var(--cyan); color: black; border: none; padding: 12px 25px; border-radius: 10px; font-weight: 800; cursor: pointer; }
+    .r-btn { background: transparent; border: none; color: #ff5252; font-size: 13px; font-weight: 700; cursor: pointer; }
+
+    .status-line { text-align: center; margin-top: 10px; }
+    #res-count { font-size: 9px; color: #333; text-transform: uppercase; font-weight: 900; letter-spacing: 1px; }
+
+    /* RESULTS GRID */
+    .feed { width: 100%; display: flex; flex-direction: column; align-items: center; padding: 0 15px 100px; }
+    .grid-layout {
+        display: grid; grid-template-columns: 1fr; gap: 20px;
+        width: 100%; max-width: 900px;
+    }
+    @media (min-width: 768px) { .grid-layout { grid-template-columns: 1fr 1fr; } }
+
+    /* CARDS */
+    .card-link { text-decoration: none; display: block; transition: 0.3s; }
+    .card-link:hover { transform: translateY(-5px); }
+
+    .e-card {
+        background: #111; padding: 22px; border-radius: 20px;
+        border: 1px solid rgba(255,255,255,0.08); color: white;
+    }
+    .c-top { display: flex; justify-content: space-between; margin-bottom: 10px; }
+    .c-tag { color: var(--cyan); font-weight: 900; font-size: 10px; text-transform: uppercase; }
+    h3 { margin: 8px 0; font-size: 1.3rem; font-weight: 900; line-height: 1.1; }
+    .c-bottom { display: flex; justify-content: space-between; align-items: flex-end; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); }
+    .val { color: var(--cyan); font-size: 1.8rem; font-weight: 900; }
+    /* --- 1. ABSTANDS-FIX FÜR DESKTOP --- */
+@media (min-width: 1024px) {
+    .page-base {
+        /* Erhöhter Puffer, damit es luftiger wirkt */
+        padding-top: calc(var(--header-h) + var(--filter-h) + 60px);
+    }
+    
+    .sticky-unit {
+        /* Optional: Kleiner zusätzlicher Abstand zum Logo-Header */
+        margin-top: 10px;
+    }
+}
+
+/* --- 2. PFEILE AUS NUMMERNFELDERN ENTFERNEN --- */
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+/* --- 3. MOBILE OPTIMIERUNG (Erinnerung) --- */
+@media (max-width: 768px) {
+    .page-base {
+        /* Mobil lassen wir es kompakt, wie du sagtest, dass es passt */
+        padding-top: calc(var(--header-h) + var(--filter-h) + 25px);
+    }
+}
 </style>
+
+<script>
+    import { createClient } from '@supabase/supabase-js';
+    const supabase = createClient(import.meta.env.PUBLIC_SUPABASE_URL, import.meta.env.PUBLIC_SUPABASE_ANON_KEY);
+
+    const toggle = document.getElementById('filter-toggle');
+    const drawer = document.getElementById('filter-drawer');
+    const grid = document.getElementById('results-grid');
+    const reset = document.getElementById('reset-btn');
+    let activeCat = "";
+
+    toggle.addEventListener('click', () => {
+        drawer.classList.toggle('open');
+        toggle.classList.toggle('active');
+    });
+
+    reset.addEventListener('click', () => {
+        document.getElementById('main-search').value = "";
+        document.getElementById('city-input').value = "";
+        document.getElementById('max-price').value = "";
+        document.getElementById('max-dist').value = "";
+        document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+        document.querySelector('.pill[data-cat=""]').classList.add('active');
+        activeCat = "";
+        fetch();
+    });
+
+    async function fetch() {
+        let query = supabase.from('listings').select('*');
+        const search = document.getElementById('main-search').value;
+        const city = document.getElementById('city-input').value;
+        const price = document.getElementById('max-price').value;
+
+        if (search) query = query.ilike('event_name', `%${search}%`);
+        if (city) query = query.ilike('location', `%${city}%`);
+        if (activeCat) query = query.eq('category', activeCat);
+        if (price) query = query.lte('price', price);
+
+        const { data } = await query.order('event_date', { ascending: true });
+        grid.innerHTML = data.map(e => `
+            <a href="/listing/${e.id}?from=search" class="card-link">
+                <div class="e-card">
+                    <div class="c-top"><span class="c-tag">${e.category}</span><span style="color:#444; font-size:11px">${new Date(e.event_date).toLocaleDateString()}</span></div>
+                    <h3>${e.event_name}</h3>
+                    <p style="color:#666; font-size:0.85rem">${e.location}</p>
+                    <div class="c-bottom"><span class="val">${e.price}€</span><div style="background:var(--cyan);color:black;padding:4px 8px;border-radius:6px;font-weight:900;font-size:10px">DEAL</div></div>
+                </div>
+            </a>
+        `).join('');
+        document.getElementById('res-count').innerText = `${data.length} Events gefunden`;
+    }
+
+    document.querySelectorAll('.pill').forEach(p => p.addEventListener('click', (e) => {
+        document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        activeCat = e.target.dataset.cat;
+        fetch();
+    }));
+
+    document.getElementById('apply-btn').addEventListener('click', () => { drawer.classList.remove('open'); toggle.classList.remove('active'); fetch(); });
+    document.getElementById('main-search').addEventListener('input', fetch);
+    fetch();
+</script>

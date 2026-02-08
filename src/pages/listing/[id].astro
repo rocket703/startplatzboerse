@@ -4,6 +4,8 @@ import Footer from '../../components/Footer.astro';
 import { createClient } from '@supabase/supabase-js';
 
 const { id } = Astro.params;
+const { searchParams } = Astro.url;
+const origin = searchParams.get('from'); // Erkennt 'index' oder 'search'
 
 const supabase = createClient(
   import.meta.env.PUBLIC_SUPABASE_URL,
@@ -19,12 +21,17 @@ const { data: item, error } = await supabase
 if (error) {
   console.error("Supabase Error:", error.message);
 }
+
+// Dynamischer Text für den Button
+const backLabel = origin === 'search' ? "← Zurück zur Suche" : "← Zurück zur Übersicht";
 ---
 
 <Layout title={item ? item.event_name : "Details"}>
     <main class="listing-page">
         <div class="container">
-            <a href="/" class="back-link">← Zurück zur Suche</a>
+            <button id="dynamic-back-btn" class="back-link">
+                {backLabel}
+            </button>
 
             {!item ? (
                 <div class="error-box card">
@@ -99,6 +106,25 @@ if (error) {
 <script>
     import { createClient } from '@supabase/supabase-js';
 
+    // BACK-LOGIK
+    const backBtn = document.getElementById('dynamic-back-btn');
+    if (backBtn) {
+        backBtn.addEventListener('click', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const origin = urlParams.get('from');
+
+            if (origin === 'search') {
+                if (window.history.length > 1) {
+                    window.history.back(); // Behält Filter in der Suche
+                } else {
+                    window.location.href = '/suche';
+                }
+            } else {
+                window.location.href = '/';
+            }
+        });
+    }
+
     const supabase = createClient(
         import.meta.env.PUBLIC_SUPABASE_URL, 
         import.meta.env.PUBLIC_SUPABASE_ANON_KEY
@@ -118,12 +144,10 @@ if (error) {
     if (form) {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('send-btn');
-            if (!btn) return;
-            
+            const btn = document.getElementById('send-btn') as HTMLButtonElement;
             const originalText = btn.innerText;
             btn.innerText = "Prüfe...";
-            (btn as HTMLButtonElement).disabled = true;
+            btn.disabled = true;
 
             const formData = new FormData(form as HTMLFormElement);
             const messageText = formData.get('message');
@@ -142,11 +166,10 @@ if (error) {
                 if (user.id === sellerId) {
                     alert("Du kannst dir nicht selbst schreiben.");
                     btn.innerText = originalText;
-                    (btn as HTMLButtonElement).disabled = false;
+                    btn.disabled = false;
                     return;
                 }
 
-                // Chat Logik
                 const { data: existing } = await supabase
                     .from('conversations')
                     .select('id')
@@ -179,7 +202,7 @@ if (error) {
                 console.error(err);
                 alert("Fehler beim Senden.");
                 btn.innerText = originalText;
-                (btn as HTMLButtonElement).disabled = false;
+                btn.disabled = false;
             }
         }); 
     }
@@ -193,30 +216,34 @@ if (error) {
         --border: #222;
     }
 
+    /* PFEILE IN NUMMERNFELDERN ENTFERNEN */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
+
     .listing-page { 
         background: var(--bg); 
         min-height: 100vh; 
-        padding: 100px 15px 60px; /* Reduziertes Padding für Mobile */
+        padding: 100px 15px 60px; 
         color: white; 
     }
     
     .container { max-width: 1100px; margin: 0 auto; }
     
-    /* Responsive Grid */
     .listing-layout { 
         display: grid; 
-        grid-template-columns: 1fr; /* Stacked auf Mobile */
+        grid-template-columns: 1fr;
         gap: 30px; 
         margin-top: 20px; 
     }
     
     @media (min-width: 992px) {
         .listing-layout { grid-template-columns: 1fr 380px; gap: 60px; }
-        .listing-page { padding: 140px 20px 80px; }
+        .listing-page { padding: 160px 20px 80px; } /* Mehr Abstand Desktop */
     }
 
     .glow-title { 
-        font-size: 2.2rem; /* Kleiner für Mobile */
+        font-size: 2.2rem;
         font-weight: 900; 
         margin: 10px 0; 
         line-height: 1.1; 
@@ -228,7 +255,6 @@ if (error) {
 
     .badge { color: var(--cyan); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; font-size: 0.7rem; }
     
-    /* Info Grid Mobil Optimierung */
     .info-grid { 
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -250,7 +276,6 @@ if (error) {
     .main-price { font-size: 2.5rem; font-weight: 900; color: var(--cyan); }
     .old-price { font-size: 1.2rem; color: #333; text-decoration: line-through; }
 
-    /* Visibility Helpers */
     .mobile-only { display: flex; }
     .desktop-only { display: none; }
 
@@ -273,6 +298,17 @@ if (error) {
     .btn-cyan-glow { width: 100%; background: var(--cyan); color: black; border: none; padding: 16px; border-radius: 14px; font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 1rem; }
     .btn-cyan-glow:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0, 188, 212, 0.2); }
 
-    .back-link { color: #555; text-decoration: none; font-weight: 700; font-size: 0.8rem; margin-bottom: 15px; display: inline-block; }
+    .back-link { 
+        background: transparent;
+        border: none;
+        color: #555; 
+        text-decoration: none; 
+        font-weight: 700; 
+        font-size: 0.8rem; 
+        margin-bottom: 15px; 
+        display: inline-block; 
+        cursor: pointer;
+        padding: 0;
+    }
     .back-link:hover { color: white; }
 </style>
