@@ -1,0 +1,137 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Footer from '../components/Footer.astro';
+
+// Button Logik
+const btnText = "STARTSEITE";
+const letters = btnText.split("");
+---
+
+<Layout title="Suche | startplatzboerse.com">
+  <div class="suche-wrapper">
+    
+    <div class="main-content">
+      <div class="icon-container">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </div>
+
+      <div class="text-group">
+        <span class="badge">In Entwicklung</span>
+        <h1>Suche in Arbeit</h1>
+        <p>Wir arbeiten an einer blitzschnellen Suche für deine Startplätze. Bald verfügbar.</p>
+      </div>
+
+      <div class="loader-track">
+        <div class="loader-fill"></div>
+      </div>
+
+      <div class="btn-box">
+        <a href="/" class="stark-btn" alt={btnText}>
+          {letters.map((l) => (
+            <i>{l === " " ? "\u00A0" : l}</i>
+          ))}
+        </a>
+      </div>
+    </div>
+
+  </div>
+  <Footer />
+</Layout>
+
+<style is:global>
+  /* --- LAYOUT BASICS --- */
+  :root { 
+    --dark-bg: #050505; 
+    --cyan: #00bcd4; 
+    --text-muted: #888; 
+  }
+  
+  .suche-wrapper {
+    min-height: 85dvh; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; padding: 100px 20px 40px; background: var(--dark-bg); box-sizing: border-box;
+  }
+  .main-content { width: 100%; max-width: 400px; text-align: center; display: flex; flex-direction: column; align-items: center; }
+  .icon-container { width: 60px; height: 60px; color: var(--cyan); margin-bottom: 24px; }
+  .badge { color: var(--cyan); font-size: 12px; text-transform: uppercase; font-weight: 900; letter-spacing: 2px; background: rgba(0, 188, 212, 0.1); padding: 6px 16px; border-radius: 50px; margin-bottom: 16px; display: inline-block; }
+  h1 { font-size: 32px; font-weight: 800; color: white; margin: 0 0 12px 0; }
+  p { color: var(--text-muted); font-size: 16px; line-height: 1.5; margin: 0 0 32px 0; }
+  .loader-track { width: 100%; max-width: 250px; height: 3px; background: #1a1a1a; border-radius: 10px; margin-bottom: 48px; overflow: hidden; }
+  .loader-fill { width: 40%; height: 100%; background: var(--cyan); box-shadow: 0 0 10px var(--cyan); animation: loading 2s ease-in-out infinite alternate; }
+  @keyframes loading { from { transform: translateX(-50%); } to { transform: translateX(200%); } }
+
+  /* --- DER ÜBERARBEITETE BUTTON --- */
+  .stark-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 50px;
+    position: relative;
+    padding: 0 25px;
+    font-size: 18px;
+    text-transform: uppercase;
+    border: 1px solid rgba(255,255,255,0.1); /* Normaler Rand */
+    background-color: var(--cyan); /* Cyan Farbe */
+    border-radius: 12px;
+    overflow: hidden;
+    transition: 0.2s ease;
+    text-decoration: none;
+    cursor: pointer;
+    min-width: 200px;
+  }
+
+  .stark-btn:before {
+    content: attr(alt);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    inset: 0;
+    font-size: 15px;
+    font-weight: bold;
+    color: black; /* Schwarz auf Cyan für bessere Lesbarkeit */
+    letter-spacing: 4px;
+    opacity: 1;
+  }
+
+  .stark-btn:active {
+    transform: scale(0.98); /* Normaler Klick-Effekt statt 3D-Sprung */
+  }
+
+  .stark-btn:hover:before {
+    transition: all .0s;
+    transform: translateY(100%);
+    opacity: 0;
+  }
+
+  .stark-btn i {
+    color: black; /* Buchstaben auch schwarz */
+    font-size: 15px;
+    font-weight: bold;
+    letter-spacing: 4px;
+    font-style: normal;
+    transition: all 2s ease;
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+
+  .stark-btn:hover i {
+    transition: all .2s ease;
+    transform: translateY(0px);
+    opacity: 1;
+  }
+
+  /* Die Delays bleiben exakt gleich */
+  .stark-btn i:nth-child(1) { transition-delay: 0.045s; }
+  .stark-btn i:nth-child(2) { transition-delay: calc(0.045s * 3); }
+  .stark-btn i:nth-child(3) { transition-delay: calc(0.045s * 4); }
+  .stark-btn i:nth-child(4) { transition-delay: calc(0.045s * 5); }
+  .stark-btn i:nth-child(5) { transition-delay: calc(0.045s * 6); }
+  .stark-btn i:nth-child(6) { transition-delay: calc(0.045s * 7); }
+  .stark-btn i:nth-child(7) { transition-delay: calc(0.045s * 8); }
+  .stark-btn i:nth-child(8) { transition-delay: calc(0.045s * 9); }
+  .stark-btn i:nth-child(9) { transition-delay: calc(0.045s * 10); }
+  .stark-btn i:nth-child(10) { transition-delay: calc(0.045s * 11); }
+</style>
