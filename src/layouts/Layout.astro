@@ -1,0 +1,25 @@
+---
+import Header from '../components/Header.astro';
+import '../styles/global.css'; // Lädt dein Design
+
+const { title } = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="de">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="description" content="Startplatzbörse">
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title} | Startplatzbörse</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+	</head>
+	<body>
+        <Header />
+
+        <slot />
+
+	</body>
+</html>

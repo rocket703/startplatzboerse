@@ -1,0 +1,22 @@
+/* src/styles/global.css */
+:root {
+    --bg-body: #181818;
+    --bg-card: #222222;
+    --bg-nav: rgba(24, 24, 24, 0.85);
+    --cyan: #00bcd4;
+    --text-main: #ffffff;
+    --text-muted: #b0b0b0;
+    --radius-l: 24px;
+    --font-stack: 'Inter', system-ui, sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; font-family: var(--font-stack); background: var(--bg-body); color: var(--text-main); }
+body { overflow-x: hidden; }
+a { text-decoration: none; color: inherit; transition: 0.3s; }
+ul { list-style: none; }
+
+/* Utilities */
+.container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+.btn { display: inline-block; padding: 12px 24px; border-radius: 50px; font-weight: 600; background: var(--cyan); color: white; }
+.btn:hover { filter: brightness(1.1); }

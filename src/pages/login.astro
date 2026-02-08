@@ -1,0 +1,158 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Anmelden - Startplatzbörse">
+    <main class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="badge">Sicherer Zugang</div>
+                <h1>Willkommen zurück</h1>
+                <p id="status-text">Gib deine E-Mail ein, um dich anzumelden oder ein Konto zu erstellen.</p>
+            </div>
+
+            <div id="step-email">
+                <div class="input-group">
+                    <label>E-Mail Adresse</label>
+                    <input type="email" id="email" placeholder="name@beispiel.de" required />
+                </div>
+                <button id="btn-send-code" class="btn-primary">Code anfordern</button>
+            </div>
+
+            <div id="step-code" style="display: none;">
+                <div class="input-group">
+                    <label>6-stelliger Code</label>
+                    <input type="text" id="otp-code" placeholder="000000" maxlength="6" />
+                </div>
+                <button id="btn-verify" class="btn-primary">Anmelden</button>
+                <button id="btn-back" class="btn-link">Andere E-Mail nutzen</button>
+            </div>
+        </div>
+    </main>
+</Layout>
+
+<script>
+    import { createClient } from '@supabase/supabase-js';
+
+    const supabase = createClient(
+        import.meta.env.PUBLIC_SUPABASE_URL,
+        import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+    );
+
+    const emailInput = document.getElementById('email') as HTMLInputElement;
+    const otpInput = document.getElementById('otp-code') as HTMLInputElement;
+    const statusText = document.getElementById('status-text');
+    
+    const stepEmail = document.getElementById('step-email');
+    const stepCode = document.getElementById('step-code');
+
+    // 1. Code anfordern
+    document.getElementById('btn-send-code')?.addEventListener('click', async () => {
+        const email = emailInput.value;
+        if (!email) return alert("Bitte E-Mail eingeben");
+
+        const { error } = await supabase.auth.signInWithOtp({ email });
+
+        if (error) {
+            alert("Fehler: " + error.message);
+        } else {
+            stepEmail!.style.display = 'none';
+            stepCode!.style.display = 'block';
+            statusText!.innerText = `Wir haben dir einen Code an ${email} gesendet.`;
+        }
+    });
+
+    // 2. Code verifizieren
+    document.getElementById('btn-verify')?.addEventListener('click', async () => {
+        const email = emailInput.value;
+        const token = otpInput.value;
+
+        const { error } = await supabase.auth.verifyOtp({
+            email,
+            token,
+            type: 'email'
+        });
+
+        if (error) {
+            alert("Falscher Code oder abgelaufen.");
+        } else {
+            // Erfolg -> Ab zum Dashboard!
+            window.location.href = "/dashboard";
+        }
+    });
+
+    // Zurück-Button
+    document.getElementById('btn-back')?.addEventListener('click', () => {
+        stepEmail!.style.display = 'block';
+        stepCode!.style.display = 'none';
+    });
+</script>
+
+<style>
+    :root { --cyan: #00bcd4; --bg: #0a0a0a; }
+    
+    .login-container {
+        min-height: 100vh;
+        background: var(--bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        color: white;
+        font-family: 'Inter', sans-serif;
+    }
+
+    .login-card {
+        background: #161616;
+        width: 100%;
+        max-width: 400px;
+        padding: 40px;
+        border-radius: 30px;
+        border: 1px solid rgba(255,255,255,0.05);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+
+    .login-header { text-align: center; margin-bottom: 30px; }
+    .badge { color: var(--cyan); font-weight: bold; text-transform: uppercase; font-size: 0.7rem; margin-bottom: 10px; display: block; }
+    h1 { font-size: 1.8rem; font-weight: 900; margin-bottom: 10px; }
+    p { color: #888; font-size: 0.9rem; line-height: 1.5; }
+
+    .input-group { margin-bottom: 20px; text-align: left; }
+    label { display: block; font-size: 0.8rem; color: #555; margin-bottom: 8px; font-weight: 600; }
+    input {
+        width: 100%;
+        background: #000;
+        border: 1px solid #222;
+        padding: 15px;
+        border-radius: 12px;
+        color: white;
+        font-size: 1rem;
+        transition: 0.3s;
+    }
+    input:focus { border-color: var(--cyan); outline: none; }
+
+    .btn-primary {
+        width: 100%;
+        background: var(--cyan);
+        color: black;
+        border: none;
+        padding: 15px;
+        border-radius: 12px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: 0.3s;
+        font-size: 1rem;
+    }
+    .btn-primary:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
+    .btn-link {
+        background: none;
+        border: none;
+        color: #555;
+        margin-top: 20px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        width: 100%;
+    }
+    .btn-link:hover { color: white; }
+</style>

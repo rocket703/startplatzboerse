@@ -1,17 +1,180 @@
 ---
+import Layout from '../layouts/Layout.astro';
+import Newsletter from '../components/Newsletter.astro';
+import Footer from '../components/Footer.astro';
+import Infos from '../components/Infos.astro';
+import Faq from '../components/Faq.astro';
+import EventCard from '../components/EventCard.astro';
+import { createClient } from '@supabase/supabase-js';
 
+const supabase = createClient(
+  import.meta.env.PUBLIC_SUPABASE_URL,
+  import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+);
+
+// Wir holen alle genehmigten Inserate, sortiert nach Datum (neuere zuerst)
+const { data: listings, error } = await supabase
+  .from('listings')
+  .select('*')
+  .eq('approved', true)
+  .order('created_at', { ascending: false });
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<link rel="icon" href="/favicon.ico" />
-		<meta name="viewport" content="width=device-width" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro</title>
-	</head>
-	<body>
-		<h1>Astro</h1>
-	</body>
-</html>
+<Layout title="Startplatzbörse - Von Sportler zu Sportler">
+    
+    <div class="hero">
+        <div class="hero-content">
+            <div class="badge-container">
+                <span class="beta-badge">Community Project</span>
+            </div>
+
+            <h1>Dein Rennen.<br> <span class="text-cyan">Dein Startplatz.</span></h1>
+            
+            <p class="hero-sub">
+                Die neue Plattform für Lauf, Rad, Triathlon & Hyrox.<br>
+                Fair. Transparent. <strong>Von privat an privat.</strong>
+            </p>
+            
+            <div class="btn-group">
+                <a href="#listings" class="btn-primary">Startplatz finden</a>
+                <a href="/inserieren" class="btn-secondary">Platz inserieren</a>
+            </div>
+        </div>
+    </div>
+
+   <section class="listings-preview" id="listings">
+    <div class="container">
+        <div class="section-header">
+            <div class="header-title">
+                <span class="badge">Aktuell</span>
+                <h2>Neueste Inserate</h2>
+            </div>
+            <a href="/suche" class="view-all">Alle anzeigen →</a>
+        </div>
+
+       <div class="event-grid">
+  {listings && listings.map((item) => (
+    <EventCard 
+      category={item.category}
+      title={item.event_name}
+      date={new Date(item.event_date).toLocaleDateString('de-DE')}
+      location={item.location}
+      distance={item.distance}
+      price={item.price}
+      oldPrice={item.old_price} 
+    />
+  ))}
+</div>
+            
+            {(!listings || listings.length === 0) && (
+                <p class="no-listings">Aktuell keine Startplätze verfügbar. Inseriere den ersten!</p>
+            )}
+        </div> </div> </section>
+
+    <Infos />
+
+    <Faq />
+
+    <Newsletter />
+
+    <Footer />
+
+</Layout>
+
+<style>
+    /* GLOBAL RESET FÜR DIESE SEITE */
+    .hero, .listings-preview {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* --- HERO STYLES --- */
+    .hero {
+        min-height: 90vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        background: radial-gradient(circle at center, #2a2a2a 0%, #121212 80%);
+        padding: 120px 20px 80px;
+    }
+
+    .hero-content {
+        max-width: 900px;
+        z-index: 10;
+    }
+
+    .badge-container { margin-bottom: 25px; }
+    .beta-badge {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #888;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        padding: 8px 20px;
+        border-radius: 50px;
+    }
+
+    h1 {
+        font-size: clamp(2.8rem, 9vw, 5.5rem);
+        font-weight: 900;
+        line-height: 1.05;
+        margin-bottom: 30px;
+        letter-spacing: -3px;
+        color: white;
+    }
+    .text-cyan { color: #00bcd4; text-shadow: 0 0 40px rgba(0, 188, 212, 0.3); }
+
+    .hero-sub {
+        font-size: 1.3rem;
+        color: #aaa;
+        max-width: 650px;
+        margin: 0 auto 50px;
+        line-height: 1.6;
+    }
+
+    /* --- BUTTONS --- */
+    .btn-group { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+    
+    .btn-primary {
+        background: #00bcd4; color: white; font-weight: 700;
+        padding: 18px 38px; border-radius: 50px; text-decoration: none;
+        transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        box-shadow: 0 10px 20px rgba(0, 188, 212, 0.2);
+    }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(0, 188, 212, 0.4); }
+
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.03); color: white; font-weight: 600;
+        padding: 18px 38px; border-radius: 50px; text-decoration: none;
+        border: 1px solid rgba(255,255,255,0.1); transition: 0.3s;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.08); border-color: white; }
+
+    /* --- LISTINGS STYLES --- */
+    .listings-preview {
+        padding: 100px 20px;
+        background: #121212;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 60px;
+    }
+
+    .badge { color: #00bcd4; font-weight: 800; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
+    h2 { font-size: 2.8rem; color: white; font-weight: 900; margin-top: 10px; letter-spacing: -1px; }
+    .view-all { color: #00bcd4; text-decoration: none; font-weight: 600; border-bottom: 1px solid transparent; transition: 0.3s; }
+    .view-all:hover { border-bottom-color: #00bcd4; }
+
+    .event-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 30px;
+    }
+</style>

@@ -1,0 +1,150 @@
+---
+// src/components/Infos.astro
+---
+
+<section id="infos" class="section-wrapper">
+    <div class="container">
+        
+        <div class="mission-box">
+            <span class="badge">Ein Herzensprojekt</span>
+            <h2>Von Sportler zu Sportler.</h2>
+            
+            <div class="mission-text">
+                <p>
+                    Hi, ich bin <strong>Dustin</strong>. Ich entwickle startplatzboerse.com aktuell als privates Ein-Mann-Projekt.
+                </p>
+                <p>
+                    Warum? Weil es mich nervt, wenn teure Startplätze verfallen, nur weil jemand krank geworden ist. 
+                    Dies ist <strong>kein gewinnorientiertes Unternehmen</strong>, sondern eine reine Plattform, die private Sportler mit privaten Sportlern verbindet.
+                </p>
+                <p>
+                    Mein Ziel: Leere Startblöcke füllen und euch an die Startlinie bringen. Fair, transparent und direkt.
+                </p>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <div class="icon-box">1</div>
+                <h3>Privat an Privat</h3>
+                <p>Du kaufst direkt von anderen Athleten. Wir stellen nur die Technik bereit, damit ihr euch findet. Ohne Zwischenhändler.</p>
+            </div>
+
+            <div class="card">
+                <div class="icon-box">2</div>
+                <h3>Community First</h3>
+                <p>Dieses Projekt lebt vom Mitmachen. Je mehr Sportler ihre Tickets hier anbieten, desto besser funktioniert der Marktplatz für alle.</p>
+            </div>
+
+            <div class="card">
+                <div class="icon-box">3</div>
+                <h3>Fair Play</h3>
+                <p>Wir dulden keinen Wucher. Tickets sollen zu fairen Preisen weitergegeben werden, damit der Sport im Vordergrund steht.</p>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<style>
+    /* --- VARIABLEN FÜR RESPONSIVE TYPO --- */
+    :root {
+        --h2-clamp: clamp(1.8rem, 8vw, 3rem);
+        --p-clamp: clamp(0.95rem, 2.5vw, 1.15rem);
+        --box-padding: clamp(25px, 6vw, 60px);
+    }
+
+    .section-wrapper { 
+        padding: clamp(60px, 10vw, 120px) 20px; 
+        background: var(--bg-body); 
+        position: relative;
+    }
+
+    .container { max-width: 1000px; margin: 0 auto; }
+
+    /* --- MISSION BOX --- */
+    .mission-box {
+        text-align: center;
+        max-width: 800px;
+        margin: 0 auto clamp(40px, 8vw, 80px);
+        background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+        padding: var(--box-padding);
+        border-radius: 30px;
+        border: 5px solid rgba(255,255,255,0.08);
+    }
+
+    .badge { 
+        background: rgba(0, 188, 212, 0.1);
+        color: var(--cyan); 
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-weight: 800; 
+        text-transform: uppercase; 
+        letter-spacing: 1.5px; 
+        font-size: 0.7rem; 
+        display: inline-block; 
+        margin-bottom: 20px; 
+    }
+
+    h2 { 
+        font-size: var(--h2-clamp); 
+        font-weight: 900;
+        color: white; 
+        margin-bottom: 25px; 
+        line-height: 1.05;
+        letter-spacing: -1px;
+    }
+
+    .mission-text p {
+        color: var(--text-muted);
+        font-size: var(--p-clamp);
+        line-height: 1.6;
+        margin-bottom: 15px;
+    }
+
+    .mission-text strong {
+        color: white;
+        font-weight: 700;
+    }
+
+    /* --- GRID & CARDS --- */
+    .grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .card {
+        background: var(--bg-card);
+        padding: clamp(30px, 5vw, 45px) clamp(20px, 4vw, 35px);
+        border-radius: 24px;
+        border: 5px solid rgba(255,255,255,0.05);
+        transition: 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        text-align: left;
+    }
+    
+    .card:hover { 
+        transform: translateY(-8px); 
+        border-color: rgba(0, 188, 212, 0.3); 
+        background: #1a1a1a;
+    }
+
+    .icon-box {
+        width: 44px; height: 44px;
+        background: rgba(0, 188, 212, 0.1);
+        color: var(--cyan);
+        font-weight: 900; font-size: 1.1rem;
+        border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        margin-bottom: 20px;
+        border: 1px solid rgba(0, 188, 212, 0.2);
+    }
+
+    h3 { color: white; margin-bottom: 12px; font-size: 1.35rem; font-weight: 800; }
+    .card p { font-size: 0.95rem; color: #888; line-height: 1.6; }
+
+    /* Desktop Ansicht */
+    @media (min-width: 850px) {
+        .grid { grid-template-columns: repeat(3, 1fr); gap: 30px; }
+    }
+</style>
