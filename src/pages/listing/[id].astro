@@ -1,10 +1,8 @@
 ---
-// 1. IMPORTS (Footer muss hier sein!)
 import Layout from '../../layouts/Layout.astro';
 import Footer from '../../components/Footer.astro'; 
 import { createClient } from '@supabase/supabase-js';
 
-// Server-Side: ID holen und Daten laden
 const { id } = Astro.params;
 
 const supabase = createClient(
@@ -12,7 +10,6 @@ const supabase = createClient(
   import.meta.env.PUBLIC_SUPABASE_ANON_KEY
 );
 
-// Daten abrufen
 const { data: item, error } = await supabase
   .from('listings')
   .select('*')
@@ -37,10 +34,16 @@ if (error) {
                 </div>
             ) : (
                 <div class="listing-layout">
+                    
                     <div class="content-side">
                         <span class="badge">{item.category}</span>
                         <h1 class="glow-title">{item.event_name}</h1>
                         
+                        <div class="price-section mobile-only">
+                             <span class="main-price">{item.price}€</span>
+                             {item.old_price && <span class="old-price">{item.old_price}€</span>}
+                        </div>
+
                         <div class="info-grid">
                             <div class="info-item">
                                 <span class="label">Datum</span>
@@ -56,28 +59,33 @@ if (error) {
                             </div>
                         </div>
 
-                        <div class="price-section">
+                        <div class="price-section desktop-only">
                             <div class="price-display">
                                 {item.old_price && <span class="old-price">{item.old_price}€</span>}
                                 <span class="main-price">{item.price}€</span>
                             </div>
+                        </div>
+
+                        <div class="description-box">
+                            <span class="label">Zusatzinfos</span>
+                            <p>{item.description || 'Keine weiteren Details vom Verkäufer hinterlegt.'}</p>
                         </div>
                     </div>
 
                     <aside class="sidebar">
                         <div class="card contact-card">
                             <h3>Verkäufer kontaktieren</h3>
-                            <p>Starte einen Chat, um den Startplatz zu kaufen.</p>
+                            <p>Sende eine Nachricht, um Details oder die Übergabe zu klären.</p>
                             
                             <form id="contact-form">
                                 <input type="hidden" name="listing_id" value={item.id}>
                                 <input type="hidden" name="seller_id" value={item.user_id}>
                                 
-                                <textarea name="message" placeholder="Hallo, ist der Startplatz noch da?" class="input-field textarea" required></textarea>
+                                <textarea name="message" placeholder="Hallo, ich habe Interesse an deinem Startplatz..." class="input-field textarea" required></textarea>
                                 
                                 <button type="submit" class="btn-cyan-glow" id="send-btn">Nachricht senden</button>
                             </form>
-                            <p class="login-hint">Du musst eingeloggt sein.</p>
+                            <p class="login-hint">🔒 Sicherer Chat via Startplatzbörse</p>
                         </div>
                     </aside>
                 </div>
@@ -98,149 +106,173 @@ if (error) {
 
     const form = document.getElementById('contact-form');
     
-    // --- DRAFT WIEDERHERSTELLEN ---
+    // Draft wiederherstellen
     document.addEventListener('DOMContentLoaded', () => {
         const savedDraft = localStorage.getItem('draft_msg');
         const textArea = document.querySelector('textarea[name="message"]');
-        
-        // Prüfen ob Element existiert und Feld leer ist
-        if (savedDraft && textArea && textArea.value === "") {
-            console.log("Entwurf wiederhergestellt");
-            textArea.value = savedDraft;
+        if (savedDraft && textArea && (textArea as HTMLTextAreaElement).value === "") {
+            (textArea as HTMLTextAreaElement).value = savedDraft;
         }
     });
 
     if (form) {
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const btn = document.getElementById('send-btn');
-            const originalText = btn ? btn.innerText : "Senden";
+            if (!btn) return;
             
-            if (btn) {
-                btn.innerText = "Prüfe...";
-                btn.disabled = true;
-            }
+            const originalText = btn.innerText;
+            btn.innerText = "Prüfe...";
+            (btn as HTMLButtonElement).disabled = true;
 
-            const formData = new FormData(form);
+            const formData = new FormData(form as HTMLFormElement);
             const messageText = formData.get('message');
             const listingId = formData.get('listing_id');
             const sellerId = formData.get('seller_id');
 
             try {
-                // 1. Auth Check
                 const { data: { user } } = await supabase.auth.getUser();
 
-                // FALL: NICHT EINGELOGGT -> Redirect zum Login
                 if (!user) {
-                    localStorage.setItem('draft_msg', messageText);
-                    
-                    // --- KORREKTUR: Wir leiten zurück auf /listing/... nicht /inserat/ ---
+                    localStorage.setItem('draft_msg', messageText as string);
                     window.location.href = `/login?redirect=/listing/${listingId}`;
                     return; 
                 }
 
-                // FALL: SELBSTGESPRÄCH
                 if (user.id === sellerId) {
                     alert("Du kannst dir nicht selbst schreiben.");
-                    if (btn) {
-                         btn.innerText = originalText;
-                         btn.disabled = false;
-                    }
+                    btn.innerText = originalText;
+                    (btn as HTMLButtonElement).disabled = false;
                     return;
                 }
 
-                // 2. Chat suchen/erstellen
-                const { data: existingConvo, error: fetchError } = await supabase
+                // Chat Logik
+                const { data: existing } = await supabase
                     .from('conversations')
                     .select('id')
                     .eq('listing_id', listingId)
                     .eq('buyer_id', user.id)
-                    .eq('seller_id', sellerId)
-                    .maybeSingle();
+                    .single();
 
-                if (fetchError) throw fetchError;
+                let chatId = existing?.id;
 
-                let conversationId;
-
-                if (existingConvo) {
-                    conversationId = existingConvo.id;
-                } else {
-                    const { data: newConvo, error: createError } = await supabase
+                if (!chatId) {
+                    const { data: nc, error: ne } = await supabase
                         .from('conversations')
                         .insert({ listing_id: listingId, buyer_id: user.id, seller_id: sellerId })
-                        .select()
-                        .single();
-
-                    if (createError) throw createError;
-                    conversationId = newConvo.id;
+                        .select().single();
+                    if (ne) throw ne;
+                    chatId = nc.id;
                 }
 
-                // 3. Nachricht speichern
-                const { error: msgError } = await supabase
-                    .from('messages')
-                    .insert({
-                        conversation_id: conversationId,
-                        sender_id: user.id,
-                        content: messageText,
-                        is_read: false
-                    });
+                const { error: me } = await supabase.from('messages').insert({
+                    conversation_id: chatId,
+                    sender_id: user.id,
+                    content: messageText
+                });
 
-                if (msgError) throw msgError;
-
+                if (me) throw me;
                 localStorage.removeItem('draft_msg');
-
-                // 4. Weiterleitung
-                if (btn) btn.innerText = "Weiterleitung...";
-                window.location.href = `/dashboard?chat_id=${conversationId}`;
+                window.location.href = `/dashboard?chat_id=${chatId}`;
 
             } catch (err) {
                 console.error(err);
-                alert("Fehler aufgetreten.");
-                if (btn) {
-                    btn.innerText = "Erneut versuchen";
-                    btn.disabled = false;
-                }
+                alert("Fehler beim Senden.");
+                btn.innerText = originalText;
+                (btn as HTMLButtonElement).disabled = false;
             }
         }); 
-    } // HIER WAR DER FEHLER: Keine ); mehr, sondern nur }
+    }
 </script>
 
 <style>
-    .listing-page { background: #050505; min-height: 100vh; padding: 140px 20px 80px; color: white; }
+    :root {
+        --cyan: #00bcd4;
+        --bg: #050505;
+        --card: #111;
+        --border: #222;
+    }
+
+    .listing-page { 
+        background: var(--bg); 
+        min-height: 100vh; 
+        padding: 100px 15px 60px; /* Reduziertes Padding für Mobile */
+        color: white; 
+    }
+    
     .container { max-width: 1100px; margin: 0 auto; }
     
-    .listing-layout { display: grid; grid-template-columns: 1fr 380px; gap: 40px; margin-top: 30px; }
-    
-    .glow-title { font-size: clamp(2rem, 5vw, 4rem); font-weight: 900; margin: 15px 0; line-height: 1; }
-    .badge { color: #00bcd4; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; font-size: 0.8rem; }
-    
-    .info-grid { display: flex; gap: 40px; margin: 40px 0; padding: 30px 0; border-top: 1px solid #1a1a1a; border-bottom: 1px solid #1a1a1a; }
-    .info-item { display: flex; flex-direction: column; }
-    .label { color: #444; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
-    .val { font-size: 1.2rem; font-weight: 700; }
-
-    .price-display { display: flex; align-items: baseline; gap: 20px; }
-    .main-price { font-size: 3.5rem; font-weight: 900; color: #00bcd4; }
-    .old-price { font-size: 1.5rem; color: #333; text-decoration: line-through; }
-
-    .card { background: #111; border: 1px solid #222; border-radius: 24px; padding: 30px; }
-    .contact-card h3 { margin-bottom: 10px; font-weight: 800; font-size: 1.2rem; }
-    .contact-card p { color: #888; font-size: 0.9rem; margin-bottom: 25px; }
-    .login-hint { font-size: 0.75rem; text-align: center; margin-top: 15px; color: #444; }
-
-    .input-field { width: 100%; background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; color: white; margin-bottom: 12px; font-family: inherit; }
-    .textarea { height: 120px; resize: none; }
-    
-    .btn-cyan-glow { width: 100%; background: #00bcd4; color: black; border: none; padding: 18px; border-radius: 16px; font-weight: 900; cursor: pointer; transition: 0.3s; }
-    .btn-cyan-glow:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0, 188, 212, 0.2); }
-
-    .back-link { color: #666; text-decoration: none; font-weight: 700; font-size: 0.9rem; }
-    .back-link:hover { color: white; }
-    .error-box { text-align: center; padding: 50px; }
-
-    @media (max-width: 900px) {
-        .listing-layout { grid-template-columns: 1fr; }
-        .sidebar { order: -1; }
+    /* Responsive Grid */
+    .listing-layout { 
+        display: grid; 
+        grid-template-columns: 1fr; /* Stacked auf Mobile */
+        gap: 30px; 
+        margin-top: 20px; 
     }
+    
+    @media (min-width: 992px) {
+        .listing-layout { grid-template-columns: 1fr 380px; gap: 60px; }
+        .listing-page { padding: 140px 20px 80px; }
+    }
+
+    .glow-title { 
+        font-size: 2.2rem; /* Kleiner für Mobile */
+        font-weight: 900; 
+        margin: 10px 0; 
+        line-height: 1.1; 
+    }
+
+    @media (min-width: 768px) {
+        .glow-title { font-size: 3.5rem; }
+    }
+
+    .badge { color: var(--cyan); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; font-size: 0.7rem; }
+    
+    /* Info Grid Mobil Optimierung */
+    .info-grid { 
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px; 
+        margin: 25px 0; 
+        padding: 20px 0; 
+        border-top: 1px solid #1a1a1a; 
+        border-bottom: 1px solid #1a1a1a; 
+    }
+
+    @media (min-width: 768px) {
+        .info-grid { display: flex; gap: 40px; }
+    }
+
+    .label { color: #555; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; margin-bottom: 4px; display: block;}
+    .val { font-size: 1rem; font-weight: 700; }
+
+    .price-section { margin: 15px 0; display: flex; align-items: baseline; gap: 15px; }
+    .main-price { font-size: 2.5rem; font-weight: 900; color: var(--cyan); }
+    .old-price { font-size: 1.2rem; color: #333; text-decoration: line-through; }
+
+    /* Visibility Helpers */
+    .mobile-only { display: flex; }
+    .desktop-only { display: none; }
+
+    @media (min-width: 992px) {
+        .mobile-only { display: none; }
+        .desktop-only { display: flex; }
+        .main-price { font-size: 3.5rem; }
+    }
+
+    .description-box { margin: 20px 0; line-height: 1.6; color: #aaa; }
+
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 24px; padding: 25px; }
+    .contact-card h3 { margin-bottom: 8px; font-weight: 800; font-size: 1.2rem; }
+    .contact-card p { color: #666; font-size: 0.85rem; margin-bottom: 20px; }
+    .login-hint { font-size: 0.7rem; text-align: center; margin-top: 15px; color: #333; font-weight: 600; }
+
+    .input-field { width: 100%; background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; color: white; margin-bottom: 12px; font-family: inherit; font-size: 1rem; }
+    .textarea { height: 110px; resize: none; }
+    
+    .btn-cyan-glow { width: 100%; background: var(--cyan); color: black; border: none; padding: 16px; border-radius: 14px; font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 1rem; }
+    .btn-cyan-glow:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0, 188, 212, 0.2); }
+
+    .back-link { color: #555; text-decoration: none; font-weight: 700; font-size: 0.8rem; margin-bottom: 15px; display: inline-block; }
+    .back-link:hover { color: white; }
 </style>

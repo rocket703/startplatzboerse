@@ -10,14 +10,14 @@ serve(async (req) => {
   }
 
   try {
-    const { record } = await req.json() // Die neue Nachricht aus der DB ('messages' Tabelle)
+    const { record } = await req.json()
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 1. Infos zur Konversation holen (Wer ist Käufer/Verkäufer?)
+    // 1. Infos zur Konversation holen
     const { data: convo, error: convoError } = await supabase
       .from('conversations')
       .select('buyer_id, seller_id, listings(event_name)')
@@ -26,10 +26,10 @@ serve(async (req) => {
 
     if (convoError || !convo) throw new Error('Konversation nicht gefunden')
 
-    // 2. Empfänger bestimmen (derjenige, der die Nachricht NICHT abgeschickt hat)
+    // 2. Empfänger bestimmen
     const recipientId = record.sender_id === convo.buyer_id ? convo.seller_id : convo.buyer_id
 
-    // 3. E-Mail-Adresse des Empfängers via Admin-API holen
+    // 3. E-Mail-Adresse des Empfängers holen
     const { data: userData, error: userError } = await supabase.auth.admin.getUserById(recipientId)
     if (userError || !userData.user?.email) throw new Error('Empfänger-Email nicht gefunden')
 
@@ -41,7 +41,7 @@ serve(async (req) => {
         'Authorization': `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: 'Startplatzbörse <onboarding@resend.dev>', // WICHTIG: Ersetze das später durch deine verifizierte Domain
+        from: 'Startplatzbörse <info@send.startplatzboerse.com>', 
         to: userData.user.email,
         subject: `Neue Nachricht zu: ${convo.listings.event_name}`,
         html: `
@@ -53,7 +53,7 @@ serve(async (req) => {
               "${record.content}"
             </div>
             <p>Klicke auf den Button, um direkt zu antworten:</p>
-            <a href="<a href="https://startplatzboerse.vercel.app/chat?id=${record.conversation_id}"
+            <a href="https://startplatzboerse.vercel.app/chat?id=${record.conversation_id}"
                style="background: #00bcd4; color: black; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; margin-top: 10px;">
                Zum Chat wechseln
             </a>
@@ -63,7 +63,7 @@ serve(async (req) => {
           </div>
         `,
       }),
-    })
+    }) // <--- DIESE ZEILE HAT GEFEHLT!
 
     const resData = await res.json()
     return new Response(JSON.stringify(resData), {
