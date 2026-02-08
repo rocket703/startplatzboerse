@@ -1,0 +1,176 @@
+---
+---
+export const prerender = false; // Erzwingt Live-Rendering auf Vercel
+import Layout from '../../layouts/Layout.astro';
+import Footer from '../../components/Footer.astro';
+import Popup from '../../components/Popup.astro';
+import { createClient } from '@supabase/supabase-js';
+
+const { id } = Astro.params;
+
+const supabase = createClient(
+    import.meta.env.PUBLIC_SUPABASE_URL,
+    import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+);
+
+// Daten des Inserats laden
+const { data: item, error } = await supabase
+    .from('listings')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+if (error || !item) return Astro.redirect('/404');
+---
+
+<Layout title={`${item.event_name} - Startplatzbörse`}>
+    <main class="listing-detail">
+        <div class="container">
+            <a href="/" class="back-link">← Zurück zur Übersicht</a>
+            
+            <div class="detail-grid">
+                <div class="info-side">
+                    <span class="badge">{item.category}</span>
+                    <h1 class="glow-text">{item.event_name}</h1>
+                    
+                    <div class="specs">
+                        <div class="spec-item">
+                            <span class="label">Datum</span>
+                            <span class="val">{new Date(item.event_date).toLocaleDateString('de-DE')}</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="label">Ort</span>
+                            <span class="val">{item.location} ({item.plz})</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="label">Distanz</span>
+                            <span class="val">{item.distance}</span>
+                        </div>
+                    </div>
+
+                    <div class="price-hero">
+                        <span class="price-label">Preis</span>
+                        <div class="price-tag">
+                            {item.old_price && <span class="old">{item.old_price}€</span>}
+                            <span class="current">{item.price}€</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="contact-side card">
+                    <h3>Interesse am Startplatz?</h3>
+                    <p>Kontaktiere den Verkäufer direkt über dieses Formular.</p>
+                    
+                    <form id="contact-form">
+                        <input type="hidden" name="listing_id" value={item.id}>
+                        <input type="hidden" name="seller_id" value={item.user_id}>
+
+                        <div id="guest-fields">
+                            <div class="row">
+                                <input type="text" name="vorname" placeholder="Vorname" class="input">
+                                <input type="text" name="nachname" placeholder="Nachname" class="input">
+                            </div>
+                            <input type="email" name="email" placeholder="Deine E-Mail Adresse" class="input">
+                        </div>
+
+                        <textarea name="message" placeholder="Hallo, ich habe Interesse an deinem Startplatz..." class="input textarea"></textarea>
+                        
+                        <button type="submit" class="btn-cyan-glow" id="send-btn">Anfrage senden</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <Popup id="status-popup" title="Meldung">
+            <p id="popup-text"></p>
+            <button class="login-button" onclick="document.getElementById('status-popup').style.display='none'">Schließen</button>
+        </Popup>
+    </main>
+    <Footer />
+</Layout>
+
+<script>
+    import { createClient } from '@supabase/supabase-js';
+    const supabase = createClient(import.meta.env.PUBLIC_SUPABASE_URL, import.meta.env.PUBLIC_SUPABASE_ANON_KEY);
+
+    const form = document.getElementById('contact-form');
+    const guestFields = document.getElementById('guest-fields');
+
+    // Prüfen ob User angemeldet ist
+    async function checkAuth() {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+            // Wenn angemeldet, Vorname/Nachname/Email ausblenden
+            if (guestFields) guestFields.style.display = 'none';
+        }
+    }
+    checkAuth();
+
+    form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = document.getElementById('send-btn');
+        btn.innerText = "Wird gesendet...";
+        btn.disabled = true;
+
+        const formData = new FormData(e.target);
+        const { data: { user } } = await supabase.auth.getUser();
+
+        const inquiryData = {
+            listing_id: formData.get('listing_id'),
+            seller_id: formData.get('seller_id'),
+            buyer_id: user?.id || null, // null wenn Gast
+            buyer_name: user ? user.user_metadata.full_name : `${formData.get('vorname')} ${formData.get('nachname')}`,
+            buyer_email: user ? user.email : formData.get('email'),
+            message: formData.get('message')
+        };
+
+        const { error } = await supabase.from('inquiries').insert([inquiryData]);
+
+        if (error) {
+            alert("Fehler: " + error.message);
+            btn.disabled = false;
+            btn.innerText = "Anfrage senden";
+        } else {
+            document.getElementById('popup-text').innerText = "Deine Anfrage wurde erfolgreich gesendet! Der Verkäufer wird sich bei dir melden.";
+            document.getElementById('status-popup').style.display = 'flex';
+            form.reset();
+            btn.innerText = "Gesendet!";
+        }
+    });
+</script>
+
+<style>
+    .listing-detail { background: #050505; min-height: 100vh; padding: 120px 20px; color: white; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    .back-link { color: #666; text-decoration: none; font-size: 0.9rem; margin-bottom: 30px; display: inline-block; }
+    .back-link:hover { color: #00bcd4; }
+    
+    .detail-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 50px; }
+    .glow-text { font-size: clamp(2rem, 6vw, 3.5rem); font-weight: 900; color: #fff; margin: 15px 0; line-height: 1; }
+    
+    .specs { display: flex; gap: 30px; margin: 40px 0; border-top: 1px solid #222; padding-top: 30px; }
+    .spec-item { display: flex; flex-direction: column; }
+    .label { font-size: 0.7rem; text-transform: uppercase; color: #555; letter-spacing: 1px; font-weight: 800; }
+    .val { font-size: 1.1rem; font-weight: 700; color: #eee; }
+
+    .price-hero { margin-top: 50px; }
+    .price-tag { display: flex; align-items: baseline; gap: 15px; }
+    .current { font-size: 4rem; font-weight: 900; color: #00bcd4; }
+    .old { font-size: 1.5rem; color: #333; text-decoration: line-through; }
+
+    .contact-side.card { background: #111; padding: 40px; border-radius: 30px; border: 1px solid #222; height: fit-content; }
+    .contact-side h3 { margin-bottom: 10px; font-weight: 800; }
+    .contact-side p { color: #666; font-size: 0.9rem; margin-bottom: 30px; }
+
+    .input { width: 100%; background: #000; border: 1px solid #222; padding: 15px; border-radius: 15px; color: white; margin-bottom: 15px; font-family: inherit; }
+    .input:focus { border-color: #00bcd4; outline: none; }
+    .textarea { height: 120px; resize: none; }
+    .row { display: flex; gap: 10px; }
+
+    .btn-cyan-glow { width: 100%; background: #00bcd4; color: #000; border: none; padding: 18px; border-radius: 18px; font-weight: 900; cursor: pointer; transition: 0.3s; }
+    .btn-cyan-glow:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0, 188, 212, 0.3); }
+
+    @media (max-width: 850px) {
+        .detail-grid { grid-template-columns: 1fr; }
+    }
+</style>
