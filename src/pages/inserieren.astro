@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Footer from '../components/Footer.astro';
+import Popup from '../components/Popup.astro'; // 1. Popup Importieren
 ---
 
 <Layout title="Startplatz inserieren - Startplatzbörse">
@@ -100,6 +101,11 @@ import Footer from '../components/Footer.astro';
 
             </div>
         </div>
+
+        <Popup id="status-popup" title="Systemmeldung">
+            <p id="popup-text" style="color: #ccc; margin-bottom: 20px;"></p>
+            <button class="login-button" onclick="document.getElementById('status-popup').style.display='none'">Alles klar</button>
+        </Popup>
     </main>
     <Footer />
 </Layout>
@@ -111,6 +117,19 @@ import Footer from '../components/Footer.astro';
         import.meta.env.PUBLIC_SUPABASE_URL,
         import.meta.env.PUBLIC_SUPABASE_ANON_KEY
     );
+
+    // Hilfsfunktion für Popup
+    function showPopup(title: string, message: string) {
+        const popup = document.getElementById('status-popup');
+        const popupTitle = popup?.querySelector('h3');
+        const popupText = document.getElementById('popup-text');
+        
+        if (popup && popupTitle && popupText) {
+            popupTitle.innerText = title;
+            popupText.innerText = message;
+            popup.style.display = 'flex';
+        }
+    }
 
     // DOM Elemente
     const authSection = document.getElementById('auth-section');
@@ -126,7 +145,7 @@ import Footer from '../components/Footer.astro';
     const locationInput = document.getElementById('location') as HTMLInputElement;
     const dateInput = document.getElementById('event_date') as HTMLInputElement;
 
-    // 1. DATUM-SPERRE (Heute als Minimum)
+    // 1. DATUM-SPERRE
     const today = new Date().toISOString().split('T')[0];
     if (dateInput) dateInput.min = today;
 
@@ -149,10 +168,10 @@ import Footer from '../components/Footer.astro';
         });
     });
 
-    // 3. PLZ AUTOFILL & VALIDIERUNG
+    // 3. PLZ AUTOFILL
     plzInput?.addEventListener('input', async (e) => {
         const target = e.target as HTMLInputElement;
-        target.value = target.value.replace(/\D/g, ''); // Nur Zahlen
+        target.value = target.value.replace(/\D/g, ''); 
         
         if (target.value.length === 5) {
             locationInput.placeholder = "Suche Stadt...";
@@ -166,14 +185,15 @@ import Footer from '../components/Footer.astro';
         }
     });
 
-    // 4. AUTH LOGIK (OTP SENDEN)
+  // 4. AUTH LOGIK (OTP SENDEN)
     document.getElementById('btn-send-otp')?.addEventListener('click', async () => {
         const email = (document.getElementById('email') as HTMLInputElement).value;
-        if(!email.includes('@')) return alert("Bitte gültige E-Mail angeben");
+        if(!email.includes('@')) return showPopup("Achtung", "Bitte eine gültige E-Mail angeben.");
 
         const { error } = await supabase.auth.signInWithOtp({ email });
-        if (error) alert(error.message);
-        else {
+        if (error) {
+            showPopup("Fehler", error.message);
+        } else {
             step1!.style.display = 'none';
             stepOtp!.style.display = 'block';
         }
@@ -187,7 +207,7 @@ import Footer from '../components/Footer.astro';
         const { error } = await supabase.auth.verifyOtp({ email, token, type: 'signup' });
         if (error) {
             const { error: err2 } = await supabase.auth.verifyOtp({ email, token, type: 'magiclink' });
-            if (err2) return alert("Code ungültig.");
+            if (err2) return showPopup("Ungültig", "Der eingegebene Code ist falsch.");
         }
         
         authSection!.style.display = 'none';
@@ -198,58 +218,51 @@ import Footer from '../components/Footer.astro';
 
     // 6. FINALES ABSENDEN
     document.getElementById('listing-form')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('btn-final') as HTMLButtonElement;
-    
-    // Button sperren gegen Doppel-Klicks
-    btn.disabled = true;
-    btn.textContent = "Sende...";
+        e.preventDefault();
+        const btn = document.getElementById('btn-final') as HTMLButtonElement;
+        btn.disabled = true;
+        btn.textContent = "Sende...";
 
-    try {
-        // 1. WICHTIG: Den User ZUERST abrufen
-        const { data: authData, error: userError } = await supabase.auth.getUser();
+        try {
+            const { data: authData, error: userError } = await supabase.auth.getUser();
 
-        if (userError || !authData.user) {
-            throw new Error("Du bist nicht eingeloggt oder die Sitzung ist abgelaufen.");
+            if (userError || !authData.user) {
+                throw new Error("Sitzung abgelaufen. Bitte lade die Seite neu.");
+            }
+
+            const user = authData.user;
+            const formData = new FormData(e.target as HTMLFormElement);
+            const vals = Object.fromEntries(formData);
+            
+            const { error: insertError } = await supabase.from('listings').insert([{
+                user_id: user.id,
+                vorname: (document.getElementById('vorname') as HTMLInputElement).value,
+                nachname: (document.getElementById('nachname') as HTMLInputElement).value,
+                seller_email: (document.getElementById('email') as HTMLInputElement).value,
+                category: vals.category,
+                event_name: vals.event_name,
+                distance: vals.distance,
+                event_date: vals.event_date,
+                plz: vals.plz,
+                location: vals.location,
+                price: parseFloat(vals.price as string),
+                approved: true
+            }]);
+
+            if (insertError) throw insertError;
+
+            // Erfolg! Erst Popup, dann Redirect
+            showPopup("Glückwunsch!", "Dein Inserat wurde erfolgreich veröffentlicht. Du wirst jetzt zum Dashboard geleitet.");
+            setTimeout(() => {
+                window.location.href = "/dashboard";
+            }, 2500);
+
+        } catch (err: any) {
+            showPopup("Fehler", err.message);
+            btn.disabled = false;
+            btn.textContent = "Inserat jetzt veröffentlichen";
         }
-
-        // Jetzt ist der User bekannt!
-        const user = authData.user;
-
-        const formData = new FormData(e.target as HTMLFormElement);
-        const vals = Object.fromEntries(formData);
-        
-        // 2. Inserat mit der user_id abschicken
-        const { error: insertError } = await supabase.from('listings').insert([{
-            user_id: user.id, // Die neue Verknüpfung für dein Dashboard
-            vorname: (document.getElementById('vorname') as HTMLInputElement).value,
-            nachname: (document.getElementById('nachname') as HTMLInputElement).value,
-            seller_email: (document.getElementById('email') as HTMLInputElement).value,
-            category: vals.category,
-            event_name: vals.event_name,
-            distance: vals.distance,
-            event_date: vals.event_date,
-            plz: vals.plz,
-            location: vals.location,
-            price: parseFloat(vals.price as string),
-            approved: true
-        }]);
-
-        if (insertError) throw insertError;
-
-        // 3. Erfolg! Ab ins Dashboard
-        window.location.href = "/dashboard";
-
-    } catch (err: any) {
-        // Bei Fehlern: Alarm schlagen und Button wieder freigeben
-        console.error("Fehler beim Absenden:", err);
-        alert("Achtung: " + err.message);
-        
-        btn.disabled = false;
-        btn.textContent = "Inserat jetzt veröffentlichen";
-    }
-});
-    
+    });
 </script>
 
 <style>

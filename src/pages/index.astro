@@ -54,15 +54,17 @@ const { data: listings, error } = await supabase
 
        <div class="event-grid">
   {listings && listings.map((item) => (
-    <EventCard 
-      category={item.category}
-      title={item.event_name}
-      date={new Date(item.event_date).toLocaleDateString('de-DE')}
-      location={item.location}
-      distance={item.distance}
-      price={item.price}
-      oldPrice={item.old_price} 
-    />
+    <a href={`/listing/${item.id}`} style="text-decoration: none; display: block;">
+      <EventCard 
+        category={item.category}
+        title={item.event_name}
+        date={new Date(item.event_date).toLocaleDateString('de-DE')}
+        location={item.location}
+        distance={item.distance}
+        price={item.price}
+        oldPrice={item.old_price} 
+      />
+    </a>
   ))}
 </div>
             
@@ -74,8 +76,6 @@ const { data: listings, error } = await supabase
     <Infos />
 
     <Faq />
-
-    <Newsletter />
 
     <Footer />
 
@@ -177,4 +177,5 @@ const { data: listings, error } = await supabase
         grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
         gap: 30px;
     }
+
 </style>

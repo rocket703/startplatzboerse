@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Footer from '../components/Footer.astro';
+import Popup from '../components/Popup.astro';
 ---
 
 <Layout title="Mein Dashboard | startplatzboerse.com">
@@ -8,23 +9,42 @@ import Footer from '../components/Footer.astro';
         <div class="container">
             
             <header class="dash-hero">
-                <div class="card stats-main">
-                    <div class="stats-content">
-                        <span class="eyebrow">Dein Account</span>
-                        <div class="count-row">
-                            <h1 id="stats-count">0</h1>
-                            <p>Aktive Inserate</p>
+                <div class="dash-layout-header">
+                    <div class="card stats-main">
+                        <div class="stats-content">
+                            <span class="eyebrow">Dein Account</span>
+                            <div class="count-row">
+                                <h1 id="stats-count">0</h1>
+                                <p>Aktive Inserate</p>
+                            </div>
+                        </div>
+                        <div class="stats-nav">
+                            <a href="/inserieren" class="btn-cyan-glow">＋ Neues Inserat</a>
+                            <button id="logout-trigger" class="btn-logout-brand">Abmelden</button>
                         </div>
                     </div>
-                    <div class="stats-nav">
-                        <a href="/inserieren" class="btn-cyan-glow">＋ Neues Inserat</a>
-                        <button id="logout-trigger" class="btn-logout-brand">Abmelden</button>
+
+                    <div class="card inquiries-quick-access">
+                        <div class="iq-header-top">
+                            <h2 class="section-label" style="margin-bottom:0;">Nachrichten</h2>
+                            <div class="tabs">
+                                <button class="tab-btn active" id="tab-received">Erhalten</button>
+                                <button class="tab-btn" id="tab-sent">Gesendet</button>
+                            </div>
+                        </div>
+                        
+                        <div id="inquiries-list" class="inquiry-compact-list">
+                            </div>
+
+                        <div id="no-inquiries" class="empty-state-compact" style="display: none;">
+                            <p>Keine Nachrichten vorhanden.</p>
+                        </div>
                     </div>
                 </div>
             </header>
 
             <section class="listings-section">
-                <h2 class="section-label">Deine Inserate</h2>
+                <h2 class="section-label">Deine aktiven Inserate</h2>
                 
                 <div id="auth-loader" class="loader-wrap">
                     <div class="spinner"></div>
@@ -56,10 +76,19 @@ import Footer from '../components/Footer.astro';
                     <p class="hint">Dein Inserat wird sofort aktualisiert.</p>
                 </div>
                 <div class="modal-footer">
-                    <button id="save-price" class="btn-cyan-glow">Preis aktualisieren</button>
+                    <button id="save-price" class="btn-cyan-glow" style="width:100%;">Preis aktualisieren</button>
                 </div>
             </div>
         </div>
+
+        <Popup id="status-popup" title="Systemmeldung">
+            <p id="popup-text" style="color: #ccc; margin-bottom: 20px;"></p>
+            <div style="display: flex; gap: 10px;">
+                <button class="login-button" style="background: #333; flex:1;" onclick="document.getElementById('status-popup').style.display='none'">Abbrechen</button>
+                <button id="confirm-delete-btn" class="login-button" style="display: none; background: #ff3b30; flex:1;" onclick="window.realDelete()">Endgültig löschen</button>
+            </div>
+        </Popup>
+
     </main>
     <Footer />
 </Layout>
@@ -72,209 +101,193 @@ import Footer from '../components/Footer.astro';
         import.meta.env.PUBLIC_SUPABASE_ANON_KEY
     );
 
+    let deleteId = null;
+    let receivedData = [];
+    let sentData = [];
+
+    function showPopup(title, message) {
+        const popup = document.getElementById('status-popup');
+        const titleEl = popup?.querySelector('h3');
+        const textEl = document.getElementById('popup-text');
+        if (popup && titleEl && textEl) {
+            titleEl.innerText = title;
+            textEl.innerText = message;
+            popup.style.display = 'flex';
+        }
+    }
+
     async function initDashboard() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return window.location.href = "/login";
 
-        const { data: listings } = await supabase
-            .from('listings')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('created_at', { ascending: false });
+        // Daten laden
+        const [listingsRes, receivedRes, sentRes] = await Promise.all([
+            supabase.from('listings').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+            supabase.from('inquiries').select('*, listings(event_name)').eq('seller_id', user.id).order('created_at', { ascending: false }),
+            supabase.from('inquiries').select('*, listings(event_name)').eq('buyer_id', user.id).order('created_at', { ascending: false })
+        ]);
 
-        document.getElementById('auth-loader')!.style.display = 'none';
-        document.getElementById('stats-count')!.innerText = listings?.length.toString() || "0";
+        receivedData = receivedRes.data || [];
+        sentData = sentRes.data || [];
 
+        document.getElementById('auth-loader').style.display = 'none';
+        document.getElementById('stats-count').innerText = listingsRes.data?.length.toString() || "0";
+
+        renderListings(listingsRes.data);
+        renderInquiries(receivedData, 'received');
+
+        // Tab Handler
+        document.getElementById('tab-received')?.addEventListener('click', () => {
+            document.getElementById('tab-received').classList.add('active');
+            document.getElementById('tab-sent').classList.remove('active');
+            renderInquiries(receivedData, 'received');
+        });
+        document.getElementById('tab-sent')?.addEventListener('click', () => {
+            document.getElementById('tab-sent').classList.add('active');
+            document.getElementById('tab-received').classList.remove('active');
+            renderInquiries(sentData, 'sent');
+        });
+    }
+
+    function renderListings(items) {
         const grid = document.getElementById('listings-grid');
-        if (!listings || listings.length === 0) {
-            document.getElementById('no-data')!.style.display = 'block';
+        if (!items || items.length === 0) {
+            document.getElementById('no-data').style.display = 'block';
             return;
         }
-
-        grid!.innerHTML = listings.map(item => `
+        grid.innerHTML = items.map(item => `
             <article class="card event-card">
                 <div class="card-body-content">
                     <div class="card-meta">
                         <span class="cat">${item.category}</span>
-                        <span class="date">${item.event_date ? new Date(item.event_date).toLocaleDateString('de-DE') : ''}</span>
+                        <span class="date">${new Date(item.event_date).toLocaleDateString('de-DE')}</span>
                     </div>
                     <h2>${item.event_name}</h2>
                     <p class="loc">${item.location} • ${item.distance || ''}</p>
-                    
                     <div class="price-box">
-                        ${item.old_price && Number(item.old_price) > Number(item.price) 
-                            ? `<span class="old-price">${item.old_price}€</span>` 
-                            : ''
-                        }
+                        ${item.old_price ? `<span class="old-price">${item.old_price}€</span>` : ''}
                         <span class="amt">${item.price}€</span>
                     </div>
                 </div>
-                
                 <div class="mgmt-actions">
                     <button class="btn-mgmt edit" onclick="window.openEditModal('${item.id}', '${item.price}')">Bearbeiten</button>
-                    <button class="btn-mgmt delete" onclick="window.confirmDel('${item.id}')">Löschen</button>
+                    <button class="btn-mgmt delete" onclick="window.askDelete('${item.id}')">Löschen</button>
                 </div>
             </article>
         `).join('');
     }
 
-    // Modal Logik
-    const modal = document.getElementById('edit-modal');
-    window.openEditModal = (id, currentPrice) => {
-        (document.getElementById('edit-listing-id') as HTMLInputElement).value = id;
-        (document.getElementById('new-price') as HTMLInputElement).value = currentPrice;
-        modal!.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
+    function renderInquiries(items, type) {
+        const list = document.getElementById('inquiries-list');
+        const empty = document.getElementById('no-inquiries');
+        if (!items || items.length === 0) {
+            list.innerHTML = '';
+            empty.style.display = 'block';
+            return;
+        }
+        empty.style.display = 'none';
+        list.innerHTML = items.map(iq => `
+            <a href="mailto:${type === 'received' ? iq.buyer_email : iq.buyer_email}?subject=Anfrage: ${iq.listings?.event_name}" class="inquiry-card-compact" style="text-decoration:none;">
+                <div class="iq-meta-compact">
+                    <span style="color:var(--cyan); font-weight:800;">${iq.listings?.event_name || 'Event'}</span>
+                    <span>${new Date(iq.created_at).toLocaleDateString('de-DE')}</span>
+                </div>
+                <span class="iq-name-compact">${type === 'received' ? 'Von: ' : 'An: '}${iq.buyer_name}</span>
+                <p class="iq-msg-compact">${iq.message}</p>
+            </a>
+        `).join('');
+    }
+
+    // Window Actions
+    window.openEditModal = (id, price) => {
+        document.getElementById('edit-listing-id').value = id;
+        document.getElementById('new-price').value = price;
+        document.getElementById('edit-modal').style.display = 'flex';
     };
 
-    document.getElementById('close-modal')?.addEventListener('click', () => {
-        modal!.style.display = 'none';
-        document.body.style.overflow = 'auto';
-    });
+    window.askDelete = (id) => {
+        deleteId = id;
+        document.getElementById('confirm-delete-btn').style.display = 'block';
+        showPopup("Löschen?", "Willst du das Inserat wirklich entfernen?");
+    };
 
-    document.getElementById('save-price')?.addEventListener('click', async () => {
-        const id = (document.getElementById('edit-listing-id') as HTMLInputElement).value;
-        const newPrice = Number((document.getElementById('new-price') as HTMLInputElement).value);
-        
-        const { data: current } = await supabase.from('listings').select('price').eq('id', id).single();
-        
-        const { error } = await supabase
-            .from('listings')
-            .update({ 
-                price: newPrice, 
-                old_price: current?.price 
-            })
-            .eq('id', id);
+    window.realDelete = async () => {
+        await supabase.from('listings').delete().eq('id', deleteId);
+        location.reload();
+    };
 
-        if (error) {
-            alert("Fehler beim Speichern: " + error.message);
-        } else {
-            location.reload();
-        }
-    });
+    document.getElementById('close-modal').onclick = () => document.getElementById('edit-modal').style.display = 'none';
+    
+    document.getElementById('save-price').onclick = async () => {
+        const id = document.getElementById('edit-listing-id').value;
+        const price = document.getElementById('new-price').value;
+        const { data: old } = await supabase.from('listings').select('price').eq('id', id).single();
+        await supabase.from('listings').update({ price, old_price: old.price }).eq('id', id);
+        location.reload();
+    };
 
-    document.getElementById('logout-trigger')?.addEventListener('click', async () => {
+    document.getElementById('logout-trigger').onclick = async () => {
         await supabase.auth.signOut();
-        window.location.href = "/";
-    });
-
-    window.confirmDel = async (id: string) => {
-        if (confirm("Möchtest du diesen Startplatz wirklich entfernen?")) {
-            await supabase.from('listings').delete().eq('id', id);
-            location.reload();
-        }
+        location.href = "/";
     };
 
     initDashboard();
 </script>
 
 <style is:global>
-    :root {
-        --bg: #050505;
-        --bg-card: #111111;
-        --cyan: #00bcd4;
-        --danger: #ff3b30;
-        --font-h1: clamp(2.8rem, 12vw, 4.8rem);
-        --font-h2: clamp(1.4rem, 5vw, 1.9rem);
-    }
+    :root { --bg: #050505; --bg-card: #111; --cyan: #00bcd4; --danger: #ff3b30; }
+    .dash-page { background: var(--bg); min-height: 100vh; padding: 120px 20px 80px; color: white; font-family: 'Inter', sans-serif; }
+    .container { max-width: 1200px; margin: 0 auto; }
 
-    .dash-page { background: var(--bg); min-height: 100vh; padding: 140px 20px 80px; color: white; font-family: 'Inter', sans-serif; }
-    .container { max-width: 1100px; margin: 0 auto; }
-
-    /* KARTEN DESIGN BASIS */
-    .card {
-        background: var(--bg-card);
-        padding: clamp(25px, 5vw, 40px) clamp(20px, 4vw, 30px);
-        border-radius: 24px;
-        border: 5px solid rgba(255,255,255,0.05);
-        transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-        position: relative;
-        overflow: hidden;
-    }
-
-    /* GRID */
-    .grid { 
-        display: grid; 
-        grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); 
-        gap: 25px; 
-        align-items: stretch; /* Stretcht Karten in einer Reihe auf gleiche Höhe */
-    }
-
-    /* EVENT CARD SPEZIFISCH */
-    .event-card {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-    }
-
-    .card-body-content {
-        flex-grow: 1; /* Nimmt allen verfügbaren Platz ein und drückt Buttons nach unten */
-        display: flex;
-        flex-direction: column;
-    }
-
-    .mgmt-actions {
-        margin-top: 30px;
-        display: flex;
-        gap: 12px;
-        border-top: 1px solid rgba(255,255,255,0.05);
-        padding-top: 25px;
-    }
-
-    /* TYPO & PRICE */
-    .card-meta { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 0.75rem; font-weight: 800; }
-    .cat { color: var(--cyan); text-transform: uppercase; }
-    .date { color: #444; }
-    .event-card h2 { font-size: var(--font-h2); font-weight: 900; margin-bottom: 8px; letter-spacing: -0.5px; line-height: 1.1; }
-    .loc { font-size: 0.95rem; color: #888; margin-bottom: 15px; }
+    /* Header Layout */
+    .dash-layout-header { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 50px; }
     
-    .price-box { display: flex; align-items: baseline; gap: 12px; margin-top: auto; padding-bottom: 5px; }
-    .old-price { font-size: 1.1rem; color: #444; text-decoration: line-through; font-weight: 600; }
-    .amt { font-size: 2.2rem; font-weight: 900; color: var(--cyan); }
+    .card { background: var(--bg-card); padding: 30px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05); }
 
-    /* BUTTONS & REST */
-    .btn-mgmt { flex: 1; padding: 14px; border-radius: 14px; border: none; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 0.85rem; }
+    /* Stats */
+    .stats-main { display: flex; flex-direction: column; justify-content: space-between; }
+    .count-row { display: flex; align-items: baseline; gap: 15px; margin: 10px 0 20px; }
+    .count-row h1 { font-size: 4rem; color: var(--cyan); font-weight: 900; }
+    .stats-nav { display: flex; gap: 10px; }
+
+    /* Inquiries Quick Access */
+    .inquiries-quick-access { display: flex; flex-direction: column; max-height: 320px; }
+    .iq-header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .inquiry-compact-list { overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+    .inquiry-card-compact { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); padding: 15px; border-radius: 16px; transition: 0.2s; }
+    .inquiry-card-compact:hover { border-color: var(--cyan); background: rgba(0, 188, 212, 0.05); }
+    .iq-meta-compact { display: flex; justify-content: space-between; font-size: 0.7rem; margin-bottom: 5px; }
+    .iq-name-compact { font-weight: 800; font-size: 0.85rem; color: #fff; display: block; }
+    .iq-msg-compact { font-size: 0.8rem; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 5px; background: #000; padding: 4px; border-radius: 12px; }
+    .tab-btn { padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; color: #555; border: none; background: transparent; cursor: pointer; }
+    .tab-btn.active { background: var(--cyan); color: #000; }
+
+    /* Listings Grid */
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+    .event-card { display: flex; flex-direction: column; height: 100%; }
+    .card-meta { display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 800; margin-bottom: 15px; }
+    .cat { color: var(--cyan); text-transform: uppercase; }
+    .event-card h2 { font-size: 1.5rem; font-weight: 900; line-height: 1.1; margin-bottom: 10px; }
+    .loc { color: #666; font-size: 0.9rem; }
+    .price-box { margin-top: 20px; display: flex; align-items: baseline; gap: 10px; }
+    .amt { font-size: 2.2rem; font-weight: 900; color: var(--cyan); }
+    .old-price { text-decoration: line-through; color: #444; }
+
+    .mgmt-actions { margin-top: auto; padding-top: 20px; display: flex; gap: 10px; border-top: 1px solid rgba(255,255,255,0.05); }
+    .btn-mgmt { flex: 1; padding: 12px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; font-size: 0.8rem; }
     .btn-mgmt.edit { background: rgba(0, 188, 212, 0.1); color: var(--cyan); }
     .btn-mgmt.delete { background: rgba(255, 255, 255, 0.03); color: #444; }
-    .btn-mgmt.delete:hover { background: rgba(255, 59, 48, 0.1); color: var(--danger); }
 
-    .btn-cyan-glow { background: var(--cyan); color: black; padding: 16px 32px; border-radius: 18px; text-decoration: none; font-weight: 800; border: none; cursor: pointer; }
-    .btn-logout-brand { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); color: #555; padding: 16px 24px; border-radius: 18px; cursor: pointer; font-weight: 700; transition: 0.3s; }
-    .btn-logout-brand:hover { color: var(--danger); border-color: var(--danger); }
+    .btn-cyan-glow { background: var(--cyan); color: #000; padding: 12px 24px; border-radius: 14px; font-weight: 800; text-decoration: none; display: inline-block; text-align: center; border:none; cursor:pointer;}
+    .btn-logout-brand { background: transparent; border: 1px solid #222; color: #444; padding: 12px 20px; border-radius: 14px; cursor: pointer; font-weight: 700; }
 
-    /* MODAL STYLES */
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; z-index: 2000; padding: 20px; }
-    .modal-content { max-width: 420px; width: 100%; border-color: rgba(0, 188, 212, 0.4); }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-    .btn-close { background: none; border: none; color: #444; font-size: 1.5rem; cursor: pointer; }
-    .input-wrapper { position: relative; margin: 15px 0; }
-    #new-price { width: 100%; background: #000; border: 2px solid #222; padding: 18px; border-radius: 16px; color: white; font-size: 1.8rem; font-weight: 900; }
-    .currency-label { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-weight: 900; color: var(--cyan); font-size: 1.2rem; }
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .modal-content { max-width: 400px; width: 100%; }
+    #new-price { width: 100%; background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; color: #fff; font-size: 1.5rem; font-weight: 800; }
 
-    /* HERO & LOADERS */
-    .dash-hero { margin-bottom: 60px; }
-    .stats-main { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 30px; }
-    .stats-main h1 { font-size: var(--font-h1); font-weight: 900; line-height: 1; margin: 5px 0; color: var(--cyan); }
-    .count-row { display: flex; align-items: baseline; gap: 15px; }
-    .count-row p { color: #555; font-weight: 700; text-transform: uppercase; font-size: 0.8rem; }
-    .stats-nav { display: flex; gap: 15px; }
-    .section-label { font-size: 0.8rem; text-transform: uppercase; color: #222; letter-spacing: 3px; margin-bottom: 30px; font-weight: 900; }
-    .loader-wrap { text-align: center; padding: 80px; }
-    .spinner { width: 35px; height: 35px; border: 4px solid rgba(255,255,255,0.05); border-top-color: var(--cyan); border-radius: 50%; animation: spin 1s infinite linear; margin: 0 auto; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    @media (max-width: 650px) {
-        .stats-main { padding: 30px; text-align: center; justify-content: center; }
-        .stats-nav { width: 100%; flex-direction: column; }
-        .grid { grid-template-columns: 1fr; }
-    }
-    .hint {
-    font-size: 0.8rem;         
-    color: #888;               
-    line-height: 1.5;          
-    margin-top: 15px;     
-    font-weight: 400;   
-    letter-spacing: 0.02em;   
-    opacity: 0.8;            
-}
+    @media (max-width: 900px) { .dash-layout-header { grid-template-columns: 1fr; } }
 </style>

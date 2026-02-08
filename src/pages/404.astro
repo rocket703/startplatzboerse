@@ -1,0 +1,60 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="404 - Seite nicht gefunden">
+    <main class="error-page">
+        <div class="content">
+            <h1 class="glow-text">404</h1>
+            <p class="subtitle">Huch! Hier ist kein Zieleinlauf.</p>
+            <p class="desc">Die Seite, die du suchst, wurde entweder verschoben oder existiert nicht mehr.</p>
+            <a href="/" class="btn-cyan-glow">Zurück zum Start</a>
+        </div>
+    </main>
+    <Footer />
+</Layout>
+
+<style>
+    .error-page {
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        background: #050505;
+        padding: 20px;
+    }
+    .glow-text {
+        font-size: clamp(6rem, 20vw, 10rem);
+        font-weight: 900;
+        color: #00bcd4;
+        line-height: 1;
+        margin: 0;
+        text-shadow: 0 0 30px rgba(0, 188, 212, 0.4);
+    }
+    .subtitle {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: white;
+        margin: 20px 0 10px;
+    }
+    .desc {
+        color: #666;
+        margin-bottom: 40px;
+        max-width: 400px;
+    }
+    .btn-cyan-glow {
+        display: inline-block;
+        background: #00bcd4;
+        color: black;
+        padding: 16px 32px;
+        border-radius: 18px;
+        text-decoration: none;
+        font-weight: 800;
+        transition: 0.3s;
+    }
+    .btn-cyan-glow:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 20px rgba(0, 188, 212, 0.4);
+    }
+</style>
