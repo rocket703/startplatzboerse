@@ -173,9 +173,18 @@ const { data: listings, error } = await supabase
     .view-all:hover { border-bottom-color: #00bcd4; }
 
     .event-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-        gap: 30px;
-    }
+    display: grid;
+    /* 1. Nutze auto-fit statt auto-fill, das verhält sich bei wenig Karten besser */
+    grid-template-columns: repeat(auto-fit, minmax(300px, 450px)); 
+    
+    /* 2. Zentriert die Spalten im Container */
+    justify-content: center; 
+    
+    /* 3. Zentriert die Karten innerhalb ihrer Grid-Zelle */
+    justify-items: center; 
+    
+    gap: 30px;
+    width: 100%;
+}
 
 </style>

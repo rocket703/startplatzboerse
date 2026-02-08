@@ -116,7 +116,42 @@ import Footer from '../components/Footer.astro';
     }
     .back-link:hover { transform: translateX(-5px); }
 
-    h1 { color: white; font-size: 2.5rem; margin-bottom: 20px; font-weight: 900; }
+  <style is:global>
+  .privacy-card {
+    background: #121212;
+    border-radius: 24px;
+    padding: clamp(1.5rem, 5vw, 3rem); /* Dynamisches Padding */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    /* Die Schriftgröße passt sich jetzt perfekt der Breite an */
+    font-size: clamp(1.5rem, 8vw, 2.8rem); 
+    font-weight: 850;
+    line-height: 1.1;
+    color: white;
+    margin-bottom: 1.5rem;
+    
+    /* Diese Zeilen verhindern das Überlappen/Rausspringen */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto; 
+    display: block;
+    width: 100%;
+  }
+
+  .back-link {
+    color: var(--cyan);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    margin-bottom: 2rem;
+  }
+
     h2 { color: white; font-size: 1.5rem; margin-top: 40px; margin-bottom: 15px; font-weight: 700; }
     
     .intro { font-size: 1.1rem; margin-bottom: 30px; }
