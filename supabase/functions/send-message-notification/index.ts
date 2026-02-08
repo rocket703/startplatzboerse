@@ -1,32 +1,80 @@
-// Follow this setup guide to integrate the Deno language server with your editor:
-// https://deno.land/manual/getting_started/setup_your_environment
-// This enables autocomplete, go to definition, etc.
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
-// Setup type definitions for built-in Supabase Runtime APIs
-import "@supabase/functions-js/edge-runtime.d.ts"
+const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY')
 
-console.log("Hello from Functions!")
-
-Deno.serve(async (req) => {
-  const { name } = await req.json()
-  const data = {
-    message: `Hello ${name}!`,
+serve(async (req) => {
+  // CORS Handling für Webhooks
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: { 'Access-Control-Allow-Origin': '*' } })
   }
 
-  return new Response(
-    JSON.stringify(data),
-    { headers: { "Content-Type": "application/json" } },
-  )
+  try {
+    const { record } = await req.json() // Die neue Nachricht aus der DB ('messages' Tabelle)
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
+    // 1. Infos zur Konversation holen (Wer ist Käufer/Verkäufer?)
+    const { data: convo, error: convoError } = await supabase
+      .from('conversations')
+      .select('buyer_id, seller_id, listings(event_name)')
+      .eq('id', record.conversation_id)
+      .single()
+
+    if (convoError || !convo) throw new Error('Konversation nicht gefunden')
+
+    // 2. Empfänger bestimmen (derjenige, der die Nachricht NICHT abgeschickt hat)
+    const recipientId = record.sender_id === convo.buyer_id ? convo.seller_id : convo.buyer_id
+
+    // 3. E-Mail-Adresse des Empfängers via Admin-API holen
+    const { data: userData, error: userError } = await supabase.auth.admin.getUserById(recipientId)
+    if (userError || !userData.user?.email) throw new Error('Empfänger-Email nicht gefunden')
+
+    // 4. E-Mail über Resend versenden
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({
+        from: 'Startplatzbörse <onboarding@resend.dev>', // WICHTIG: Ersetze das später durch deine verifizierte Domain
+        to: userData.user.email,
+        subject: `Neue Nachricht zu: ${convo.listings.event_name}`,
+        html: `
+          <div style="font-family: sans-serif; padding: 20px; color: #333; max-width: 600px; border: 1px solid #eee; border-radius: 10px;">
+            <h2 style="color: #00bcd4;">Neue Nachricht erhalten!</h2>
+            <p>Hallo,</p>
+            <p>du hast eine neue Nachricht bezüglich des Events <strong>${convo.listings.event_name}</strong> erhalten:</p>
+            <div style="background: #f9f9f9; padding: 15px; border-left: 4px solid #00bcd4; font-style: italic; margin: 20px 0;">
+              "${record.content}"
+            </div>
+            <p>Klicke auf den Button, um direkt zu antworten:</p>
+            <a href="https://deine-seite.com/dashboard" 
+               style="background: #00bcd4; color: black; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; margin-top: 10px;">
+               Zum Chat wechseln
+            </a>
+            <p style="font-size: 0.8rem; color: #999; margin-top: 30px;">
+              Dies ist eine automatische Benachrichtigung von startplatzboerse.com
+            </p>
+          </div>
+        `,
+      }),
+    })
+
+    const resData = await res.json()
+    return new Response(JSON.stringify(resData), {
+      headers: { 'Content-Type': 'application/json' },
+      status: 200,
+    })
+
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message }), {
+      headers: { 'Content-Type': 'application/json' },
+      status: 400,
+    })
+  }
 })
-
-/* To invoke locally:
-
-  1. Run `supabase start` (see: https://supabase.com/docs/reference/cli/supabase-start)
-  2. Make an HTTP request:
-
-  curl -i --location --request POST 'http://127.0.0.1:54321/functions/v1/send-message-notification' \
-    --header 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0' \
-    --header 'Content-Type: application/json' \
-    --data '{"name":"Functions"}'
-
-*/
