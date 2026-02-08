@@ -46,48 +46,55 @@
 <script>
     import { createClient } from '@supabase/supabase-js';
 
-    // 1. Supabase nur EINMAL initialisieren
     const supabase = createClient(
         import.meta.env.PUBLIC_SUPABASE_URL,
         import.meta.env.PUBLIC_SUPABASE_ANON_KEY
     );
 
-    // 2. AUTH-LOGIK (Die robuste Version)
-    async function updateAuthUI() {
-        try {
-            // getSession ist schneller, da es lokal im Browser prüft
-            const { data: { session } } = await supabase.auth.getSession();
-            const user = session?.user;
+    // Funktion zum Umschalten der Buttons
+    function toggleAuthButtons(isLoggedIn) {
+        console.log("Header Status Update:", isLoggedIn ? "User ist eingeloggt" : "User ist Gast");
+        
+        const loginDesk = document.getElementById('login-desktop');
+        const dashDesk = document.getElementById('dash-desktop');
+        const loginMob = document.getElementById('login-mobile');
+        const dashMob = document.getElementById('dash-mobile');
 
-            console.log("Header Check:", user ? "Eingeloggt" : "Nicht eingeloggt");
-
-            // Alle Button-Elemente sammeln
-            const elements = {
-                loginDesk: document.getElementById('login-desktop'),
-                dashDesk: document.getElementById('dash-desktop'),
-                loginMob: document.getElementById('login-mobile'),
-                dashMob: document.getElementById('dash-mobile')
-            };
-
-            if (user) {
-                // EINGELOGGT: Login verstecken, Dashboard zeigen
-                if(elements.loginDesk) elements.loginDesk.style.setProperty('display', 'none', 'important');
-                if(elements.dashDesk)  elements.dashDesk.style.setProperty('display', 'flex', 'important');
-                if(elements.loginMob)  elements.loginMob.style.setProperty('display', 'none', 'important');
-                if(elements.dashMob)   elements.dashMob.style.setProperty('display', 'block', 'important');
-            } else {
-                // AUSGELOGGT: Login zeigen, Dashboard verstecken
-                if(elements.loginDesk) elements.loginDesk.style.setProperty('display', 'flex', 'important');
-                if(elements.dashDesk)  elements.dashDesk.style.setProperty('display', 'none', 'important');
-                if(elements.loginMob)  elements.loginMob.style.setProperty('display', 'block', 'important');
-                if(elements.dashMob)   elements.dashMob.style.setProperty('display', 'none', 'important');
-            }
-        } catch (err) {
-            console.error("Fehler im Header-Auth:", err);
+        if (isLoggedIn) {
+            // Zeige Dashboard, verstecke Login
+            if (loginDesk) loginDesk.style.setProperty('display', 'none', 'important');
+            if (dashDesk) dashDesk.style.setProperty('display', 'flex', 'important');
+            
+            if (loginMob) loginMob.style.setProperty('display', 'none', 'important');
+            if (dashMob) dashMob.style.setProperty('display', 'block', 'important');
+        } else {
+            // Zeige Login, verstecke Dashboard
+            if (loginDesk) loginDesk.style.setProperty('display', 'flex', 'important');
+            if (dashDesk) dashDesk.style.setProperty('display', 'none', 'important');
+            
+            if (loginMob) loginMob.style.setProperty('display', 'block', 'important');
+            if (dashMob) dashMob.style.setProperty('display', 'none', 'important');
         }
     }
 
-    // 3. BURGER LOGIK (Chirurgisch integriert)
+    async function checkAuth() {
+        // 1. Schneller Check im LocalStorage
+        const { data: { session } } = await supabase.auth.getSession();
+        toggleAuthButtons(!!session);
+
+        // 2. Listener für Änderungen (Login/Logout)
+        supabase.auth.onAuthStateChange((event, session) => {
+            console.log("Auth Event:", event);
+            toggleAuthButtons(!!session);
+            
+            // Wenn Logout, leite zur Startseite, falls wir im Dashboard sind
+            if (event === 'SIGNED_OUT' && window.location.pathname.includes('/dashboard')) {
+                window.location.href = '/';
+            }
+        });
+    }
+
+    // Burger Menu Logik
     const burgerWrapper = document.getElementById('burger');
     const menuIcon = document.querySelector('.menu__icon');
     const menu = document.getElementById('menu');
@@ -99,21 +106,12 @@
             menu.classList.toggle('open');
             document.body.classList.toggle('no-scroll');
         };
-
         burgerWrapper.addEventListener('click', toggleMenu);
-        links.forEach(link => {
-            link.addEventListener('click', toggleMenu);
-        });
+        links.forEach(link => link.addEventListener('click', toggleMenu));
     }
 
-    // 4. INITIALISIERUNG & WATCHER
-    updateAuthUI();
-
-    // Reagiert sofort, wenn sich der Status ändert (Login/Logout)
-    supabase.auth.onAuthStateChange((event) => {
-        console.log("Auth Event:", event);
-        updateAuthUI();
-    });
+    // Starten
+    checkAuth();
 </script>
 
 <style>
@@ -165,7 +163,13 @@
     .mobile-menu-overlay.open { right: 0; }
     .mobile-links { display: flex; flex-direction: column; gap: 30px; text-align: center; }
     .mobile-links a { font-size: 2rem; font-weight: 700; color: var(--text-muted); text-decoration: none; transition: 0.3s; }
-    .mobile-links a:hover, .mobile-links a.btn-highlight { color: var(--cyan); }
+    
+    /* Hover und Active State Mobile */
+    .mobile-links a:hover, 
+    .mobile-links a.nav-active, /* NEU */
+    .mobile-links a.btn-highlight { 
+        color: var(--cyan); 
+    }
 
     .desktop-dock { display: none; }
 
@@ -192,7 +196,20 @@
         .dock-logo { margin-right: auto; padding-right: 20px; }
         .dock-links { display: flex; gap: 40px; }
         .dock-links a { color: var(--text-muted); font-size: 0.95rem; font-weight: 500; text-decoration: none; padding: 8px 16px; border-radius: 20px; transition: 0.3s; }
-        .dock-links a:hover { color: white; background: rgba(255,255,255,0.05); }
+        
+        /* NEU: Active State & Hover Desktop */
+        .dock-links a:hover,
+        .dock-links a.nav-active { 
+            color: white; 
+            background: rgba(255,255,255,0.05); 
+        }
+        
+        /* Wenn du den aktiven Link noch stärker hervorheben willst (Cyan Text): */
+        .dock-links a.nav-active {
+            color: var(--cyan);
+            background: rgba(0, 188, 212, 0.1); /* Ganz leichtes Cyan im Hintergrund */
+            font-weight: 700;
+        }
 
         .dock-btn {
             background: var(--cyan); color: white; padding: 12px 28px; border-radius: 50px;
@@ -202,7 +219,6 @@
         }
         .dock-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0, 188, 212, 0.4); }
 
-        /* Style für den Dashboard-Button (etwas dezenter) */
         .dash-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); }
         .dash-btn:hover { background: rgba(255, 255, 255, 0.15); border-color: var(--cyan); }
     }

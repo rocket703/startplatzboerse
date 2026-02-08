@@ -37,11 +37,12 @@ import Popup from '../components/Popup.astro';
 
             <nav class="dash-nav-pills">
                 <button class="nav-pill active" data-target="section-listings">Anzeigen</button>
-                <button class="nav-pill" data-target="section-messages">Postfach</button>
+                <button class="nav-pill" data-target="section-messages">Chats</button>
                 <button class="nav-pill" data-target="section-watchlist">Merkliste</button>
             </nav>
 
             <div class="dash-content">
+                
                 <section id="section-listings" class="dash-section active">
                     <div id="listings-grid" class="smart-grid"></div>
                     <div id="no-listings" class="empty-state" style="display:none;">
@@ -52,21 +53,21 @@ import Popup from '../components/Popup.astro';
                 <section id="section-messages" class="dash-section">
                     <div id="inquiries-feed" class="message-stack"></div>
                     <div id="no-inquiries" class="empty-state" style="display:none;">
-                        <p>Dein Postfach ist leer.</p>
+                        <p>Keine aktiven Chats vorhanden.</p>
                     </div>
                 </section>
 
                 <section id="section-watchlist" class="dash-section">
                     <div id="watchlist-grid" class="smart-grid">
                         <div class="card glass-card">
-                            <p style="color:#444">Demnächst verfügbar: Merke dir Inserate für später.</p>
+                            <p style="color:#666">Demnächst verfügbar: Merke dir Inserate für später.</p>
                         </div>
                     </div>
                 </section>
             </div>
         </div>
 
-        <Popup id="status-popup" title="Details">
+        <Popup id="status-popup" title="Info">
             <div id="popup-dynamic-content"></div>
             <div id="popup-actions" class="modal-footer-btns">
                 <button class="btn-close-modal" onclick="document.getElementById('status-popup').style.display='none'">Schließen</button>
@@ -104,68 +105,122 @@ import Popup from '../components/Popup.astro';
     let deleteId = null;
 
     async function init() {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return window.location.href = "/login";
+        console.log("Dashboard Init gestartet...");
 
-        // Daten ziehen
-        const [listings, received, sent] = await Promise.all([
-            supabase.from('listings').select('*').eq('user_id', user.id).order('created_at', {ascending: false}),
-            supabase.from('inquiries').select('*, listings(event_name)').eq('seller_id', user.id),
-            supabase.from('inquiries').select('*, listings(event_name)').eq('buyer_id', user.id)
-        ]);
+        // 1. AUTH CHECK
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-        // UI füllen
-        document.getElementById('stats-count').innerText = listings.data?.length || 0;
-        
-        renderListings(listings.data);
-        renderMessages(received.data, sent.data);
-        setupTabs();
-    }
-
-    function renderListings(data) {
-        const grid = document.getElementById('listings-grid');
-        if (!data || data.length === 0) {
-            document.getElementById('no-listings').style.display = 'block';
+        if (authError || !user) {
+            window.location.href = "/login";
             return;
         }
+
+        // 2. DATEN LADEN (Wir machen beides gleichzeitig für mehr Speed)
+        // Wir nutzen die Funktionen von unten
+        await Promise.all([
+            fetchListings(user.id),
+            fetchChats(user.id)
+        ]);
+
+        // 3. TABS INITIALISIEREN
+        setupTabs();
+
+        // 4. AUTO-WECHSEL ZU CHATS (Falls man gerade eine Nachricht gesendet hat)
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('chat_id')) {
+            const chatPill = document.querySelector('[data-target="section-messages"]');
+            if (chatPill) {
+                console.log("Auto-Wechsel zum Chat-Tab");
+                (chatPill as HTMLElement).click();
+            }
+        }
+
+        // Logout Event
+        document.getElementById('logout-trigger')?.addEventListener('click', async () => {
+            await supabase.auth.signOut();
+            window.location.href = "/";
+        });
+    }
+
+    // --- HILFSFUNKTIONEN ---
+
+    async function fetchListings(userId) {
+        const grid = document.getElementById('listings-grid');
+        const empty = document.getElementById('no-listings');
+
+        const { data, error } = await supabase
+            .from('listings')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', {ascending: false});
+
+        if (error) {
+            console.error("Fehler Inserate:", error);
+            return;
+        }
+
+        document.getElementById('stats-count').innerText = data.length || 0;
+
+        if (!data || data.length === 0) {
+            if(empty) empty.style.display = 'block';
+            return;
+        }
+        
         grid.innerHTML = data.map(item => `
             <div class="glass-card event-card-new">
                 <div class="card-content">
-                    <span class="eyebrow">${item.category}</span>
+                    <span class="eyebrow">${item.category || 'Event'}</span>
                     <h3>${item.event_name}</h3>
-                    <p style="color:#666; font-size:0.8rem;">${item.location} • ${new Date(item.event_date).toLocaleDateString()}</p>
+                    <p style="color:#666; font-size:0.8rem;">${new Date(item.event_date).toLocaleDateString()}</p>
                     <div class="price-tag-new">${item.price}€</div>
                 </div>
                 <div class="card-footer-btns">
-                    <button class="btn-small edit" onclick="window.openEditModal('${item.id}', '${item.price}')">Preis ändern</button>
+                    <button class="btn-small edit" onclick="window.openEditModal('${item.id}', '${item.price}')">Preis</button>
                     <button class="btn-small" onclick="window.askDelete('${item.id}')">Löschen</button>
                 </div>
             </div>
         `).join('');
     }
 
-    function renderMessages(received, sent) {
+    async function fetchChats(userId) {
         const feed = document.getElementById('inquiries-feed');
-        const all = [
-            ...(received || []).map(m => ({ ...m, type: 'received' })),
-            ...(sent || []).map(m => ({ ...m, type: 'sent' }))
-        ].sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+        const empty = document.getElementById('no-inquiries');
 
-        if (all.length === 0) {
-            document.getElementById('no-inquiries').style.display = 'block';
+        const { data: chats, error } = await supabase
+            .from('conversations')
+            .select(`
+                id, 
+                updated_at, 
+                listing_id, 
+                buyer_id, 
+                seller_id,
+                listings (event_name)
+            `)
+            .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
+            .order('updated_at', { ascending: false });
+
+        if (error || !chats || chats.length === 0) {
+            if(empty) empty.style.display = 'block';
             return;
         }
 
-        feed.innerHTML = all.map(m => `
-            <div class="msg-card ${m.type}" onclick="window.viewMessage('${m.buyer_name}', '${m.buyer_email}', \`${m.message.replace(/'/g, "&apos;")}\`, '${m.listings?.event_name}', '${m.type}')">
-                <div class="msg-header">
-                    <span>${m.type === 'received' ? 'ANFRAGE ERHALTEN' : 'ANFRAGE GESENDET'}</span>
-                    <span>${new Date(m.created_at).toLocaleDateString()}</span>
+        feed.innerHTML = chats.map(chat => {
+            const isBuyer = chat.buyer_id === userId;
+            const badgeClass = isBuyer ? 'received' : 'sent';
+            const roleLabel = isBuyer ? 'DU KAUFST' : 'DU VERKAUFST';
+            const eventName = chat.listings?.event_name || 'Unbekanntes Event';
+            
+            return `
+                <div class="msg-card ${badgeClass}" onclick="window.location.href='/chat?id=${chat.id}'">
+                    <div class="msg-header">
+                        <span class="badge ${badgeClass}">${roleLabel}</span>
+                        <span class="date">${new Date(chat.updated_at).toLocaleDateString()}</span>
+                    </div>
+                    <span class="msg-title">${eventName}</span>
+                    <p class="msg-preview">Zum Chat →</p>
                 </div>
-                <span class="msg-title">${m.type === 'received' ? m.buyer_name : m.listings?.event_name}</span>
-                <p class="msg-preview">${m.message}</p>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     function setupTabs() {
@@ -175,40 +230,20 @@ import Popup from '../components/Popup.astro';
                 document.querySelectorAll('.nav-pill').forEach(b => b.classList.remove('active'));
                 document.querySelectorAll('.dash-section').forEach(s => s.classList.remove('active'));
                 btn.classList.add('active');
-                document.getElementById(target).classList.add('active');
+                const targetEl = document.getElementById(target);
+                if (targetEl) targetEl.classList.add('active');
             });
         });
     }
 
-    // Window Functions für Popups
-    window.viewMessage = (name, email, msg, event, type) => {
-        const content = document.getElementById('popup-dynamic-content');
-        const actionBtn = document.getElementById('confirm-action-btn');
-        content.innerHTML = `
-            <div style="text-align:left;">
-                <span class="eyebrow">${event}</span>
-                <h2 style="margin: 10px 0;">${name}</h2>
-                <div style="background:#000; padding:20px; border-radius:15px; font-style:italic; color:#888;">"${msg}"</div>
-            </div>
-        `;
-        if (type === 'received') {
-            actionBtn.style.display = 'block';
-            actionBtn.innerText = "Antworten";
-            actionBtn.onclick = () => window.location.href = `mailto:${email}?subject=Re: ${event}`;
-        } else {
-            actionBtn.style.display = 'none';
-        }
-        document.getElementById('status-popup').style.display = 'flex';
-    };
-
+    // --- WINDOW GLOBALS FÜR BUTTONS ---
     window.askDelete = (id) => {
         deleteId = id;
-        document.getElementById('popup-dynamic-content').innerHTML = `<p>Soll das Inserat wirklich gelöscht werden?</p>`;
+        document.getElementById('popup-dynamic-content').innerHTML = "Soll das Inserat gelöscht werden?";
         const btn = document.getElementById('confirm-action-btn');
         btn.style.display = 'block';
         btn.innerText = "Löschen";
-        btn.style.background = "#ff3b30";
-        btn.style.color = "#fff";
+        btn.style.background = "red";
         btn.onclick = async () => {
             await supabase.from('listings').delete().eq('id', deleteId);
             location.reload();
@@ -222,21 +257,16 @@ import Popup from '../components/Popup.astro';
         document.getElementById('edit-modal').style.display = 'flex';
     }
 
-    document.getElementById('save-price').onclick = async () => {
-        const id = document.getElementById('edit-listing-id').value;
-        const price = document.getElementById('new-price').value;
+    document.getElementById('save-price')?.addEventListener('click', async () => {
+        const id = (document.getElementById('edit-listing-id') as HTMLInputElement).value;
+        const price = (document.getElementById('new-price') as HTMLInputElement).value;
         await supabase.from('listings').update({ price }).eq('id', id);
         location.reload();
-    }
+    });
 
-    document.getElementById('logout-trigger').onclick = async () => {
-        await supabase.auth.signOut();
-        location.href = "/";
-    }
-
+    // START!
     init();
 </script>
-
 <style is:global>
     :root {
         --cyan: #00bcd4;
@@ -316,7 +346,7 @@ import Popup from '../components/Popup.astro';
     }
 
     .event-card-new { display: flex; flex-direction: column; gap: 15px; }
-    .event-card-new h3 { font-size: 1.3rem; font-weight: 800; line-height: 1.2; }
+    .event-card-new h3 { font-size: 1.3rem; font-weight: 800; line-height: 1.2; margin: 0; }
     .price-tag-new { font-size: 1.8rem; font-weight: 900; color: var(--cyan); }
     
     .card-footer-btns { display: flex; gap: 10px; margin-top: 10px; }
@@ -331,14 +361,24 @@ import Popup from '../components/Popup.astro';
     .msg-card { 
         padding: 15px 20px; border-radius: 20px; border: 1px solid var(--border); 
         background: var(--card-bg); cursor: pointer; transition: 0.2s;
+        display: flex; flex-direction: column; gap: 5px;
     }
-    .msg-card.received { border-left: 4px solid var(--cyan); }
-    .msg-card.sent { opacity: 0.7; }
+    
+    /* Farben für die Chat-Karten */
+    .msg-card.received { border-left: 4px solid var(--cyan); } /* Ich bin Käufer */
+    .msg-card.sent { opacity: 0.8; border-left: 4px solid #444; } /* Ich bin Verkäufer */
+    
     .msg-card:hover { background: #161616; border-color: #333; }
 
-    .msg-header { display: flex; justify-content: space-between; font-size: 0.7rem; margin-bottom: 5px; }
-    .msg-title { font-weight: 800; display: block; }
-    .msg-preview { font-size: 0.8rem; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .msg-header { display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; margin-bottom: 5px; }
+    
+    /* Badges */
+    .badge { padding: 4px 8px; border-radius: 6px; font-weight: 900; letter-spacing: 1px; }
+    .badge.received { background: rgba(0, 188, 212, 0.1); color: var(--cyan); }
+    .badge.sent { background: #222; color: #888; }
+    
+    .msg-title { font-weight: 800; display: block; font-size: 1rem; }
+    .msg-preview { font-size: 0.8rem; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     /* --- MODALS --- */
     .modal-overlay { 
@@ -348,4 +388,9 @@ import Popup from '../components/Popup.astro';
     .modal-footer-btns { display: flex; gap: 10px; margin-top: 20px; }
     .btn-close-modal { flex: 1; padding: 14px; border-radius: 14px; background: #1a1a1a; border: none; color: #666; font-weight: 700; cursor: pointer; }
     .btn-action-main { flex: 1.5; padding: 14px; border-radius: 14px; background: var(--cyan); border: none; color: #000; font-weight: 900; cursor: pointer; }
+    
+    /* Edit Modal Special */
+    .input-glow-wrap { display: flex; align-items: center; justify-content: center; position: relative; margin: 20px 0; }
+    #new-price { background: transparent; border: none; color: white; font-size: 3rem; font-weight: 900; width: 100%; text-align: center; outline: none; }
+    .input-glow-wrap span { font-size: 2rem; color: var(--cyan); font-weight: 900; position: absolute; right: 20px; }
 </style>

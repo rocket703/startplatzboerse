@@ -1,15 +1,12 @@
 ---
-// 1. SSR erzwingen (WICHTIG für Vercel)
-export const prerender = false;
-
+// 1. IMPORTS (Footer muss hier sein!)
 import Layout from '../../layouts/Layout.astro';
-import Footer from '../../components/Footer.astro';
-import Popup from '../../components/Popup.astro';
+import Footer from '../../components/Footer.astro'; 
 import { createClient } from '@supabase/supabase-js';
 
+// Server-Side: ID holen und Daten laden
 const { id } = Astro.params;
 
-// Supabase initialisieren
 const supabase = createClient(
   import.meta.env.PUBLIC_SUPABASE_URL,
   import.meta.env.PUBLIC_SUPABASE_ANON_KEY
@@ -20,25 +17,23 @@ const { data: item, error } = await supabase
   .from('listings')
   .select('*')
   .eq('id', id)
-  .maybeSingle(); // Sicherer als .single()
+  .maybeSingle();
 
-// Falls ein Fehler passiert, loggen wir ihn für Vercel
 if (error) {
-  console.error("Supabase Error auf Detailseite:", error.message);
+  console.error("Supabase Error:", error.message);
 }
 ---
 
-<Layout title={item ? `${item.event_name}` : "Inserat Details"}>
+<Layout title={item ? item.event_name : "Details"}>
     <main class="listing-page">
         <div class="container">
             <a href="/" class="back-link">← Zurück zur Suche</a>
 
-            {(!item) ? (
+            {!item ? (
                 <div class="error-box card">
                     <h2>Inserat nicht gefunden</h2>
-                    <p>Die ID <strong>{id}</strong> konnte in der Datenbank nicht gefunden werden.</p>
-                    {error && <p style="color: red;">Fehler: {error.message}</p>}
-                    <a href="/" class="btn-cyan-glow" style="display:inline-block; margin-top:20px;">Zurück zur Startseite</a>
+                    <p>Das Inserat existiert nicht oder wurde gelöscht.</p>
+                    <a href="/" class="btn-cyan-glow" style="display:inline-block; margin-top:20px;">Startseite</a>
                 </div>
             ) : (
                 <div class="listing-layout">
@@ -71,65 +66,144 @@ if (error) {
 
                     <aside class="sidebar">
                         <div class="card contact-card">
-                            <h3>Startplatz anfragen</h3>
-                            <p>Schreibe dem Verkäufer eine Nachricht:</p>
+                            <h3>Verkäufer kontaktieren</h3>
+                            <p>Starte einen Chat, um den Startplatz zu kaufen.</p>
                             
                             <form id="contact-form">
                                 <input type="hidden" name="listing_id" value={item.id}>
                                 <input type="hidden" name="seller_id" value={item.user_id}>
                                 
-                                <div id="guest-fields">
-                                    <input type="text" name="name" placeholder="Dein Name" class="input-field" required>
-                                    <input type="email" name="email" placeholder="Deine E-Mail" class="input-field" required>
-                                </div>
-
-                                <textarea name="message" placeholder="Hallo, ich habe Interesse..." class="input-field textarea" required></textarea>
+                                <textarea name="message" placeholder="Hallo, ist der Startplatz noch da?" class="input-field textarea" required></textarea>
                                 
-                                <button type="submit" class="btn-cyan-glow" id="send-btn">Anfrage jetzt senden</button>
+                                <button type="submit" class="btn-cyan-glow" id="send-btn">Nachricht senden</button>
                             </form>
+                            <p class="login-hint">Du musst eingeloggt sein.</p>
                         </div>
                     </aside>
                 </div>
             )}
         </div>
     </main>
-    <Footer />
+    
+    <Footer /> 
 </Layout>
 
 <script>
-    // Kontakt-Logik hier (identisch zu vorher, nur mit Fehler-Popups)
     import { createClient } from '@supabase/supabase-js';
-    const supabase = createClient(import.meta.env.PUBLIC_SUPABASE_URL, import.meta.env.PUBLIC_SUPABASE_ANON_KEY);
 
-    const form = document.getElementById('contact-form') as HTMLFormElement;
-    form?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const btn = document.getElementById('send-btn') as HTMLButtonElement;
-        btn.innerText = "Wird gesendet...";
-        btn.disabled = true;
+    const supabase = createClient(
+        import.meta.env.PUBLIC_SUPABASE_URL, 
+        import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+    );
 
-        const formData = new FormData(form);
-        const { data: { user } } = await supabase.auth.getUser();
-
-        const { error } = await supabase.from('inquiries').insert([{
-            listing_id: formData.get('listing_id'),
-            seller_id: formData.get('seller_id'),
-            buyer_id: user?.id || null,
-            buyer_name: formData.get('name'),
-            buyer_email: formData.get('email'),
-            message: formData.get('message')
-        }]);
-
-        if (error) {
-            alert("Fehler: " + error.message);
-            btn.disabled = false;
-            btn.innerText = "Anfrage jetzt senden";
-        } else {
-            alert("Anfrage erfolgreich gesendet!");
-            form.reset();
-            btn.innerText = "Gesendet!";
+    const form = document.getElementById('contact-form');
+    
+    // --- DRAFT WIEDERHERSTELLEN ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedDraft = localStorage.getItem('draft_msg');
+        const textArea = document.querySelector('textarea[name="message"]');
+        
+        // Prüfen ob Element existiert und Feld leer ist
+        if (savedDraft && textArea && textArea.value === "") {
+            console.log("Entwurf wiederhergestellt");
+            textArea.value = savedDraft;
         }
     });
+
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const btn = document.getElementById('send-btn');
+            const originalText = btn ? btn.innerText : "Senden";
+            
+            if (btn) {
+                btn.innerText = "Prüfe...";
+                btn.disabled = true;
+            }
+
+            const formData = new FormData(form);
+            const messageText = formData.get('message');
+            const listingId = formData.get('listing_id');
+            const sellerId = formData.get('seller_id');
+
+            try {
+                // 1. Auth Check
+                const { data: { user } } = await supabase.auth.getUser();
+
+                // FALL: NICHT EINGELOGGT -> Redirect zum Login
+                if (!user) {
+                    localStorage.setItem('draft_msg', messageText);
+                    
+                    // --- KORREKTUR: Wir leiten zurück auf /listing/... nicht /inserat/ ---
+                    window.location.href = `/login?redirect=/listing/${listingId}`;
+                    return; 
+                }
+
+                // FALL: SELBSTGESPRÄCH
+                if (user.id === sellerId) {
+                    alert("Du kannst dir nicht selbst schreiben.");
+                    if (btn) {
+                         btn.innerText = originalText;
+                         btn.disabled = false;
+                    }
+                    return;
+                }
+
+                // 2. Chat suchen/erstellen
+                const { data: existingConvo, error: fetchError } = await supabase
+                    .from('conversations')
+                    .select('id')
+                    .eq('listing_id', listingId)
+                    .eq('buyer_id', user.id)
+                    .eq('seller_id', sellerId)
+                    .maybeSingle();
+
+                if (fetchError) throw fetchError;
+
+                let conversationId;
+
+                if (existingConvo) {
+                    conversationId = existingConvo.id;
+                } else {
+                    const { data: newConvo, error: createError } = await supabase
+                        .from('conversations')
+                        .insert({ listing_id: listingId, buyer_id: user.id, seller_id: sellerId })
+                        .select()
+                        .single();
+
+                    if (createError) throw createError;
+                    conversationId = newConvo.id;
+                }
+
+                // 3. Nachricht speichern
+                const { error: msgError } = await supabase
+                    .from('messages')
+                    .insert({
+                        conversation_id: conversationId,
+                        sender_id: user.id,
+                        content: messageText,
+                        is_read: false
+                    });
+
+                if (msgError) throw msgError;
+
+                localStorage.removeItem('draft_msg');
+
+                // 4. Weiterleitung
+                if (btn) btn.innerText = "Weiterleitung...";
+                window.location.href = `/dashboard?chat_id=${conversationId}`;
+
+            } catch (err) {
+                console.error(err);
+                alert("Fehler aufgetreten.");
+                if (btn) {
+                    btn.innerText = "Erneut versuchen";
+                    btn.disabled = false;
+                }
+            }
+        }); 
+    } // HIER WAR DER FEHLER: Keine ); mehr, sondern nur }
 </script>
 
 <style>
@@ -138,7 +212,7 @@ if (error) {
     
     .listing-layout { display: grid; grid-template-columns: 1fr 380px; gap: 40px; margin-top: 30px; }
     
-    .glow-title { font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 900; margin: 15px 0; letter-spacing: -2px; line-height: 1; }
+    .glow-title { font-size: clamp(2rem, 5vw, 4rem); font-weight: 900; margin: 15px 0; line-height: 1; }
     .badge { color: #00bcd4; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; font-size: 0.8rem; }
     
     .info-grid { display: flex; gap: 40px; margin: 40px 0; padding: 30px 0; border-top: 1px solid #1a1a1a; border-bottom: 1px solid #1a1a1a; }
@@ -147,24 +221,26 @@ if (error) {
     .val { font-size: 1.2rem; font-weight: 700; }
 
     .price-display { display: flex; align-items: baseline; gap: 20px; }
-    .main-price { font-size: 4rem; font-weight: 900; color: #00bcd4; }
-    .old-price { font-size: 1.8rem; color: #333; text-decoration: line-through; }
+    .main-price { font-size: 3.5rem; font-weight: 900; color: #00bcd4; }
+    .old-price { font-size: 1.5rem; color: #333; text-decoration: line-through; }
 
     .card { background: #111; border: 1px solid #222; border-radius: 24px; padding: 30px; }
-    .contact-card h3 { margin-bottom: 10px; font-weight: 800; }
-    .contact-card p { color: #666; font-size: 0.9rem; margin-bottom: 25px; }
+    .contact-card h3 { margin-bottom: 10px; font-weight: 800; font-size: 1.2rem; }
+    .contact-card p { color: #888; font-size: 0.9rem; margin-bottom: 25px; }
+    .login-hint { font-size: 0.75rem; text-align: center; margin-top: 15px; color: #444; }
 
     .input-field { width: 100%; background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; color: white; margin-bottom: 12px; font-family: inherit; }
     .textarea { height: 120px; resize: none; }
     
     .btn-cyan-glow { width: 100%; background: #00bcd4; color: black; border: none; padding: 18px; border-radius: 16px; font-weight: 900; cursor: pointer; transition: 0.3s; }
-    .btn-cyan-glow:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0, 188, 212, 0.3); }
+    .btn-cyan-glow:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0, 188, 212, 0.2); }
 
-    .back-link { color: #444; text-decoration: none; font-weight: 700; font-size: 0.9rem; }
-    .back-link:hover { color: #00bcd4; }
+    .back-link { color: #666; text-decoration: none; font-weight: 700; font-size: 0.9rem; }
+    .back-link:hover { color: white; }
+    .error-box { text-align: center; padding: 50px; }
 
     @media (max-width: 900px) {
         .listing-layout { grid-template-columns: 1fr; }
-        .sidebar { order: -1; } /* Formular oben auf Mobile */
+        .sidebar { order: -1; }
     }
 </style>

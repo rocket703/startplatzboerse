@@ -1,0 +1,219 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Layout title="Chat | startplatzboerse.com">
+    <main class="chat-page">
+        <div class="container">
+            
+            <div id="loader" style="text-align:center; padding-top:100px;">
+                <div class="spinner"></div>
+                <p style="margin-top:20px; color:#666;">Verbindung zum Chat wird aufgebaut...</p>
+            </div>
+
+            <div id="chat-interface" style="display:none;">
+                
+                <div class="chat-header glass-card">
+                    <a href="/dashboard" class="back-btn">←</a>
+                    <div class="header-info">
+                        <span id="chat-event-name" class="eyebrow">Event</span>
+                        <h2 id="chat-partner-name">Partner</h2>
+                    </div>
+                </div>
+
+                <div class="chat-window" id="chat-window">
+                    </div>
+
+                <div class="chat-input-area glass-card">
+                    <form id="chat-form">
+                        <input type="text" id="msg-input" placeholder="Nachricht tippen..." autocomplete="off">
+                        <button type="submit" id="send-btn">➤</button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </main>
+    <Footer />
+</Layout>
+
+<script>
+    import { createClient } from '@supabase/supabase-js';
+
+    const supabase = createClient(
+        import.meta.env.PUBLIC_SUPABASE_URL,
+        import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+    );
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const conversationId = urlParams.get('id');
+    let currentUser = null;
+
+    async function initChat() {
+        console.log("🚀 Chat-Initialisierung gestartet...");
+
+        try {
+            // 1. Auth Check
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+                console.error("❌ Nicht eingeloggt!");
+                window.location.href = '/login';
+                return;
+            }
+            currentUser = user;
+
+            if (!conversationId) {
+                console.error("❌ Keine conversationId!");
+                return;
+            }
+
+            // 2. Chat-Infos & Nachrichten parallel laden
+            console.log("📡 Lade Chat-Daten für ID:", conversationId);
+            const [infoRes, msgsRes] = await Promise.all([
+                supabase.from('conversations').select('*, listings(event_name)').eq('id', conversationId).single(),
+                supabase.from('messages').select('*').eq('conversation_id', conversationId).order('created_at', { ascending: true })
+            ]);
+
+            if (infoRes.error) throw infoRes.error;
+
+            // 3. UI vorbereiten
+            renderHeader(infoRes.data, user.id);
+            
+            if (msgsRes.data) {
+                const container = document.getElementById('chat-window');
+                if (container) {
+                    container.innerHTML = '';
+                    msgsRes.data.forEach(msg => appendMessage(msg));
+                }
+            }
+
+            // 4. UI anzeigen
+            document.getElementById('loader').style.display = 'none';
+            document.getElementById('chat-interface').style.display = 'block';
+            scrollToBottom();
+
+            // 5. Realtime Subscription
+            console.log("🔮 Aktiviere Realtime...");
+            supabase
+                .channel(`realtime:public:messages:conversation_id=eq.${conversationId}`)
+                .on('postgres_changes', 
+                    { event: 'INSERT', schema: 'public', table: 'messages', filter: `conversation_id=eq.${conversationId}` }, 
+                    (payload) => {
+                        console.log("⚡ Neue Nachricht via Realtime:", payload.new);
+                        appendMessage(payload.new);
+                    }
+                )
+                .subscribe();
+
+        } catch (err) {
+            console.error("🔥 Schwerer Fehler im Chat-Init:", err);
+            const loader = document.getElementById('loader');
+            if(loader) loader.innerHTML = `<p style="color:red">Fehler beim Laden: ${err.message}</p>`;
+        }
+    }
+
+    function renderHeader(info, myId) {
+        const isBuyer = info.buyer_id === myId;
+        const roleText = isBuyer ? "Verkäufer" : "Käufer";
+        
+        const eventEl = document.getElementById('chat-event-name');
+        const partnerEl = document.getElementById('chat-partner-name');
+        
+        if (eventEl) eventEl.innerText = info.listings?.event_name || "Unbekanntes Event";
+        if (partnerEl) partnerEl.innerText = roleText;
+    }
+
+    function appendMessage(msg) {
+        const container = document.getElementById('chat-window');
+        if (!container) return;
+
+        // Verhindern, dass Nachrichten doppelt erscheinen
+        if (document.getElementById(`msg-${msg.id}`)) return;
+
+        const isMe = msg.sender_id === currentUser.id;
+        const time = new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        
+        const msgDiv = document.createElement('div');
+        msgDiv.id = `msg-${msg.id}`;
+        msgDiv.className = `message-bubble ${isMe ? 'me' : 'other'}`;
+        msgDiv.innerHTML = `
+            <div class="bubble-content">${escapeHtml(msg.content)}</div>
+            <span class="msg-time">${time}</span>
+        `;
+        
+        container.appendChild(msgDiv);
+        scrollToBottom();
+    }
+
+    function scrollToBottom() {
+        const win = document.getElementById('chat-window');
+        if (win) win.scrollTo({ top: win.scrollHeight, behavior: 'smooth' });
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // SENDEN LOGIK
+    const form = document.getElementById('chat-form');
+    form?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const input = document.getElementById('msg-input') as HTMLInputElement;
+        const text = input.value.trim();
+        
+        if (!text) return;
+        input.value = ""; 
+
+        const { data, error } = await supabase
+            .from('messages')
+            .insert({
+                conversation_id: conversationId,
+                sender_id: currentUser.id,
+                content: text
+            })
+            .select()
+            .single();
+
+        if (error) {
+            console.error("Senden Fehler:", error);
+            input.value = text;
+        } else if (data) {
+            appendMessage(data); // Sofort anzeigen
+        }
+    });
+
+    initChat();
+</script>
+
+<style>
+    /* Styling für das Interface */
+    .chat-page { background: #050505; min-height: 100vh; padding: 100px 20px 20px; color: white; }
+    .container { max-width: 600px; margin: 0 auto; height: 80vh; display: flex; flex-direction: column; }
+
+    .chat-header { display: flex; align-items: center; gap: 20px; padding: 15px 20px; margin-bottom: 20px; }
+    .back-btn { font-size: 1.5rem; text-decoration: none; color: #444; }
+    .header-info h2 { font-size: 1.1rem; margin: 0; }
+    .eyebrow { color: #00bcd4; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; }
+
+    .chat-window { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
+    
+    .message-bubble { max-width: 85%; padding: 12px 16px; border-radius: 18px; line-height: 1.4; font-size: 0.95rem; }
+    .message-bubble.me { background: #00bcd4; color: black; align-self: flex-end; border-bottom-right-radius: 4px; font-weight: 500; }
+    .message-bubble.other { background: #1a1a1a; color: white; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid #333; }
+    
+    .msg-time { font-size: 0.6rem; opacity: 0.5; display: block; margin-top: 5px; text-align: right; }
+
+    .chat-input-area { padding: 10px 20px; margin-top: 15px; }
+    #chat-form { display: flex; gap: 10px; align-items: center; }
+    #msg-input { flex: 1; background: transparent; border: none; color: white; padding: 10px 0; outline: none; }
+    #send-btn { background: #00bcd4; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-weight: 900; }
+
+    .glass-card { background: #111; border: 1px solid #222; border-radius: 20px; }
+
+    /* Spinner für den Loader */
+    .spinner { width: 30px; height: 30px; border: 3px solid #222; border-top: 3px solid #00bcd4; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+</style>
