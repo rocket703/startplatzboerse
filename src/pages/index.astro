@@ -56,7 +56,7 @@ const { data: listings, error } = await supabase
         </div>
 
        <div class="event-grid">
-  {listings && listings.map((item) => (
+  {listings && listings.map((item: any) => (
     <EventCard 
       id={item.id}
       category={item.category}
@@ -66,7 +66,8 @@ const { data: listings, error } = await supabase
       distance={item.distance}
       price={item.price}
       oldPrice={item.old_price}
-      nickname={item.profiles?.nickname || "User123"}
+      /* Das ?. sorgt dafür, dass es nicht abstürzt, wenn kein Profil da ist */
+      nickname={item.profiles?.nickname || "Gast"}
     />
   ))}
 </div>
