@@ -195,15 +195,19 @@ import Popup from '../components/Popup.astro';
                 const eventName = chat.listings?.event_name || 'Unbekanntes Event';
                 
                 return `
-                    <div class="msg-card ${badgeClass}" onclick="window.location.href='/chat?id=${chat.id}'">
-                        <div class="msg-header">
-                            <span class="badge ${badgeClass}">${roleLabel}</span>
-                            <span class="date">${new Date(chat.updated_at).toLocaleDateString()}</span>
-                        </div>
-                        <span class="msg-title">${eventName}</span>
-                        <p class="msg-preview">Zum Chat →</p>
-                    </div>
-                `;
+  <div class="msg-card ${badgeClass}" onclick="window.location.href='/chat?id=${chat.id}'">
+      
+      <span class="msg-badge ${badgeClass}">${roleLabel}</span>
+      <span class="msg-date">${new Date(chat.updated_at).toLocaleDateString()}</span>
+
+      <div class="msg-center">
+          <span class="msg-title">${eventName}</span>
+      </div>
+
+      <span class="msg-action">Zum Chat →</span>
+
+  </div>
+`;
             }).join('');
         }
     }
@@ -272,7 +276,7 @@ import Popup from '../components/Popup.astro';
         --border: rgba(255, 255, 255, 0.08);
     }
 
-    /* --- KILL ALL ARROWS --- */
+    /* --- PFEILE IN DEN INPUTS KILLEN --- */
 
 /* Chrome, Safari, Edge, Opera */
 input#new-price::-webkit-outer-spin-button,
@@ -348,4 +352,91 @@ input#new-price {
     #new-price { background: transparent; border: none; color: white; font-size: 3rem; font-weight: 900; width: 100%; text-align: center; outline: none; }
     .input-glow-wrap { display: flex; align-items: center; justify-content: center; position: relative; margin: 20px 0; }
     .input-glow-wrap span { font-size: 2rem; color: var(--cyan); font-weight: 900; position: absolute; right: 20px; }
+    /* MESSAGES */
+.message-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.msg-card {
+    width: 100%;
+    max-width: 520px;
+    margin-inline: auto;
+    position: relative;
+    padding: 20px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--card-bg);
+    cursor: pointer;
+    min-height: 90px;
+}
+@media (min-width: 1200px) {
+    .msg-card {
+        max-width: 580px;
+    }
+}
+
+/* Badge oben links */
+.msg-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.6rem;
+    font-weight: 900;
+    letter-spacing: 1px;
+}
+
+.msg-badge.received {
+    background: rgba(0, 188, 212, 0.15);
+    color: var(--cyan);
+}
+
+.msg-badge.sent {
+    background: rgba(255,255,255,0.08);
+    color: #aaa;
+}
+
+/* Datum oben rechts */
+.msg-date {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    font-size: 0.65rem;
+    color: #555;
+}
+
+/* Titel zentriert */
+.msg-center {
+    position: absolute;
+    inset: 0; /* top/right/bottom/left = 0 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none; /* Klick geht weiter zur Card */
+    text-align: center;
+    padding: 0 40px; /* Luft für Datum & Badge */
+}
+
+
+.msg-title {
+    font-size: 1.15rem;
+    font-weight: 900;
+    color: var(--cyan);
+    line-height: 1.25;
+    max-width: 100%;
+}
+
+
+/* Action unten links */
+.msg-action {
+    position: absolute;
+    bottom: 12px;
+    left: 14px;
+    font-size: 0.7rem;
+    color: #555;
+}
+
 </style>
