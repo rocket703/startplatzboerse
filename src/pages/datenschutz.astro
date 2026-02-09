@@ -7,84 +7,169 @@ import Footer from '../components/Footer.astro';
     <main class="legal-wrapper">
         <div class="container">
             <a href="/" class="back-link">← Zurück zur Startseite</a>
-            
-            <h1>Datenschutzerklärung</h1>
-            <p class="intro">
-                Der Schutz deiner persönlichen Daten ist uns ein besonderes Anliegen. Nachfolgend informieren wir dich über die Verarbeitung deiner Daten auf dieser Webseite.
-            </p>
 
-            <hr />
+            <h1>Datenschutzerklärung</h1>
+
+            <p class="intro">
+                Der Schutz deiner personenbezogenen Daten ist uns ein besonderes Anliegen.
+                Wir verarbeiten deine Daten ausschließlich im Rahmen der gesetzlichen
+                Bestimmungen der Datenschutz-Grundverordnung (DSGVO). Nachfolgend informieren
+                wir dich über Art, Umfang und Zweck der Verarbeitung personenbezogener Daten
+                auf unserer Plattform.
+            </p>
 
             <section>
                 <h2>1. Verantwortlicher</h2>
                 <p>
-                    <strong>Dustin Rose</strong><br />
+                    Dustin Rose<br />
                     startplatzboerse.com<br />
                     Lindenplan 26, 39120 Magdeburg<br />
-                    E-Mail: <a href="mailto:info@startplatzboerse.com">info@startplatzboerse.com</a>
-                </p>
-            </section>
-
-            <section>
-                <h2>2. Datenerhebung durch Formulare (Web3Forms)</h2>
-                <p>
-                    Wir nutzen für unsere Formulare (Newsletter & Kontakt) den Dienst <strong>Web3Forms</strong> (gehostet von Humaans Labs Inc.). 
-                    Wenn du ein Formular abschickst, werden die von dir eingegebenen Daten an Web3Forms übertragen, um sie per E-Mail an uns weiterzuleiten.
-                </p>
-                <ul>
-                    <li><strong>Zweck:</strong> Bearbeitung deiner Anfrage & Startbenachrichtigung.</li>
-                    <li><strong>Daten:</strong> Name, E-Mail-Adresse, Betreff, Nachrichtentext.</li>
-                    <li><strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. a (Einwilligung) & lit. b (Vertragserfüllung).</li>
-                </ul>
-                <p>
-                    Web3Forms speichert deine Nachrichten nicht dauerhaft in einer Datenbank, sondern dient lediglich als Brücke zu unserem Postfach. 
-                    Weitere Infos findest du in der <a href="https://web3forms.com/privacy" target="_blank">Datenschutzerklärung von Web3Forms</a>.
-                </p>
-            </section>
-
-            <section>
-                <h2>3. Hosting & Server-Logfiles</h2>
-                <p>
-                    Beim Aufruf unserer Webseite erhebt unser Hosting-Anbieter automatisch Informationen (Server-Logfiles), die dein Browser übermittelt. Dies sind z.B. IP-Adresse, Browsertyp, Datum/Uhrzeit und die besuchte Seite.
-                </p>
-                <p>Dies ist technisch notwendig, um die Sicherheit und Stabilität der Seite zu gewährleisten (Art. 6 Abs. 1 lit. f DSGVO).</p>
-            </section>
-
-            <section>
-                <h2>4. Speicherdauer</h2>
-                <p>
-                    Wir speichern deine Daten nur so lange, wie es für den Zweck nötig ist:
-                </p>
-                <ul>
-                    <li><strong>Startbenachrichtigung:</strong> Bis zum Start der Plattform oder bis zu deinem Widerruf.</li>
-                    <li><strong>Kontaktanfragen:</strong> Bis zur abschließenden Klärung deines Anliegens.</li>
-                </ul>
-            </section>
-
-            <section>
-                <h2>5. Cookies & Tracking</h2>
-                <p>
-                    Wir verwenden aktuell <strong>keine Cookies</strong> und keine Tracking-Tools (wie Google Analytics). Deine Privatsphäre bleibt gewahrt.
-                </p>
-            </section>
-
-            <section>
-                <h2>6. Deine Rechte</h2>
-                <p>
-                    Du hast jederzeit das Recht auf Auskunft, Berichtigung, Löschung oder Einschränkung der Verarbeitung deiner Daten. Zudem kannst du der Verarbeitung widersprechen. Kontaktiere mich dazu einfach unter der oben genannten E-Mail-Adresse.
-                </p>
-            </section>
-
-            <section>
-                <h2>7. Kontakt bei Datenschutzfragen</h2>
-                <p>
-                    Bei Fragen erreichst du uns jederzeit unter: <br />
+                    E-Mail:
                     <a href="mailto:info@startplatzboerse.com">info@startplatzboerse.com</a>
                 </p>
             </section>
 
+            <section>
+                <h2>2. Hosting & Infrastruktur (Vercel)</h2>
+                <p>
+                    Unsere Webseite wird bei <strong>Vercel Inc.</strong> gehostet. Beim Aufruf
+                    der Webseite werden automatisch sogenannte Server-Logfiles verarbeitet.
+                    Diese können insbesondere folgende Daten enthalten:
+                </p>
+                <ul>
+                    <li>IP-Adresse</li>
+                    <li>Browsertyp und Browserversion</li>
+                    <li>Betriebssystem</li>
+                    <li>Datum und Uhrzeit des Zugriffs</li>
+                </ul>
+                <p>
+                    Die Verarbeitung ist technisch erforderlich, um einen sicheren und
+                    stabilen Betrieb der Webseite zu gewährleisten.
+                </p>
+                <p>
+                    <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. f DSGVO
+                    (berechtigtes Interesse)
+                </p>
+            </section>
+
+            <section>
+                <h2>3. Datenbank & Authentifizierung (Supabase)</h2>
+                <p>
+                    Wir nutzen <strong>Supabase</strong> als Datenbankdienstleister und zur
+                    Benutzerverwaltung. Im Rahmen der Nutzung unserer Plattform werden
+                    folgende personenbezogene Daten verarbeitet:
+                </p>
+                <ul>
+                    <li>Name und ggf. Nickname</li>
+                    <li>E-Mail-Adresse</li>
+                    <li>Daten zu inserierten Startplätzen (Eventname, Ort, Datum, Preis)</li>
+                    <li>Inhalte von Nachrichten aus dem internen Chatsystem</li>
+                </ul>
+                <p>
+                    <strong>Speicherdauer:</strong> Die Daten werden gespeichert, solange dein
+                    Benutzerkonto besteht oder bis du dein Inserat bzw. dein Konto löschst.
+                    Nachrichten werden zur Abwicklung der Kommunikation vorgehalten.
+                </p>
+                <p>
+                    <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. b DSGVO
+                    (Erfüllung eines Nutzungsvertrags)
+                </p>
+            </section>
+
+            <section>
+                <h2>4. Kontaktformular (Web3Forms)</h2>
+                <p>
+                    Für allgemeine Anfragen nutzen wir den Dienst
+                    <strong>Web3Forms</strong>. Die von dir eingegebenen Daten (z. B. Name,
+                    E-Mail-Adresse, Nachricht) werden verschlüsselt an uns übermittelt.
+                </p>
+                <p>
+                    Nach Angaben des Anbieters speichert Web3Forms diese Daten nicht dauerhaft
+                    auf eigenen Servern.
+                </p>
+                <p>
+                    <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. b DSGVO
+                    (Bearbeitung von Anfragen) sowie Art. 6 Abs. 1 lit. f DSGVO
+                    (berechtigtes Interesse)
+                </p>
+            </section>
+
+            <section>
+                <h2>5. E-Mail-Versand (Resend)</h2>
+                <p>
+                    Für den Versand von System-E-Mails (z. B. Verifizierungscodes,
+                    Benachrichtigungen oder systemrelevante Hinweise) nutzen wir den Dienst
+                    <strong>Resend</strong>.
+                </p>
+                <p>
+                    Dabei wird deine E-Mail-Adresse ausschließlich zur Zustellung der
+                    jeweiligen Nachricht verarbeitet.
+                </p>
+                <p>
+                    <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. b DSGVO
+                    (vertragliche Kommunikation)
+                </p>
+            </section>
+
+            <section>
+                <h2>6. Datenübermittlung in Drittländer</h2>
+                <p>
+                    Die eingesetzten Dienste (Vercel, Supabase, Web3Forms, Resend) haben ihren
+                    Sitz teilweise in den USA. Eine Übermittlung personenbezogener Daten in
+                    ein Drittland kann daher nicht ausgeschlossen werden.
+                </p>
+                <p>
+                    Die Übermittlung erfolgt auf Grundlage geeigneter Garantien gemäß Art. 46
+                    DSGVO, insbesondere durch den Abschluss von
+                    <strong>EU-Standardvertragsklauseln</strong>.
+                </p>
+            </section>
+
+            <section>
+                <h2>7. Cookies & Tracking</h2>
+                <p>
+                    Unsere Webseite verwendet keine Cookies zu Analyse-, Tracking- oder
+                    Marketingzwecken. Es findet kein Profiling statt.
+                </p>
+            </section>
+
+            <section>
+                <h2>8. Datensicherheit</h2>
+                <p>
+                    Wir setzen geeignete technische und organisatorische Maßnahmen ein, um
+                    deine Daten gegen Verlust, Manipulation oder unbefugten Zugriff zu
+                    schützen. Dazu gehören insbesondere verschlüsselte Datenübertragungen
+                    sowie Zugriffsbeschränkungen.
+                </p>
+            </section>
+
+            <section>
+                <h2>9. Deine Rechte</h2>
+                <p>Du hast jederzeit das Recht:</p>
+                <ul>
+                    <li>auf Auskunft (Art. 15 DSGVO)</li>
+                    <li>auf Berichtigung (Art. 16 DSGVO)</li>
+                    <li>auf Löschung (Art. 17 DSGVO)</li>
+                    <li>auf Einschränkung der Verarbeitung (Art. 18 DSGVO)</li>
+                    <li>auf Datenübertragbarkeit (Art. 20 DSGVO)</li>
+                    <li>auf Widerspruch gegen die Verarbeitung (Art. 21 DSGVO)</li>
+                </ul>
+                <p>
+                    Zudem hast du das Recht, dich bei einer Datenschutz-Aufsichtsbehörde zu
+                    beschweren.
+                </p>
+            </section>
+
+            <section>
+                <h2>10. Kontakt bei Datenschutzfragen</h2>
+                <p>
+                    Bei Fragen zum Datenschutz erreichst du uns jederzeit unter:<br />
+                    <a href="mailto:info@startplatzboerse.com">info@startplatzboerse.com</a>
+                </p>
+            </section>
         </div>
     </main>
+
     <Footer />
 </Layout>
 
@@ -102,7 +187,7 @@ import Footer from '../components/Footer.astro';
         background: #222;
         padding: 50px;
         border-radius: 30px;
-        border: 1px solid rgba(255,255,255,0.05);
+        border: 5px solid rgba(255,255,255,0.08);
         box-shadow: 0 20px 50px rgba(0,0,0,0.4);
     }
 
@@ -116,57 +201,28 @@ import Footer from '../components/Footer.astro';
     }
     .back-link:hover { transform: translateX(-5px); }
 
-  <style is:global>
-  .privacy-card {
-    background: #121212;
-    border-radius: 24px;
-    padding: clamp(1.5rem, 5vw, 3rem); /* Dynamisches Padding */
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    max-width: 800px;
-    margin: 0 auto;
-  }
+    h1 { color: white; font-size: 2.5rem; margin-bottom: 40px; font-weight: 900; }
+    h2 {
+        color: white;
+        font-size: 1.3rem;
+        margin-top: 35px;
+        margin-bottom: 15px;
+        font-weight: 700;
+        border-left: 3px solid var(--cyan);
+        padding-left: 15px;
+    }
 
-  h1 {
-    /* Die Schriftgröße passt sich jetzt perfekt der Breite an */
-    font-size: clamp(1.5rem, 8vw, 2.8rem); 
-    font-weight: 850;
-    line-height: 1.1;
-    color: white;
-    margin-bottom: 1.5rem;
-    
-    /* Diese Zeilen verhindern das Überlappen/Rausspringen */
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    hyphens: auto; 
-    display: block;
-    width: 100%;
-  }
+    .intro { font-size: 1rem; margin-bottom: 30px; }
 
-  .back-link {
-    color: var(--cyan);
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.9rem;
-    margin-bottom: 2rem;
-  }
+    section p { margin-bottom: 15px; font-size: 0.95rem; }
 
-    h2 { color: white; font-size: 1.5rem; margin-top: 40px; margin-bottom: 15px; font-weight: 700; }
-    
-    .intro { font-size: 1.1rem; margin-bottom: 30px; }
-    
-    hr { border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 30px 0; }
-
-    section p { margin-bottom: 15px; }
-    
     ul { margin-bottom: 20px; padding-left: 20px; }
-    ul li { margin-bottom: 8px; }
+    ul li { margin-bottom: 8px; font-size: 0.95rem; list-style-type: square; }
 
     strong { color: white; }
-    
-    a { color: var(--cyan); text-decoration: none; border-bottom: 1px solid transparent; transition: 0.3s; }
-    a:hover { border-bottom-color: var(--cyan); }
+
+    a { color: var(--cyan); text-decoration: none; transition: 0.3s; }
+    a:hover { filter: brightness(1.2); }
 
     @media (max-width: 600px) {
         .container { padding: 30px 20px; }

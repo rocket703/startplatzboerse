@@ -8,6 +8,7 @@ const currentYear = new Date().getFullYear();
         <div class="footer-links">
             <a href="/impressum">Impressum</a>
             <a href="/datenschutz">Datenschutz</a>
+            <a href="/agb">AGB</a>
         </div>
 
         <div class="footer-center">
@@ -46,6 +47,7 @@ const currentYear = new Date().getFullYear();
 
     .footer-links a {
         color: var(--text-muted);
+        text-decoration: none; /* Clean Look */
         transition: 0.2s;
     }
     .footer-links a:hover { color: white; }
@@ -71,6 +73,11 @@ const currentYear = new Date().getFullYear();
         .footer-content {
             flex-direction: row;
             justify-content: space-between;
+        }
+        
+        /* Sorgt dafür, dass das Copyright auf Desktop rechtsbündig steht */
+        .footer-copyright {
+            text-align: right;
         }
     }
 </style>
