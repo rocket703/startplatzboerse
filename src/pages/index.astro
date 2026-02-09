@@ -15,7 +15,10 @@ const supabase = createClient(
 // Wir holen alle genehmigten Inserate, sortiert nach Datum (neuere zuerst)
 const { data: listings, error } = await supabase
   .from('listings')
-  .select('*')
+  .select(`
+    *,
+    profiles (nickname)
+  `) // <--- WICHTIG: Backticks (`) nutzen, nicht einfache Anführungszeichen (')
   .eq('approved', true)
   .order('created_at', { ascending: false });
 ---
@@ -54,17 +57,17 @@ const { data: listings, error } = await supabase
 
        <div class="event-grid">
   {listings && listings.map((item) => (
-    <a href={`/listing/${item.id}?from=index`} style="text-decoration: none; display: block;">
-      <EventCard 
-        category={item.category}
-        title={item.event_name}
-        date={new Date(item.event_date).toLocaleDateString('de-DE')}
-        location={item.location}
-        distance={item.distance}
-        price={item.price}
-        oldPrice={item.old_price} 
-      />
-    </a>
+    <EventCard 
+      id={item.id}
+      category={item.category}
+      title={item.event_name}
+      date={new Date(item.event_date).toLocaleDateString('de-DE')}
+      location={item.location}
+      distance={item.distance}
+      price={item.price}
+      oldPrice={item.old_price}
+      nickname={item.profiles?.nickname || "User123"}
+    />
   ))}
 </div>
             
@@ -155,10 +158,16 @@ const { data: listings, error } = await supabase
 
     /* --- LISTINGS STYLES --- */
     .listings-preview {
-        padding: 100px 20px;
+        padding: 100px 0;
         background: #121212;
     }
-    .container { max-width: 1200px; margin: 0 auto; }
+    
+    .container { 
+        max-width: 1200px; 
+        margin: 0 auto;
+        padding: 0 20px;
+        box-sizing: border-box;
+    }
     
     .section-header {
         display: flex;
@@ -171,36 +180,54 @@ const { data: listings, error } = await supabase
     h2 { font-size: 2.8rem; color: white; font-weight: 900; margin-top: 10px; letter-spacing: -1px; }
     .view-all { color: #00bcd4; text-decoration: none; font-weight: 600; border-bottom: 1px solid transparent; transition: 0.3s; }
     .view-all:hover { border-bottom-color: #00bcd4; }
-.event-grid {
-    display: grid;
-    /* 2 Spalten auf Desktop */
-    grid-template-columns: repeat(2, 1fr); 
-    /* Der Abstand (die "Luft") zwischen den Karten */
-    gap: 30px; 
-    width: 100%;
-    max-width: 1200px;
-    margin: 40px auto; /* Abstand nach oben/unten */
-    padding: 0 20px;
-    box-sizing: border-box;
-}
 
-/* WICHTIG: Der Link-Tag muss das Grid-Verhalten weitergeben */
-.card-link {
-    text-decoration: none;
-    display: flex; /* Zwingt den Link, die volle Grid-Breite zu nutzen */
-    width: 100%;
-    transition: transform 0.3s ease;
-}
-
-.card-link:hover {
-    transform: translateY(-5px);
-}
-
-/* MOBIL: Auf Smartphones wieder untereinander */
-@media (max-width: 768px) {
+    /* EVENT GRID - FIXED FOR MOBILE */
     .event-grid {
-        grid-template-columns: 1fr;
-        gap: 20px;
+        display: grid;
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 30px; 
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
     }
-}
+
+    .event-grid a {
+        text-decoration: none;
+        display: block;
+        width: 100%;
+        transition: transform 0.3s ease;
+    }
+
+    .event-grid a:hover {
+        transform: translateY(-5px);
+    }
+
+    /* MOBILE: Full width ohne Padding */
+    @media (max-width: 768px) {
+        .container {
+            padding: 0; /* Container ohne Padding auf Mobile */
+        }
+        
+        .event-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        
+        .section-header {
+            padding: 0 20px; /* Header braucht trotzdem Padding */
+            margin-bottom: 40px;
+        }
+        
+        h2 {
+            font-size: 2rem;
+        }
+    }
+
+    /* Sehr kleine Screens */
+    @media (max-width: 480px) {
+        h2 {
+            font-size: 1.8rem;
+        }
+    }
 </style>

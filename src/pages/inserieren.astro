@@ -1,7 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Footer from '../components/Footer.astro';
-import Popup from '../components/Popup.astro'; // 1. Popup Importieren
+import Popup from '../components/Popup.astro';
 ---
 
 <Layout title="Startplatz inserieren - Startplatzbörse">
@@ -17,7 +17,7 @@ import Popup from '../components/Popup.astro'; // 1. Popup Importieren
 
                 <div id="auth-section">
                     <div class="heading">Wer bist du?</div>
-                    <p class="info-text">Verifiziere kurz deine E-Mail, damit wir wissen, dass du kein Roboter bist.</p>
+                    <p class="info-text">Wir brauchen kurz deine Daten für die Verifizierung.</p>
                     
                     <div id="step-1">
                         <div class="row">
@@ -30,6 +30,13 @@ import Popup from '../components/Popup.astro'; // 1. Popup Importieren
                                 <input class="input" type="text" id="nachname" placeholder="Mustermann">
                             </div>
                         </div>
+
+                        <label class="input-label">Dein Nickname (öffentlich sichtbar)</label>
+                        <div class="input-wrapper">
+                            <span class="prefix">@</span>
+                            <input class="input with-prefix" type="text" id="nickname" placeholder="IronMan99">
+                        </div>
+
                         <label class="input-label">E-Mail Adresse</label>
                         <input class="input" type="email" id="email" placeholder="deine@mail.de">
                         
@@ -38,7 +45,7 @@ import Popup from '../components/Popup.astro'; // 1. Popup Importieren
 
                     <div id="step-otp" style="display: none;">
                         <p class="info-text">Check dein Postfach! Gib den 6-stelligen Code hier ein:</p>
-                        <input class="input" type="text" id="otp-code" placeholder="123456" maxlength="6">
+                        <input class="input" type="text" id="otp-code" placeholder="123456" maxlength="6" style="text-align: center; letter-spacing: 5px; font-size: 1.2rem;">
                         <button class="login-button" id="btn-verify-otp">Identität bestätigen</button>
                     </div>
                 </div>
@@ -118,12 +125,35 @@ import Popup from '../components/Popup.astro'; // 1. Popup Importieren
         import.meta.env.PUBLIC_SUPABASE_ANON_KEY
     );
 
-    // Hilfsfunktion für Popup
+    // --- DOM ELEMENTE ---
+    const authSection = document.getElementById('auth-section');
+    const step1 = document.getElementById('step-1');
+    const stepOtp = document.getElementById('step-otp');
+    const listingSection = document.getElementById('listing-section');
+    
+    // Inputs Auth
+    const inputVorname = document.getElementById('vorname') as HTMLInputElement;
+    const inputNachname = document.getElementById('nachname') as HTMLInputElement;
+    const inputNickname = document.getElementById('nickname') as HTMLInputElement;
+    const inputEmail = document.getElementById('email') as HTMLInputElement;
+    const inputOtp = document.getElementById('otp-code') as HTMLInputElement;
+
+    // Inputs Listing
+    const categorySelect = document.getElementById('category') as HTMLSelectElement;
+    const distanceSelect = document.getElementById('distance-select') as HTMLSelectElement;
+    const plzInput = document.getElementById('plz') as HTMLInputElement;
+    const locationInput = document.getElementById('location') as HTMLInputElement;
+    const dateInput = document.getElementById('event_date') as HTMLInputElement;
+
+    // UI Elemente
+    const stepDot2 = document.getElementById('step-dot-2');
+    const progressLine = document.getElementById('progress-line');
+
+    // --- HILFSFUNKTIONEN ---
     function showPopup(title: string, message: string) {
         const popup = document.getElementById('status-popup');
         const popupTitle = popup?.querySelector('h3');
         const popupText = document.getElementById('popup-text');
-        
         if (popup && popupTitle && popupText) {
             popupTitle.innerText = title;
             popupText.innerText = message;
@@ -131,25 +161,94 @@ import Popup from '../components/Popup.astro'; // 1. Popup Importieren
         }
     }
 
-    // DOM Elemente
-    const authSection = document.getElementById('auth-section');
-    const step1 = document.getElementById('step-1');
-    const stepOtp = document.getElementById('step-otp');
-    const listingSection = document.getElementById('listing-section');
-    const categorySelect = document.getElementById('category') as HTMLSelectElement;
-    const distanceSelect = document.getElementById('distance-select') as HTMLSelectElement;
-    const stepDot2 = document.getElementById('step-dot-2');
-    const progressLine = document.getElementById('progress-line');
-    
-    const plzInput = document.getElementById('plz') as HTMLInputElement;
-    const locationInput = document.getElementById('location') as HTMLInputElement;
-    const dateInput = document.getElementById('event_date') as HTMLInputElement;
+    // 1. Validierung & OTP Senden
+    document.getElementById('btn-send-otp')?.addEventListener('click', async () => {
+        const email = inputEmail.value.trim();
+        const nickname = inputNickname.value.trim();
+        const vorname = inputVorname.value.trim();
+        const nachname = inputNachname.value.trim();
 
-    // 1. DATUM-SPERRE
+        if(!email.includes('@')) return showPopup("Fehler", "Bitte gültige E-Mail angeben.");
+        if(nickname.length < 3) return showPopup("Fehler", "Nickname muss mind. 3 Zeichen haben.");
+        if(!vorname || !nachname) return showPopup("Fehler", "Bitte Vor- und Nachname ausfüllen.");
+
+        const btn = document.getElementById('btn-send-otp') as HTMLButtonElement;
+        btn.textContent = "Sende Code...";
+        btn.disabled = true;
+
+        const { error } = await supabase.auth.signInWithOtp({ email });
+
+        if (error) {
+            showPopup("Fehler", error.message);
+            btn.textContent = "Code anfordern";
+            btn.disabled = false;
+        } else {
+            step1!.style.display = 'none';
+            stepOtp!.style.display = 'block';
+        }
+    });
+
+    // 2. OTP Verifizieren & PROFIL SPEICHERN (Wichtig!)
+    document.getElementById('btn-verify-otp')?.addEventListener('click', async () => {
+        const email = inputEmail.value.trim();
+        const token = inputOtp.value.trim();
+        const nickname = inputNickname.value.trim();
+        const vorname = inputVorname.value.trim();
+        const nachname = inputNachname.value.trim();
+
+        const btn = document.getElementById('btn-verify-otp') as HTMLButtonElement;
+        btn.textContent = "Prüfe...";
+        btn.disabled = true;
+
+        // A. Login prüfen
+        const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
+        
+        if (error || !data.user) {
+            // Fallback für Signup Link Typen (manchmal nötig)
+            const { data: data2, error: err2 } = await supabase.auth.verifyOtp({ email, token, type: 'signup' });
+            if (err2 || !data2.user) {
+                btn.textContent = "Identität bestätigen";
+                btn.disabled = false;
+                return showPopup("Ungültig", "Falscher Code.");
+            }
+        }
+
+        const user = data.user || (await supabase.auth.getUser()).data.user;
+
+        if (user) {
+            // B. PROFIL UPDATE (Hier passiert die Magie)
+            
+            // 1. Nickname in die 'profiles' Tabelle schreiben (die wir vorhin erstellt haben)
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .upsert({
+                    id: user.id,
+                    nickname: nickname,
+                    // avatar_url: ... (optional später)
+                });
+
+            // 2. Echte Namen in die Auth-Metadaten schreiben (Standard Supabase)
+            await supabase.auth.updateUser({
+                data: { first_name: vorname, last_name: nachname }
+            });
+
+            if (profileError) {
+                console.error("Profil Fehler:", profileError);
+                // Wir lassen den User trotzdem weiter, aber loggen den Fehler
+            }
+
+            // C. Weiter zum Listing
+            authSection!.style.display = 'none';
+            listingSection!.style.display = 'block';
+            stepDot2!.classList.add('active');
+            progressLine!.style.background = '#00bcd4';
+        }
+    });
+
+    // 3. Listings Logik (Distanzen, PLZ, Submit)
     const today = new Date().toISOString().split('T')[0];
     if (dateInput) dateInput.min = today;
 
-    // 2. DISTANZEN-LOGIK
     const distances = {
         Laufen: ['5 km', '10 km', 'Halbmarathon', 'Marathon', 'Ultra'],
         Radrennen: ['Jedermann (kurz)', 'Jedermann (lang)', 'RTF', 'Kriterium', 'Radmarathon'],
@@ -168,11 +267,9 @@ import Popup from '../components/Popup.astro'; // 1. Popup Importieren
         });
     });
 
-    // 3. PLZ AUTOFILL
     plzInput?.addEventListener('input', async (e) => {
         const target = e.target as HTMLInputElement;
         target.value = target.value.replace(/\D/g, ''); 
-        
         if (target.value.length === 5) {
             locationInput.placeholder = "Suche Stadt...";
             try {
@@ -185,38 +282,7 @@ import Popup from '../components/Popup.astro'; // 1. Popup Importieren
         }
     });
 
-  // 4. AUTH LOGIK (OTP SENDEN)
-    document.getElementById('btn-send-otp')?.addEventListener('click', async () => {
-        const email = (document.getElementById('email') as HTMLInputElement).value;
-        if(!email.includes('@')) return showPopup("Achtung", "Bitte eine gültige E-Mail angeben.");
-
-        const { error } = await supabase.auth.signInWithOtp({ email });
-        if (error) {
-            showPopup("Fehler", error.message);
-        } else {
-            step1!.style.display = 'none';
-            stepOtp!.style.display = 'block';
-        }
-    });
-
-    // 5. AUTH LOGIK (OTP VERIFIZIEREN)
-    document.getElementById('btn-verify-otp')?.addEventListener('click', async () => {
-        const email = (document.getElementById('email') as HTMLInputElement).value;
-        const token = (document.getElementById('otp-code') as HTMLInputElement).value;
-
-        const { error } = await supabase.auth.verifyOtp({ email, token, type: 'signup' });
-        if (error) {
-            const { error: err2 } = await supabase.auth.verifyOtp({ email, token, type: 'magiclink' });
-            if (err2) return showPopup("Ungültig", "Der eingegebene Code ist falsch.");
-        }
-        
-        authSection!.style.display = 'none';
-        listingSection!.style.display = 'block';
-        stepDot2!.classList.add('active');
-        progressLine!.style.background = '#00bcd4';
-    });
-
-    // 6. FINALES ABSENDEN
+    // 4. Listing Absenden
     document.getElementById('listing-form')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('btn-final') as HTMLButtonElement;
@@ -224,21 +290,19 @@ import Popup from '../components/Popup.astro'; // 1. Popup Importieren
         btn.textContent = "Sende...";
 
         try {
-            const { data: authData, error: userError } = await supabase.auth.getUser();
+            const { data: authData } = await supabase.auth.getUser();
+            if (!authData.user) throw new Error("Sitzung abgelaufen.");
 
-            if (userError || !authData.user) {
-                throw new Error("Sitzung abgelaufen. Bitte lade die Seite neu.");
-            }
-
-            const user = authData.user;
             const formData = new FormData(e.target as HTMLFormElement);
             const vals = Object.fromEntries(formData);
             
+            // Wir speichern hier die Namen nochmal redundat ins Listing, falls gewünscht.
+            // Aber eigentlich haben wir sie jetzt im Profil (sauberer).
             const { error: insertError } = await supabase.from('listings').insert([{
-                user_id: user.id,
-                vorname: (document.getElementById('vorname') as HTMLInputElement).value,
-                nachname: (document.getElementById('nachname') as HTMLInputElement).value,
-                seller_email: (document.getElementById('email') as HTMLInputElement).value,
+                user_id: authData.user.id,
+                vorname: inputVorname.value,
+                nachname: inputNachname.value,
+                seller_email: inputEmail.value,
                 category: vals.category,
                 event_name: vals.event_name,
                 distance: vals.distance,
@@ -251,11 +315,8 @@ import Popup from '../components/Popup.astro'; // 1. Popup Importieren
 
             if (insertError) throw insertError;
 
-            // Erfolg! Erst Popup, dann Redirect
-            showPopup("Glückwunsch!", "Dein Inserat wurde erfolgreich veröffentlicht. Du wirst jetzt zum Dashboard geleitet.");
-            setTimeout(() => {
-                window.location.href = "/dashboard";
-            }, 2500);
+            showPopup("Glückwunsch!", "Dein Inserat ist online!");
+            setTimeout(() => { window.location.href = "/dashboard"; }, 2000);
 
         } catch (err: any) {
             showPopup("Fehler", err.message);
@@ -266,6 +327,25 @@ import Popup from '../components/Popup.astro'; // 1. Popup Importieren
 </script>
 
 <style>
+    /* Styling Updates für Nickname Feld */
+    .input-wrapper {
+        position: relative;
+        width: 100%;
+    }
+    .prefix {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--cyan);
+        font-weight: bold;
+        z-index: 2;
+    }
+    .input.with-prefix {
+        padding-left: 30px; /* Platz für das @ Zeichen */
+    }
+
+    /* Restliches CSS (unverändert) */
     :root { --cyan: #00bcd4; --bg: #121212; --card: #222; }
     .page-wrapper { min-height: 100vh; background: var(--bg); padding: 80px 20px; font-family: 'Inter', sans-serif; color: white; }
     .form-wrapper { display: flex; justify-content: center; }
