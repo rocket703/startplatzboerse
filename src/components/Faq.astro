@@ -89,11 +89,15 @@ const questions = [
 <style>
     .section-wrapper { 
         padding: 100px 20px; 
-        background: #1a1a1a; /* Etwas dunkler als der Body für Kontrast */
+        background: var(--bg-body); /* Etwas dunkler als der Body für Kontrast */
         position: relative;
     }
 
-    .container { max-width: 800px; margin: 0 auto; }
+    .container { 
+        background: var(--bg-body);
+        max-width: 800px; 
+        margin: 0 auto; 
+    }
 
     /* Header */
     .header-center { text-align: center; margin-bottom: 50px; }

@@ -11,14 +11,16 @@
             
             <div class="mission-text">
                 <p>
-                    Hi, ich bin <strong>Dustin</strong>. Ich entwickle startplatzboerse.com aktuell als privates Ein-Mann-Projekt.
+                    Hi, ich bin Dustin. Ich entwickle startplatzboerse.com gerade als kleines, privates Ein-Mann-Projekt, direkt aus der Community heraus.
                 </p>
+                    <h3>Die Idee</h3><br>
                 <p>
-                    Warum? Weil es mich nervt, wenn teure Startplätze verfallen, nur weil jemand krank geworden ist. 
-                    Dies ist <strong>kein gewinnorientiertes Unternehmen</strong>, sondern eine reine Plattform, die private Sportler mit privaten Sportlern verbindet.
+                    Es nervt, wenn teure Startplätze verfallen, nur weil jemand krank oder verletzt ist. Gleichzeitig suchen andere auf zuvielen Plattformen, in Facebook-Gruppen oder Chats nach genau 
+                    diesen Startplätzen – unübersichtlich und zu zeitaufwändig.
                 </p>
+                    <h3>Mein Ziel:</h3>
                 <p>
-                    Mein Ziel: Leere Startblöcke füllen und euch an die Startlinie bringen. Fair, transparent und direkt.
+                    Leere Startblöcke füllen und euch an die Startlinie bringen. Fair, transparent und direkt.
                 </p>
             </div>
         </div>
@@ -47,30 +49,38 @@
 </section>
 
 <style>
-    /* --- VARIABLEN FÜR RESPONSIVE TYPO --- */
+    /* --- VARIABLEN --- */
     :root {
         --h2-clamp: clamp(1.8rem, 8vw, 3rem);
         --p-clamp: clamp(0.95rem, 2.5vw, 1.15rem);
         --box-padding: clamp(25px, 6vw, 60px);
+        /* WICHTIG: Hier definieren wir ein einheitliches Dunkel für alle Karten */
+        --bg-card-dark: #1a1a1a; 
     }
 
     .section-wrapper { 
         padding: clamp(60px, 10vw, 120px) 20px; 
-        background: var(--bg-body); 
+        background: #323232; /* Dein neuer Website-Hintergrund */
         position: relative;
     }
 
-    .container { max-width: 1000px; margin: 0 auto; }
+    .container { 
+        max-width: 1000px; 
+        margin: 0 auto; 
+    }
 
-    /* --- MISSION BOX --- */
+    /* --- MISSION BOX (Die große Box oben) --- */
     .mission-box {
         text-align: center;
         max-width: 800px;
         margin: 0 auto clamp(40px, 8vw, 80px);
-        background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0) 100%);
+        /* HIER GEÄNDERT: Feste dunkle Farbe statt Transparenz */
+        background: var(--bg-card-dark);
         padding: var(--box-padding);
         border-radius: 30px;
+        /* Dein Standard-Border für den Karten-Look */
         border: 5px solid rgba(255,255,255,0.08);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.2);
     }
 
     .badge { 
@@ -96,7 +106,7 @@
     }
 
     .mission-text p {
-        color: var(--text-muted);
+        color: #aaa; /* Etwas helleres Grau für bessere Lesbarkeit auf Schwarz */
         font-size: var(--p-clamp);
         line-height: 1.6;
         margin-bottom: 15px;
@@ -107,7 +117,7 @@
         font-weight: 700;
     }
 
-    /* --- GRID & CARDS --- */
+    /* --- GRID & CARDS (Die kleineren Karten darunter) --- */
     .grid {
         display: grid;
         grid-template-columns: 1fr;
@@ -115,7 +125,8 @@
     }
 
     .card {
-        background: var(--bg-card);
+        /* HIER GEÄNDERT: Feste dunkle Farbe */
+        background: var(--bg-card-dark);
         padding: clamp(30px, 5vw, 45px) clamp(20px, 4vw, 35px);
         border-radius: 24px;
         border: 5px solid rgba(255,255,255,0.05);
@@ -126,7 +137,7 @@
     .card:hover { 
         transform: translateY(-8px); 
         border-color: rgba(0, 188, 212, 0.3); 
-        background: #1a1a1a;
+        background: #111; /* Noch ein Tick dunkler beim Hover */
     }
 
     .icon-box {

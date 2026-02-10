@@ -105,12 +105,12 @@ import Footer from '../components/Footer.astro';
         --cyan: #00bcd4;
         --header-h: 80px;
         --filter-h: 80px;
-        --bg: #050505;
+        --bg: var(--bg-body);
     }
 
     /* Damit der Content nicht unter den fixierten Filtern verschwindet */
     .page-base {
-        background: var(--bg);
+        background: var(--bg-body);
         min-height: 100dvh;
         padding-top: calc(var(--header-h) + var(--filter-h) + 30px);
     }
@@ -122,9 +122,10 @@ import Footer from '../components/Footer.astro';
         left: 0;
         right: 0;
         z-index: 990;
-        background: black;
+        background: var(--bg-body);
+        border-radius: 15px;
         backdrop-filter: none;
-        border-bottom: none;
+        border-bottom: 5px solid rgba(255,255,255,0.05);
         padding: 12px 0;
     }
 
@@ -207,70 +208,198 @@ import Footer from '../components/Footer.astro';
     /* RESULTS GRID */
     .feed { width: 100%; display: flex; flex-direction: column; align-items: center; padding: 0 15px 100px; }
     .grid-layout {
-        display: grid; grid-template-columns: 1fr; gap: 20px;
-        width: 100%; max-width: 900px;
+        display: grid; 
+        grid-template-columns: 1fr; 
+        gap: 16px;
+        width: 100%; 
+        max-width: 900px;
     }
-    @media (min-width: 768px) { .grid-layout { grid-template-columns: 1fr 1fr; } }
+    @media (min-width: 768px) { 
+        .grid-layout { 
+            grid-template-columns: 1fr 1fr; 
+        } 
+    }
 
-    /* CARDS */
-    .card-link { text-decoration: none; display: block; transition: 0.3s; }
-    .card-link:hover { transform: translateY(-5px); }
-
+    /* KOMPAKTE CARDS FÜR SUCHSEITE */
     .e-card {
-        background: #111; padding: 22px; border-radius: 20px;
-        border: 5px solid rgba(255,255,255,0.08); color: white;
-    }
-    .c-top { display: flex; justify-content: space-between; margin-bottom: 10px; }
-    .c-tag { color: var(--cyan); font-weight: 900; font-size: 10px; text-transform: uppercase; }
-    h3 { margin: 8px 0; font-size: 1.3rem; font-weight: 900; line-height: 1.1; }
-    .c-bottom { display: flex; justify-content: space-between; align-items: flex-end; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.05); }
-    .val { color: var(--cyan); font-size: 1.8rem; font-weight: 900; }
-    /* --- 1. ABSTANDS-FIX FÜR DESKTOP --- */
-@media (min-width: 1024px) {
-    .page-base {
-        /* Erhöhter Puffer, damit es luftiger wirkt */
-        padding-top: calc(var(--header-h) + var(--filter-h) + 60px);
+        background: #111;
+        padding: 18px;
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,0.08);
+        color: white;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
     }
     
-    .sticky-unit {
-        /* Optional: Kleiner zusätzlicher Abstand zum Logo-Header */
-        margin-top: 10px;
+    .e-card:hover {
+        transform: translateY(-3px);
+        border-color: var(--cyan);
+        box-shadow: 0 8px 20px rgba(0, 188, 212, 0.15);
     }
-}
 
-/* Chrome, Safari, Edge, Opera */
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-/* Firefox */
-input[type=number] {
-    -moz-appearance: textfield;
-}
-
-/* --- 3. MOBILE OPTIMIERUNG (Erinnerung) --- */
-@media (max-width: 768px) {
-    .page-base {
-        /* Mobil lassen wir es kompakt, wie du sagtest, dass es passt */
-        padding-top: calc(var(--header-h) + var(--filter-h) + 25px);
+    /* Top Row: Event Name + Sport Badge */
+    .c-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
     }
-}
+
+    .event-name {
+        color: white;
+        font-size: 1.05rem;
+        font-weight: 900;
+        line-height: 1.2;
+        flex: 1;
+    }
+
+    .sport-badge {
+        background: rgba(0, 188, 212, 0.1);
+        color: var(--cyan);
+        font-size: 0.65rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        padding: 4px 10px;
+        border-radius: 6px;
+        white-space: nowrap;
+        letter-spacing: 0.5px;
+        flex-shrink: 0;
+    }
+
+    /* Middle: Meta Info */
+    .c-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        padding: 10px 0;
+        border-top: 1px solid rgba(255,255,255,0.05);
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .meta-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.8rem;
+    }
+    
+    .meta-row.split {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+    }
+    
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .meta-label {
+        color: #666;
+        font-weight: 700;
+        font-size: 0.65rem;
+        text-transform: uppercase;
+    }
+
+    .meta-value {
+        color: #ccc;
+        font-weight: 500;
+    }
+
+    /* Bottom: Price + Details Button */
+    .c-bottom {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .price-val {
+        color: var(--cyan);
+        font-size: 1.8rem;
+        font-weight: 900;
+        line-height: 1;
+    }
+
+    .details-link {
+        background: var(--cyan);
+        color: #000;
+        text-decoration: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .details-link:hover {
+        background: white;
+        transform: translateX(2px);
+    }
+
+    /* Desktop Spacing */
+    @media (min-width: 1024px) {
+        .page-base {
+            padding-top: calc(var(--header-h) + var(--filter-h) + 60px);
+        }
+        
+        .sticky-unit {
+            margin-top: 10px;
+        }
+    }
+
+    /* Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+
+    /* Mobile Optimization */
+    @media (max-width: 768px) {
+        .page-base {
+            padding-top: calc(var(--header-h) + var(--filter-h) + 25px);
+        }
+        
+        .event-name {
+            font-size: 0.95rem;
+        }
+        
+        .price-val {
+            font-size: 1.5rem;
+        }
+        
+        .details-link {
+            padding: 8px 16px;
+            font-size: 0.7rem;
+        }
+    }
 </style>
 
 <script>
     import { createClient } from '@supabase/supabase-js';
     const supabase = createClient(import.meta.env.PUBLIC_SUPABASE_URL, import.meta.env.PUBLIC_SUPABASE_ANON_KEY);
 
-    // Elemente mit Typ-Zuweisung (as HTMLElement), damit die Fehler verschwinden
     const toggle = document.getElementById('filter-toggle') as HTMLElement;
     const drawer = document.getElementById('filter-drawer') as HTMLElement;
     const grid = document.getElementById('results-grid') as HTMLElement;
     const reset = document.getElementById('reset-btn') as HTMLElement;
     let activeCat = "";
 
-    // Prüfung ob Elemente existieren, bevor Listener gebunden werden
     if (toggle && drawer) {
         toggle.addEventListener('click', () => {
             drawer.classList.toggle('open');
@@ -280,7 +409,6 @@ input[type=number] {
 
     if (reset) {
         reset.addEventListener('click', () => {
-            // "as HTMLInputElement" wird benötigt, um auf .value zuzugreifen
             (document.getElementById('main-search') as HTMLInputElement).value = "";
             (document.getElementById('city-input') as HTMLInputElement).value = "";
             (document.getElementById('max-price') as HTMLInputElement).value = "";
@@ -295,11 +423,10 @@ input[type=number] {
     }
 
     async function fetch() {
-        if (!grid) return; // Sicherheit, falls Grid nicht da ist
+        if (!grid) return;
 
         let query = supabase.from('listings').select('*');
         
-        // Konstanten mit Typ-Assertion für korrekte Auslesung
         const searchInput = document.getElementById('main-search') as HTMLInputElement;
         const cityInput = document.getElementById('city-input') as HTMLInputElement;
         const priceInput = document.getElementById('max-price') as HTMLInputElement;
@@ -317,14 +444,36 @@ input[type=number] {
         
         if (data && grid) {
             grid.innerHTML = data.map(e => `
-                <a href="/listing/${e.id}?from=search" class="card-link">
-                    <div class="e-card">
-                        <div class="c-top"><span class="c-tag">${e.category}</span><span style="color:#444; font-size:11px">${new Date(e.event_date).toLocaleDateString()}</span></div>
-                        <h3>${e.event_name}</h3>
-                        <p style="color:#666; font-size:0.85rem">${e.location}</p>
-                        <div class="c-bottom"><span class="val">${e.price}€</span><div style="background:var(--cyan);color:black;padding:4px 8px;border-radius:6px;font-weight:900;font-size:10px">DEAL</div></div>
+                <div class="e-card">
+                    <div class="c-top">
+                        <div class="event-name">${e.event_name}</div>
+                        <div class="sport-badge">${e.category}</div>
                     </div>
-                </a>
+                    
+                    <div class="c-meta">
+                        <div class="meta-row split">
+                            <div class="meta-item">
+                                <span class="meta-label">Ort:</span>
+                                <span class="meta-value">${e.location}</span>
+                            </div>
+                            <div class="meta-item">
+                                <span class="meta-label">Datum:</span>
+                                <span class="meta-value">${new Date(e.event_date).toLocaleDateString('de-DE')}</span>
+                            </div>
+                        </div>
+                        <div class="meta-row">
+                            <span class="meta-label">Distanz:</span>
+                            <span class="meta-value">${e.distance || 'N/A'}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="c-bottom">
+                        <div class="price-val">${e.price}€</div>
+                        <a href="/listing/${e.id}?from=search" class="details-link">
+                            Details →
+                        </a>
+                    </div>
+                </div>
             `).join('');
             
             const countDisplay = document.getElementById('res-count');
@@ -335,7 +484,6 @@ input[type=number] {
     }
 
     document.querySelectorAll('.pill').forEach(p => p.addEventListener('click', (e) => {
-        // e.currentTarget statt e.target ist sicherer für Dataset-Zugriff
         const currentPill = e.currentTarget as HTMLElement;
         document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
         currentPill.classList.add('active');
@@ -343,7 +491,6 @@ input[type=number] {
         fetch();
     }));
 
-    // Listener für Buttons und Input mit Optional Chaining (?.)
     document.getElementById('apply-btn')?.addEventListener('click', () => { 
         drawer?.classList.remove('open'); 
         toggle?.classList.remove('active'); 
@@ -352,6 +499,5 @@ input[type=number] {
 
     document.getElementById('main-search')?.addEventListener('input', fetch);
     
-    // Initialer Aufruf
     fetch();
 </script>
