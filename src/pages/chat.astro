@@ -52,14 +52,30 @@ import Layout from '../layouts/Layout.astro';
         if (!user) return window.location.href = '/login';
         currentUser = user;
 
+        // 1. Daten laden
         const [infoRes, msgsRes] = await Promise.all([
-            supabase.from('conversations').select('*, listings(event_name)').eq('id', conversationId).single(),
-            supabase.from('messages').select('*').eq('conversation_id', conversationId).order('created_at', { ascending: true })
+            supabase.from('conversations')
+                .select(`
+                    *, 
+                    listings(event_name),
+                    seller:profiles!conversations_seller_id_fkey(nickname),
+                    buyer:profiles!conversations_buyer_id_fkey(nickname)
+                `)
+                .eq('id', conversationId)
+                .single(),
+            supabase.from('messages')
+                .select('*')
+                .eq('conversation_id', conversationId)
+                .order('created_at', { ascending: true })
         ]);
 
+        // 2. Anzeige füllen
         if (infoRes.data) {
-            document.getElementById('chat-event-name').innerText = infoRes.data.listings?.event_name || "Event";
-            document.getElementById('chat-partner-name').innerText = infoRes.data.buyer_id === user.id ? "Verkäufer" : "Käufer";
+            const chat = infoRes.data;
+            document.getElementById('chat-event-name').innerText = chat.listings?.event_name || "Event";
+            const isMeBuyer = chat.buyer_id === user.id;
+            const partnerName = isMeBuyer ? chat.seller?.nickname : chat.buyer?.nickname;
+            document.getElementById('chat-partner-name').innerText = partnerName || "Dein Partner";
         }
 
         if (msgsRes.data) {
@@ -67,25 +83,48 @@ import Layout from '../layouts/Layout.astro';
             if(loader) loader.style.display = 'none';
             msgsRes.data.forEach(msg => appendMessage(msg));
             scrollToBottom();
+            
+            // --- NEU: NACHRICHTEN ALS GELESEN MARKIEREN ---
+            await markMessagesAsRead();
         }
 
+        // 3. Realtime
         supabase.channel(`chat-${conversationId}`)
-            .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `conversation_id=eq.${conversationId}` }, 
-                payload => {
-                    if (payload.new.sender_id !== currentUser.id) {
-                        appendMessage(payload.new);
-                    }
+            .on('postgres_changes', { 
+                event: 'INSERT', 
+                schema: 'public', 
+                table: 'messages', 
+                filter: `conversation_id=eq.${conversationId}` 
+            }, 
+            async payload => {
+                if (payload.new.sender_id !== currentUser.id) {
+                    appendMessage(payload.new);
+                    // Auch neue einkommende Nachrichten direkt als gelesen markieren
+                    await markMessagesAsRead();
                 }
-            ).subscribe();
+            })
+            .subscribe();
+    }
+
+    // FUNKTION ZUM GELESEN MARKIEREN
+    async function markMessagesAsRead() {
+        if (!conversationId || !currentUser) return;
+
+        const { error } = await supabase
+            .from('messages')
+            .update({ is_read: true })
+            .eq('conversation_id', conversationId)
+            .eq('is_read', false)
+            .neq('sender_id', currentUser.id); // Nur Nachrichten markieren, die ich EMPFANGEN habe
+
+        if (error) console.error("Fehler beim Markieren:", error);
     }
 
     function appendMessage(msg) {
         const container = document.getElementById('chat-window');
         if (!container || document.getElementById(`msg-${msg.id}`)) return;
 
-        // DER ID-CHECK (Sicherheits-String-Vergleich)
         const isMe = String(msg.sender_id) === String(currentUser?.id);
-        
         const row = document.createElement('div');
         row.id = `msg-${msg.id || Date.now()}`;
         row.className = `msg-row ${isMe ? 'me' : 'other'}`;
@@ -111,28 +150,18 @@ import Layout from '../layouts/Layout.astro';
         e.preventDefault();
         const input = document.getElementById('msg-input');
         const text = input.value.trim();
-        if (!text) return;
-        input.value = "";
+        if (!text || !conversationId) return;
+        input.value = ""; 
 
         const { data } = await supabase.from('messages').insert({
             conversation_id: conversationId,
             sender_id: currentUser.id,
-            content: text
+            content: text,
+            is_read: false // Neue Nachricht ist für den Empfänger erstmal ungelesen
         }).select().single();
 
         if (data) appendMessage(data);
     });
-
-    // S24 KEYBOARD FIX
-    if (window.visualViewport) {
-        window.visualViewport.addEventListener('resize', () => {
-            const shell = document.querySelector('.chat-app-shell');
-            if (shell) {
-                shell.style.height = window.visualViewport.height + 'px';
-                scrollToBottom();
-            }
-        });
-    }
 
     initChat();
 </script>
@@ -145,7 +174,7 @@ import Layout from '../layouts/Layout.astro';
         height: 100dvh !important;
         width: 100% !important;
         overflow: hidden !important;
-        background: #000 !important;
+        background: #323232 !important;
         position: fixed;
     }
 
@@ -157,7 +186,7 @@ import Layout from '../layouts/Layout.astro';
         width: 100%;
         max-width: 600px;
         margin: 0 auto;
-        background: #000;
+        background: #323232;
         position: relative;
         /* ABSTAND FÜR DEIN DOCK OBEN */
         padding-top: 80px; 
@@ -169,9 +198,11 @@ import Layout from '../layouts/Layout.astro';
         display: flex;
         align-items: center;
         padding: 12px 16px;
+        margin-top: 25px;
         gap: 15px;
         background: #0a0a0a;
-        border-bottom: 1px solid #1a1a1a;
+        border: 5px solid #1a1a1a;
+        border-radius: 15px;
     }
     .back-btn { color: #666; }
     .event-tag { font-size: 10px; color: #00bcd4; text-transform: uppercase; font-weight: 900; }
@@ -184,7 +215,7 @@ import Layout from '../layouts/Layout.astro';
         display: flex;
         flex-direction: column;
         gap: 16px;
-        background: #000;
+        background: #323232;
     }
 
     /* 4. DIE FARBLICHE & SEITLICHE TRENNUNG (Wichtig!) */
@@ -223,15 +254,14 @@ import Layout from '../layouts/Layout.astro';
 
     .msg-time {
         font-size: 10px;
-        color: #555;
+        color: #ffffff;
         margin-top: 4px;
     }
 
     /* INPUT UNTEN */
     .chat-input-area {
         padding: 10px 12px 25px;
-        background: #050505;
-        border-top: 1px solid #1a1a1a;
+        background: transparent;
     }
     #chat-form {
         display: flex;

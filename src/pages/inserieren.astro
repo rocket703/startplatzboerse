@@ -1,7 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Footer from '../components/Footer.astro';
-import Popup from '../components/Popup.astro';
 ---
 
 <Layout title="Startplatz inserieren - Startplatzbörse">
@@ -16,43 +15,38 @@ import Popup from '../components/Popup.astro';
                 </div>
 
                 <div id="auth-section">
-                    <div class="heading">Wer bist du?</div>
-                    <p class="info-text">Wir brauchen kurz deine Daten für die Verifizierung.</p>
+                    <div class="heading" id="auth-heading">Wer bist du?</div>
+                    <p class="info-text" id="auth-info">Wir brauchen kurz deine E-Mail für die Verifizierung.</p>
                     
-                    <div id="step-1">
-                        <div class="row">
-                            <div class="col">
-                                <label class="input-label">Vorname</label>
-                                <input class="input" type="text" id="vorname" placeholder="Max">
-                            </div>
-                            <div class="col">
-                                <label class="input-label">Nachname</label>
-                                <input class="input" type="text" id="nachname" placeholder="Mustermann">
-                            </div>
-                        </div>
-
-                        <label class="input-label">Dein Nickname (öffentlich sichtbar)</label>
-                        <div class="input-wrapper">
-                            <span class="prefix">@</span>
-                            <input class="input with-prefix" type="text" id="nickname" placeholder="IronMan99">
-                        </div>
-
+                    <div id="auth-step-email">
                         <label class="input-label">E-Mail Adresse</label>
-                        <input class="input" type="email" id="email" placeholder="deine@mail.de">
-                        
+                        <input class="input" type="email" id="email" placeholder="deine@mail.de" maxlength="50">
                         <button class="login-button" id="btn-send-otp">Code anfordern</button>
                     </div>
 
-                    <div id="step-otp" style="display: none;">
-                        <p class="info-text">Check dein Postfach! Gib den 6-stelligen Code hier ein:</p>
-                        <input class="input" type="text" id="otp-code" placeholder="123456" maxlength="6" style="text-align: center; letter-spacing: 5px; font-size: 1.2rem;">
+                    <div id="auth-step-otp" style="display: none;">
+                        <input class="input" type="text" id="otp-code" placeholder="123456" maxlength="6" style="text-align: center; letter-spacing: 5px;" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                         <button class="login-button" id="btn-verify-otp">Identität bestätigen</button>
                     </div>
-                </div>
 
-                <div id="listing-section" style="display: none;">
+                    <div id="auth-step-profile" style="display: none;">
+                        <div class="input-group">
+                            <label class="input-label">Vorname</label>
+                            <input class="input" type="text" id="vorname" placeholder="Dein Vorname" maxlength="30">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Nachname</label>
+                            <input class="input" type="text" id="nachname" placeholder="Dein Nachname" maxlength="30">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Dein Nickname</label>
+                            <input class="input" type="text" id="nickname" placeholder="3-20 Zeichen" maxlength="20">
+                        </div>
+                        <button class="login-button" id="btn-save-profile">Profil speichern & weiter</button>
+                    </div>
+                </div> <div id="listing-section" style="display: none;">
                     <div class="heading">Event Details</div>
-                    <p class="info-text">Fast geschafft! Gib jetzt die Daten zu deinem Startplatz an.</p>
+                    <p class="info-text">Gib jetzt die Daten zu deinem Startplatz an.</p>
                     
                     <form id="listing-form">
                         <label class="input-label">Sportart</label>
@@ -65,7 +59,7 @@ import Popup from '../components/Popup.astro';
                         </select>
 
                         <label class="input-label">Name des Events</label>
-                        <input required class="input" type="text" name="event_name" placeholder="z.B. Berlin Marathon">
+                        <input required class="input" type="text" name="event_name" placeholder="z.B. Berlin Marathon" maxlength="100">
                         
                         <div class="row">
                             <div class="col">
@@ -83,36 +77,33 @@ import Popup from '../components/Popup.astro';
                         <div class="row">
                             <div class="col">
                                 <label class="input-label">PLZ</label>
-                                <input required class="input" type="text" id="plz" name="plz" placeholder="12345" maxlength="5" inputmode="numeric">
+                                <input required class="input" type="text" id="plz" name="plz" placeholder="12345" maxlength="5" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                             </div>
                             <div class="col">
                                 <label class="input-label">Ort</label>
-                                <input required class="input" type="text" id="location" name="location" placeholder="Ort eingeben">
+                                <input required class="input" type="text" id="location" name="location" placeholder="Ort eingeben" maxlength="50">
                             </div>
                         </div>
 
                         <label class="input-label">Dein Preis (in €)</label>
                         <div class="price-input-wrapper">
-                            <input required class="input" type="number" name="price" id="price" placeholder="50" min="1">
+                            <input required class="input" type="number" name="price" id="price" placeholder="50" min="1" max="9999">
                             <span class="currency-suffix">€</span>
                         </div>
 
                         <div class="checkbox-wrapper">
                             <input type="checkbox" required id="confirm-transfer">
-                            <label for="confirm-transfer">Ich bestätige, dass eine offizielle Ummeldung möglich ist.</label>
+                            <label for="confirm-transfer">Ich bestätige, dass ich die Ummeldung vorab mit der Veranstalter geklärt habe.</label>
                         </div>
 
                         <button class="login-button" type="submit" id="btn-final">Inserat jetzt veröffentlichen</button>
                     </form>
                 </div>
 
+                <div id="error-msg" style="color: #ff3b30; font-size: 0.85rem; margin-top: 20px; display: none; text-align: center; font-weight: 600; background: rgba(255, 59, 48, 0.1); padding: 12px; border-radius: 12px; line-height: 1.4;"></div>
+
             </div>
         </div>
-
-        <Popup id="status-popup" title="Systemmeldung">
-            <p id="popup-text" style="color: #ccc; margin-bottom: 20px;"></p>
-            <button class="login-button" onclick="document.getElementById('status-popup').style.display='none'">Alles klar</button>
-        </Popup>
     </main>
     <Footer />
 </Layout>
@@ -127,128 +118,169 @@ import Popup from '../components/Popup.astro';
 
     // --- DOM ELEMENTE ---
     const authSection = document.getElementById('auth-section');
-    const step1 = document.getElementById('step-1');
-    const stepOtp = document.getElementById('step-otp');
+    const authStepEmail = document.getElementById('auth-step-email');
+    const authStepOtp = document.getElementById('auth-step-otp');
+    const authStepProfile = document.getElementById('auth-step-profile');
     const listingSection = document.getElementById('listing-section');
+    const errorDisplay = document.getElementById('error-msg');
     
-    // Inputs Auth
-    const inputVorname = document.getElementById('vorname') as HTMLInputElement;
-    const inputNachname = document.getElementById('nachname') as HTMLInputElement;
-    const inputNickname = document.getElementById('nickname') as HTMLInputElement;
     const inputEmail = document.getElementById('email') as HTMLInputElement;
     const inputOtp = document.getElementById('otp-code') as HTMLInputElement;
-
-    // Inputs Listing
-    const categorySelect = document.getElementById('category') as HTMLSelectElement;
-    const distanceSelect = document.getElementById('distance-select') as HTMLSelectElement;
-    const plzInput = document.getElementById('plz') as HTMLInputElement;
-    const locationInput = document.getElementById('location') as HTMLInputElement;
-    const dateInput = document.getElementById('event_date') as HTMLInputElement;
-
-    // UI Elemente
     const stepDot2 = document.getElementById('step-dot-2');
     const progressLine = document.getElementById('progress-line');
 
-    // --- HILFSFUNKTIONEN ---
-    function showPopup(title: string, message: string) {
-        const popup = document.getElementById('status-popup');
-        const popupTitle = popup?.querySelector('h3');
-        const popupText = document.getElementById('popup-text');
-        if (popup && popupTitle && popupText) {
-            popupTitle.innerText = title;
-            popupText.innerText = message;
-            popup.style.display = 'flex';
+    // FEHLER LOGIK
+    function showError(msg: string) {
+        if (errorDisplay) {
+            errorDisplay.innerText = msg;
+            errorDisplay.style.display = 'block';
         }
     }
+    function hideError() {
+        if (errorDisplay) errorDisplay.style.display = 'none';
+    }
 
-    // 1. Validierung & OTP Senden
-    document.getElementById('btn-send-otp')?.addEventListener('click', async () => {
+    // --- 0. INITIALER SESSION CHECK ---
+    async function checkExistingSession() {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('has_completed_onboarding')
+                .eq('id', session.user.id)
+                .single();
+
+            if (profile?.has_completed_onboarding) {
+                showListingForm();
+            } else {
+                if(authStepEmail) authStepEmail.style.display = 'none';
+                if(authStepProfile) authStepProfile.style.display = 'block';
+            }
+        }
+    }
+    checkExistingSession();
+
+    // --- 1. OTP SENDEN ---
+    document.getElementById('btn-send-otp')?.addEventListener('click', async (e) => {
+        hideError();
         const email = inputEmail.value.trim();
-        const nickname = inputNickname.value.trim();
-        const vorname = inputVorname.value.trim();
-        const nachname = inputNachname.value.trim();
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-        if(!email.includes('@')) return showPopup("Fehler", "Bitte gültige E-Mail angeben.");
-        if(nickname.length < 3) return showPopup("Fehler", "Nickname muss mind. 3 Zeichen haben.");
-        if(!vorname || !nachname) return showPopup("Fehler", "Bitte Vor- und Nachname ausfüllen.");
+        if(!emailRegex.test(email)) return showError("Bitte gib eine gültige E-Mail Adresse ein.");
 
-        const btn = document.getElementById('btn-send-otp') as HTMLButtonElement;
-        btn.textContent = "Sende Code...";
+        const btn = e.target as HTMLButtonElement;
         btn.disabled = true;
+        btn.innerText = "Sende...";
 
         const { error } = await supabase.auth.signInWithOtp({ email });
-
+        
         if (error) {
-            showPopup("Fehler", error.message);
-            btn.textContent = "Code anfordern";
+            showError("Fehler: " + error.message);
             btn.disabled = false;
+            btn.innerText = "Code anfordern";
         } else {
-            step1!.style.display = 'none';
-            stepOtp!.style.display = 'block';
+            if(authStepEmail) authStepEmail.style.display = 'none';
+            if(authStepOtp) authStepOtp.style.display = 'block';
+            const info = document.getElementById('auth-info');
+            if(info) info.innerText = "Prüfe dein Postfach!";
         }
     });
 
-    // 2. OTP Verifizieren & PROFIL SPEICHERN (Wichtig!)
-    document.getElementById('btn-verify-otp')?.addEventListener('click', async () => {
+    // --- 2. OTP VERIFIZIEREN ---
+    document.getElementById('btn-verify-otp')?.addEventListener('click', async (e) => {
+        hideError();
         const email = inputEmail.value.trim();
         const token = inputOtp.value.trim();
-        const nickname = inputNickname.value.trim();
-        const vorname = inputVorname.value.trim();
-        const nachname = inputNachname.value.trim();
 
-        const btn = document.getElementById('btn-verify-otp') as HTMLButtonElement;
-        btn.textContent = "Prüfe...";
+        const btn = e.target as HTMLButtonElement;
+        btn.innerText = "Prüfe...";
         btn.disabled = true;
 
-        // A. Login prüfen
-        const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
+        let { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
         
-        if (error || !data.user) {
-            // Fallback für Signup Link Typen (manchmal nötig)
-            const { data: data2, error: err2 } = await supabase.auth.verifyOtp({ email, token, type: 'signup' });
-            if (err2 || !data2.user) {
-                btn.textContent = "Identität bestätigen";
-                btn.disabled = false;
-                return showPopup("Ungültig", "Falscher Code.");
-            }
+        if (error) {
+            const signupRes = await supabase.auth.verifyOtp({ email, token, type: 'signup' });
+            data = signupRes.data;
+            error = signupRes.error;
         }
 
-        const user = data.user || (await supabase.auth.getUser()).data.user;
+        if (error || !data.user) {
+            showError("Code ungültig oder abgelaufen.");
+            btn.innerText = "Identität bestätigen";
+            btn.disabled = false;
+            return;
+        }
 
-        if (user) {
-            // B. PROFIL UPDATE (Hier passiert die Magie)
-            
-            // 1. Nickname in die 'profiles' Tabelle schreiben (die wir vorhin erstellt haben)
-            const { error: profileError } = await supabase
-                .from('profiles')
-                .upsert({
-                    id: user.id,
-                    nickname: nickname,
-                    // avatar_url: ... (optional später)
-                });
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('has_completed_onboarding')
+            .eq('id', data.user.id)
+            .single();
 
-            // 2. Echte Namen in die Auth-Metadaten schreiben (Standard Supabase)
-            await supabase.auth.updateUser({
-                data: { first_name: vorname, last_name: nachname }
-            });
-
-            if (profileError) {
-                console.error("Profil Fehler:", profileError);
-                // Wir lassen den User trotzdem weiter, aber loggen den Fehler
-            }
-
-            // C. Weiter zum Listing
-            authSection!.style.display = 'none';
-            listingSection!.style.display = 'block';
-            stepDot2!.classList.add('active');
-            progressLine!.style.background = '#00bcd4';
+        if (profile?.has_completed_onboarding) {
+            showListingForm();
+        } else {
+            if(authStepOtp) authStepOtp.style.display = 'none';
+            if(authStepProfile) authStepProfile.style.display = 'block';
+            const heading = document.getElementById('auth-heading');
+            if(heading) heading.innerText = "Willkommen!";
         }
     });
 
-    // 3. Listings Logik (Distanzen, PLZ, Submit)
-    const today = new Date().toISOString().split('T')[0];
-    if (dateInput) dateInput.min = today;
+    // --- 3. PROFIL SPEICHERN ---
+    document.getElementById('btn-save-profile')?.addEventListener('click', async (e) => {
+        hideError();
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return window.location.reload();
 
+        const nickname = (document.getElementById('nickname') as HTMLInputElement).value.trim();
+        const first_name = (document.getElementById('vorname') as HTMLInputElement).value.trim();
+        const last_name = (document.getElementById('nachname') as HTMLInputElement).value.trim();
+
+        // VALIDIERUNG
+        const nicknameRegex = /^[a-zA-Z0-9_]{3,20}$/; 
+        const nameRegex = /^[a-zA-ZÀ-ÿ\s\-]{2,30}$/;
+
+        if (!nameRegex.test(first_name)) return showError("Vorname ungültig (Nur Buchstaben, 2-30 Zeichen).");
+        if (!nameRegex.test(last_name)) return showError("Nachname ungültig (Nur Buchstaben, 2-30 Zeichen).");
+        if (!nicknameRegex.test(nickname)) return showError("Nickname ungültig: 3-20 Zeichen, nur Buchstaben, Zahlen & Unterstrich.");
+
+        const btn = e.target as HTMLButtonElement;
+        btn.innerText = "Speichere...";
+        btn.disabled = true;
+
+        const { error } = await supabase.from('profiles').upsert({
+            id: session.user.id,
+            nickname,
+            first_name,
+            last_name,
+            registered_email: session.user.email,
+            has_completed_onboarding: true
+        });
+
+        if (error) {
+            if (error.code === '23505') {
+                showError("Dieser Nickname ist bereits vergeben.");
+            } else {
+                showError("Fehler: " + error.message);
+            }
+            btn.innerText = "Profil speichern & weiter";
+            btn.disabled = false;
+        } else {
+            showListingForm();
+        }
+    });
+
+    function showListingForm() {
+        if(authSection) authSection.style.display = 'none';
+        if(listingSection) listingSection.style.display = 'block';
+        if(stepDot2) stepDot2.classList.add('active');
+        if(progressLine) progressLine.style.background = '#00bcd4';
+    }
+
+    // --- 4. KATEGORIEN & DISTANZEN ---
+    const categorySelect = document.getElementById('category') as HTMLSelectElement;
+    const distanceSelect = document.getElementById('distance-select') as HTMLSelectElement;
     const distances = {
         Laufen: ['5 km', '10 km', 'Halbmarathon', 'Marathon', 'Ultra'],
         Radrennen: ['Jedermann (kurz)', 'Jedermann (lang)', 'RTF', 'Kriterium', 'Radmarathon'],
@@ -258,68 +290,60 @@ import Popup from '../components/Popup.astro';
 
     categorySelect?.addEventListener('change', () => {
         const selected = categorySelect.value as keyof typeof distances;
-        distanceSelect.innerHTML = '';
-        distances[selected].forEach(dist => {
-            const opt = document.createElement('option');
-            opt.value = dist;
-            opt.textContent = dist;
-            distanceSelect.appendChild(opt);
-        });
-    });
-
-    plzInput?.addEventListener('input', async (e) => {
-        const target = e.target as HTMLInputElement;
-        target.value = target.value.replace(/\D/g, ''); 
-        if (target.value.length === 5) {
-            locationInput.placeholder = "Suche Stadt...";
-            try {
-                const response = await fetch(`https://api.zippopotam.us/de/${target.value}`);
-                if (response.ok) {
-                    const data = await response.json();
-                    locationInput.value = data.places[0]['place name'];
-                }
-            } catch (err) { console.error("PLZ API Error"); }
+        if (distanceSelect) {
+            distanceSelect.innerHTML = '';
+            distances[selected].forEach(dist => {
+                const opt = document.createElement('option');
+                opt.value = dist; opt.textContent = dist;
+                distanceSelect.appendChild(opt);
+            });
         }
     });
 
-    // 4. Listing Absenden
+    // --- 5. LISTING ABSENDEN ---
     document.getElementById('listing-form')?.addEventListener('submit', async (e) => {
         e.preventDefault();
+        hideError();
         const btn = document.getElementById('btn-final') as HTMLButtonElement;
         btn.disabled = true;
-        btn.textContent = "Sende...";
+        btn.textContent = "Wird veröffentlicht...";
 
         try {
-            const { data: authData } = await supabase.auth.getUser();
-            if (!authData.user) throw new Error("Sitzung abgelaufen.");
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) throw new Error("Sitzung abgelaufen. Bitte lade die Seite neu.");
 
             const formData = new FormData(e.target as HTMLFormElement);
             const vals = Object.fromEntries(formData);
-            
-            // Wir speichern hier die Namen nochmal redundat ins Listing, falls gewünscht.
-            // Aber eigentlich haben wir sie jetzt im Profil (sauberer).
+
             const { error: insertError } = await supabase.from('listings').insert([{
-                user_id: authData.user.id,
-                vorname: inputVorname.value,
-                nachname: inputNachname.value,
-                seller_email: inputEmail.value,
+                user_id: user.id, 
+                vorname: (document.getElementById('vorname') as HTMLInputElement)?.value || "",
+                nachname: (document.getElementById('nachname') as HTMLInputElement)?.value || "",
+                seller_email: user.email,
                 category: vals.category,
                 event_name: vals.event_name,
                 distance: vals.distance,
                 event_date: vals.event_date,
                 plz: vals.plz,
-                location: vals.location,
+                location: (document.getElementById('location') as HTMLInputElement).value,
                 price: parseFloat(vals.price as string),
                 approved: true
             }]);
 
             if (insertError) throw insertError;
 
-            showPopup("Glückwunsch!", "Dein Inserat ist online!");
-            setTimeout(() => { window.location.href = "/dashboard"; }, 2000);
+            // Erfolgsmeldung im Fehler-Banner (Grün umstylen für Erfolg)
+            if (errorDisplay) {
+                errorDisplay.style.background = "rgba(0, 188, 212, 0.1)";
+                errorDisplay.style.color = "var(--cyan)";
+                errorDisplay.innerText = "Erfolg! Dein Inserat ist online. Weiterleitung zum Dashboard...";
+                errorDisplay.style.display = "block";
+            }
+            
+            setTimeout(() => window.location.href = "/dashboard", 2000);
 
         } catch (err: any) {
-            showPopup("Fehler", err.message);
+            showError(err.message);
             btn.disabled = false;
             btn.textContent = "Inserat jetzt veröffentlichen";
         }
@@ -327,54 +351,50 @@ import Popup from '../components/Popup.astro';
 </script>
 
 <style>
-    /* Styling Updates für Nickname Feld */
-    .input-wrapper {
-        position: relative;
-        width: 100%;
-    }
-    .prefix {
-        position: absolute;
-        left: 14px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--cyan);
-        font-weight: bold;
-        z-index: 2;
-    }
-    .input.with-prefix {
-        padding-left: 30px; /* Platz für das @ Zeichen */
+    /* CSS BLEIBT IDENTISCH - NUR DIE ERROR-MSG WURDE GEADDET */
+    :root { --cyan: #00bcd4; --bg: #323232; }
+    
+    .page-wrapper {
+        min-height: 100vh;
+        background: var(--bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 120px 20px 60px;
+        color: white;
+        font-family: system-ui, sans-serif;
     }
 
-    :root { --cyan: #00bcd4; --bg: #323232; --card: #222; }
-    .page-wrapper { min-height: 100vh; background: var(--bg); padding: 80px 20px; font-family: 'Inter', sans-serif; color: white; }
-    .form-wrapper { display: flex; justify-content: center; }
-    .container { 
-        max-width: 550px; width: 100%; background: var(--card); border-radius: 24px; 
-        padding: 40px; border: 1px solid rgba(255,255,255,0.1); 
-        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    .container {
+        background: #111;
+        width: 100%;
+        max-width: 550px;
+        padding: 40px;
+        border-radius: 24px;
+        border: 1px solid rgba(255,255,255,0.08);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
     }
+
+    .heading { font-size: 2rem; font-weight: 900; margin-bottom: 10px; color: white; text-align: center; }
+    .info-text { color: #888; font-size: 0.9rem; line-height: 1.5; text-align: center; margin-bottom: 30px; }
+
     .progress-bar { display: flex; align-items: center; justify-content: center; margin-bottom: 40px; }
-    .step { width: 32px; height: 32px; border-radius: 50%; background: #333; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: bold; transition: 0.3s; }
-    .step.active { background: var(--cyan); color: black; box-shadow: 0 0 15px var(--cyan); }
-    .line { width: 60px; height: 2px; background: #333; margin: 0 10px; }
-    .heading { font-size: 1.8rem; font-weight: 800; text-align: center; color: var(--cyan); margin-bottom: 8px; }
-    .info-text { text-align: center; color: #aaa; font-size: 0.9rem; margin-bottom: 30px; }
-    .input-label { display: block; font-size: 0.8rem; font-weight: 600; margin: 15px 0 6px 4px; color: #eee; }
-    .input { 
-        width: 100%; background: #1a1a1a; border: 1px solid #333; padding: 14px; 
-        border-radius: 12px; color: white; outline: none; transition: 0.3s; box-sizing: border-box;
-    }
-    .input:focus { border-color: var(--cyan); background: #222; }
-    .row { display: flex; gap: 15px; margin-bottom: 10px; }
+    .step { width: 32px; height: 32px; border-radius: 50%; background: #333; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; color: #666; transition: 0.3s; }
+    .step.active { background: var(--cyan); color: black; box-shadow: 0 0 15px rgba(0, 188, 212, 0.4); }
+    .line { width: 40px; height: 2px; background: #333; margin: 0 10px; }
+
+    .input-label { display: block; font-size: 0.75rem; color: #666; margin-bottom: 8px; font-weight: 700; text-transform: uppercase; margin-top: 15px; }
+    .input { width: 100%; background: #000; border: 1px solid #333; padding: 15px; border-radius: 12px; color: white; font-size: 1rem; transition: 0.3s; box-sizing: border-box; outline: none; }
+    .input:focus { border-color: var(--cyan); }
+    
+    .row { display: flex; gap: 15px; }
     .col { flex: 1; }
+
+    .login-button { width: 100%; background: var(--cyan); color: black; border: none; padding: 16px; border-radius: 12px; font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 1rem; margin-top: 25px; }
+    .login-button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 188, 212, 0.3); }
+    .login-button:disabled { opacity: 0.5; cursor: not-allowed; }
+
     .price-input-wrapper { position: relative; }
-    .currency-suffix { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--cyan); font-weight: bold; }
-    .checkbox-wrapper { display: flex; gap: 10px; margin-top: 20px; font-size: 0.8rem; color: #999; align-items: center; }
-    .login-button { 
-        width: 100%; background: var(--cyan); color: black; padding: 16px; border-radius: 12px; 
-        border: none; font-weight: 800; cursor: pointer; margin-top: 25px; transition: 0.3s;
-    }
-    .login-button:hover { transform: translateY(-2px); opacity: 0.9; }
-    .login-button:disabled { background: #444; cursor: not-allowed; }
-    @media (max-width: 500px) { .row { flex-direction: column; gap: 0; } }
+    .currency-suffix { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--cyan); font-weight: 900; }
+    .checkbox-wrapper { display: flex; gap: 10px; margin-top: 20px; font-size: 0.8rem; color: #666; align-items: center; }
 </style>

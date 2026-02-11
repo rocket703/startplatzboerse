@@ -31,71 +31,87 @@ const { initialEmail = "" } = Astro.props;
 </div>
 
 <script>
-    import { supabase } from '../lib/supabaseClient'; // Stelle sicher, dass der Client hier verfügbar ist
+    import { createClient } from '@supabase/supabase-js';
 
-    const step1 = document.getElementById('step-1');
-    const step2 = document.getElementById('step-2');
+    const supabase = createClient(
+        import.meta.env.PUBLIC_SUPABASE_URL,
+        import.meta.env.PUBLIC_SUPABASE_ANON_KEY
+    );
+
     const detailsForm = document.getElementById('details-form');
-    const verifyBtn = document.getElementById('verify-btn');
+    const emailInput = document.getElementById('reg-email');
 
-    let userData = {};
+    // 1. ROUTE GUARD & INITIALISIERUNG
+    async function initOnboarding() {
+        const { data: { session }, error } = await supabase.auth.getSession();
 
-    // PHASE 1: Formular absenden & OTP anfordern
-    detailsForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        userData = {
-            vorname: document.getElementById('vorname').value,
-            nachname: document.getElementById('nachname').value,
-            nickname: document.getElementById('nickname').value,
-            email: document.getElementById('reg-email').value
-        };
-
-        const { error } = await supabase.auth.signInWithOtp({
-            email: userData.email,
-        });
-
-        if (error) {
-            alert("Fehler: " + error.message);
-        } else {
-            document.getElementById('display-email').innerText = userData.email;
-            step1.classList.add('hidden');
-            step2.classList.remove('hidden');
+        // Wenn kein Nutzer eingeloggt ist -> zurück zum Login
+        if (!session || error) {
+            window.location.href = '/login';
+            return;
         }
-    });
 
-    // PHASE 2: OTP verifizieren & Profil in DB anlegen
-    verifyBtn.addEventListener('click', async () => {
-        const token = document.getElementById('otp-code').value;
+        // Wenn das Onboarding bereits abgeschlossen ist -> direkt zum Dashboard
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('has_completed_onboarding')
+            .eq('id', session.user.id)
+            .single();
 
-        const { data, error } = await supabase.auth.verifyOtp({
-            email: userData.email,
-            token,
-            type: 'signup' // oder 'magiclink'
-        });
+        if (profile?.has_completed_onboarding) {
+            window.location.href = '/dashboard';
+            return;
+        }
 
-        if (error) {
-            alert("Falscher Code oder abgelaufen.");
-        } else if (data.user) {
-            // JETZT das Profil in der Datenbank anlegen/aktualisieren
+        // E-Mail aus der Session im Formular vorbelegen
+        if (emailInput) {
+            emailInput.value = session.user.email;
+            emailInput.disabled = true; // Verhindert, dass die Mail hier geändert wird
+        }
+    }
+
+    // Initialisierung ausführen
+    initOnboarding();
+
+    // 2. PROFIL SPEICHERN (Ohne erneutes OTP)
+    if (detailsForm) {
+        detailsForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Button-Status ändern
+            const submitBtn = detailsForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerText;
+            submitBtn.innerText = "Speichere...";
+            submitBtn.disabled = true;
+
+            const { data: { session } } = await supabase.auth.getSession();
+
+            const profileData = {
+                id: session.user.id, // Ganz wichtig für die Zuordnung
+                nickname: document.getElementById('nickname').value,
+                // Stelle sicher, dass diese Spalten in deiner Tabelle existieren:
+                vorname: document.getElementById('vorname').value,
+                nachname: document.getElementById('nachname').value,
+                // Hier setzen wir den Status auf abgeschlossen:
+                has_completed_onboarding: true,
+                updated_at: new Date()
+            };
+
+            // Upsert: Aktualisiert den Datensatz oder erstellt ihn, falls nicht vorhanden
             const { error: profileError } = await supabase
                 .from('profiles')
-                .upsert({
-                    id: data.user.id,
-                    nickname: userData.nickname,
-                    // falls du Vorname/Nachname in die Table aufnimmst:
-                    // first_name: userData.vorname,
-                    // last_name: userData.nachname
-                });
+                .upsert(profileData);
 
             if (profileError) {
-                console.error("Profil-Fehler:", profileError);
+                alert("Fehler beim Speichern: " + profileError.message);
+                submitBtn.innerText = originalText;
+                submitBtn.disabled = false;
+            } else {
+                // Erfolg! Jetzt zum Dashboard
+                window.location.href = '/dashboard?msg=welcome';
             }
-            
-            // Erfolg! Weiterleitung zum Dashboard oder Inserat
-            window.location.href = '/dashboard?msg=welcome';
-        }
-    });
+        });
+    }
 </script>
 
 <style>
