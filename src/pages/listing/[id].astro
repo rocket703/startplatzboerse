@@ -29,9 +29,9 @@ const backLabel = origin === 'search' ? "← Zurück zur Suche" : "← Zurück z
 <Layout title={item ? item.event_name : "Details"}>
     <main class="listing-page">
         <div class="container">
-            <button id="dynamic-back-btn" class="back-link">
-                {backLabel}
-            </button>
+            <a href="/#listings" class="back-link button-style">
+    {backLabel}
+</a>
 
             {!item ? (
                 <div class="error-box card">
@@ -308,7 +308,7 @@ const backLabel = origin === 'search' ? "← Zurück zur Suche" : "← Zurück z
     .back-link { 
         background: transparent;
         border: none;
-        color: #555; 
+        color: #00bcd4; 
         text-decoration: none; 
         font-weight: 700; 
         font-size: 0.8rem; 
@@ -316,6 +316,7 @@ const backLabel = origin === 'search' ? "← Zurück zur Suche" : "← Zurück z
         display: inline-block; 
         cursor: pointer;
         padding: 0;
+        transition: color 0.3s ease;
     }
     .back-link:hover { color: white; }
 </style>

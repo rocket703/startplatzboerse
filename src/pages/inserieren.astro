@@ -29,21 +29,29 @@ import Footer from '../components/Footer.astro';
                         <button class="login-button" id="btn-verify-otp">Identität bestätigen</button>
                     </div>
 
-                    <div id="auth-step-profile" style="display: none;">
-                        <div class="input-group">
-                            <label class="input-label">Vorname</label>
-                            <input class="input" type="text" id="vorname" placeholder="Dein Vorname" maxlength="30">
-                        </div>
-                        <div class="input-group">
-                            <label class="input-label">Nachname</label>
-                            <input class="input" type="text" id="nachname" placeholder="Dein Nachname" maxlength="30">
-                        </div>
-                        <div class="input-group">
-                            <label class="input-label">Dein Nickname</label>
-                            <input class="input" type="text" id="nickname" placeholder="3-20 Zeichen" maxlength="20">
-                        </div>
-                        <button class="login-button" id="btn-save-profile">Profil speichern & weiter</button>
-                    </div>
+                    <div id="auth-step-profile" class="profile" style="display: none;">
+    <div class="input-group">
+        <label class="input-label">Vorname</label>
+        <input class="input" type="text" id="vorname" placeholder="Dein Vorname" maxlength="30">
+    </div>
+    <div class="input-group">
+        <label class="input-label">Nachname</label>
+        <input class="input" type="text" id="nachname" placeholder="Dein Nachname" maxlength="30">
+    </div>
+    <div class="input-group">
+        <label class="input-label">Dein Nickname</label>
+        <input class="input" type="text" id="nickname" placeholder="3-20 Zeichen" maxlength="20">
+    </div>
+
+    <div class="checkbox-group">
+        <input type="checkbox" id="agb-consent" />
+        <label for="agb-consent" class="agb-label">
+            Ich stimme den <a href="/agb" class="agb-link" target="_blank">AGB</a> zu.
+        </label>
+    </div>
+
+    <button class="login-button" id="btn-save-profile">Profil speichern & weiter</button>
+</div>
                 </div> <div id="listing-section" style="display: none;">
                     <div class="heading">Event Details</div>
                     <p class="info-text">Gib jetzt die Daten zu deinem Startplatz an.</p>
@@ -229,15 +237,29 @@ import Footer from '../components/Footer.astro';
 
     // --- 3. PROFIL SPEICHERN ---
     document.getElementById('btn-save-profile')?.addEventListener('click', async (e) => {
-        hideError();
+        hideError(); // Fehleranzeige zurücksetzen
+
+        // Session prüfen
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) return window.location.reload();
 
+        // Input-Werte holen
         const nickname = (document.getElementById('nickname') as HTMLInputElement).value.trim();
         const first_name = (document.getElementById('vorname') as HTMLInputElement).value.trim();
         const last_name = (document.getElementById('nachname') as HTMLInputElement).value.trim();
 
-        // VALIDIERUNG
+        // +++ NEU: AGB CHECKBOX PRÜFEN +++
+        // Wir suchen das Checkbox-Element im DOM
+        const agbCheckbox = document.getElementById('agb-consent') as HTMLInputElement;
+        
+        // Wenn die Checkbox nicht existiert ODER nicht angehakt ist (.checked ist false)
+        if (!agbCheckbox || !agbCheckbox.checked) {
+             // Zeige Fehlermeldung und brich die Funktion ab (return)
+             return showError("Bitte stimme den AGB zu, um fortzufahren.");
+        }
+        // +++ ENDE NEU +++
+
+        // REGEX VALIDIERUNG
         const nicknameRegex = /^[a-zA-Z0-9_]{3,20}$/; 
         const nameRegex = /^[a-zA-ZÀ-ÿ\s\-]{2,30}$/;
 
@@ -249,6 +271,7 @@ import Footer from '../components/Footer.astro';
         btn.innerText = "Speichere...";
         btn.disabled = true;
 
+        // DATEN AN SUPABASE SENDEN
         const { error } = await supabase.from('profiles').upsert({
             id: session.user.id,
             nickname,
@@ -397,4 +420,49 @@ import Footer from '../components/Footer.astro';
     .price-input-wrapper { position: relative; }
     .currency-suffix { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: var(--cyan); font-weight: 900; }
     .checkbox-wrapper { display: flex; gap: 10px; margin-top: 20px; font-size: 0.8rem; color: #666; align-items: center; }
+
+    /* Container Checkbox + Text */
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    margin-top: 15px;
+    margin-bottom: 20px;
+}
+
+/* Die Box selbst */
+.checkbox-group input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
+    cursor: pointer;
+    accent-color: #00bcd4; /* Deine Brand-Farbe */
+}
+
+/* Der Text daneben */
+.agb-label {
+    color: #e0e0e0;
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+/* Der Link */
+.agb-link {
+    color: #00bcd4;
+    text-decoration: underline;
+    font-weight: 600;
+}
+.profile {
+    /* 1. Stabilität: Eine feste Basisbreite verhindern das Springen */
+    width: 100%; 
+    max-width: 400px; /* Die Box wird nie breiter als 400px */
+    
+    /* 2. Sicherheit: Falls kein Inhalt da ist, fällt sie nicht zusammen */
+    min-width: 300px; 
+
+    /* 3. Zentrierung (falls gewünscht) */
+    margin: 0 auto; 
+    
+    /* Wichtig: Padding wird in die Breite eingerechnet */
+    box-sizing: border-box; 
+}
 </style>

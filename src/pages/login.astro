@@ -29,21 +29,29 @@ import Footer from '../components/Footer.astro';
                 <button id="btn-back" class="btn-link">Andere E-Mail nutzen</button>
             </div>
 
-            <div id="step-register" style="display: none;">
-                <div class="input-group">
-                    <label>Vorname</label>
-                    <input type="text" id="vorname" placeholder="Dein Vorname" maxlength="30" />
-                </div>
-                <div class="input-group">
-                    <label>Nachname</label>
-                    <input type="text" id="nachname" placeholder="Dein Nachname" maxlength="30" />
-                </div>
-                <div class="input-group">
-                    <label>Nickname</label>
-                    <input type="text" id="nickname" placeholder="3-20 Zeichen" maxlength="20" />
-                </div>
-                <button id="btn-complete-profile" class="btn-primary">Profil speichern & Starten</button>
-            </div>
+           <div id="step-register" style="display: none;">
+    <div class="input-group">
+        <label>Vorname</label>
+        <input type="text" id="vorname" placeholder="Dein Vorname" maxlength="30" />
+    </div>
+    <div class="input-group">
+        <label>Nachname</label>
+        <input type="text" id="nachname" placeholder="Dein Nachname" maxlength="30" />
+    </div>
+    <div class="input-group">
+        <label>Nickname</label>
+        <input type="text" id="nickname" placeholder="3-20 Zeichen" maxlength="20" />
+    </div>
+
+    <div class="checkbox-group">
+    <input type="checkbox" id="agb-consent" />
+    <label for="agb-consent" class="agb-label">
+        Ich stimme den <a href="/agb" class="agb-link" target="_blank">AGB</a> zu.
+    </label>
+</div>  
+
+    <button id="btn-complete-profile" class="btn-primary">Profil speichern & Starten</button>
+</div>
             
             <div id="error-msg" style="color: #ff3b30; font-size: 0.85rem; margin-top: 15px; display: none; text-align: center; font-weight: 600; background: rgba(255, 59, 48, 0.1); padding: 10px; border-radius: 8px; line-height: 1.4;"></div>
         </div>
@@ -52,23 +60,29 @@ import Footer from '../components/Footer.astro';
 </Layout>
 
 <script>
+    // --- IMPORT & INITIALISIERUNG ---
     import { createClient } from '@supabase/supabase-js';
 
+    // Supabase-Client starten
     const supabase = createClient(
         import.meta.env.PUBLIC_SUPABASE_URL,
         import.meta.env.PUBLIC_SUPABASE_ANON_KEY
     );
 
-    const emailInput = document.getElementById('email') as HTMLInputElement;
-    const otpInput = document.getElementById('otp-code') as HTMLInputElement;
+    // --- DOM-ELEMENTE HOLEN ---
+    const emailInput = document.getElementById('email');
+    const otpInput = document.getElementById('otp-code');
     const statusText = document.getElementById('status-text');
     const mainTitle = document.getElementById('main-title');
+    
+    // Die verschiedenen Container für die Schritte (Email, Code, Profil)
     const stepEmail = document.getElementById('step-email');
     const stepCode = document.getElementById('step-code');
     const stepRegister = document.getElementById('step-register');
     const errorDisplay = document.getElementById('error-msg');
 
-    function showError(message: string) {
+    // --- HILFSFUNKTIONEN FÜR FEHLERMELDUNGEN ---
+    function showError(message) {
         if (errorDisplay) {
             errorDisplay.innerText = message;
             errorDisplay.style.display = 'block';
@@ -79,26 +93,31 @@ import Footer from '../components/Footer.astro';
         if (errorDisplay) errorDisplay.style.display = 'none';
     }
 
-    // 1. CODE ANFORDERN
+    // --- SCHRITT 1: LOGIN-CODE ANFORDERN ---
     document.getElementById('btn-send-code')?.addEventListener('click', async (e) => {
-        hideError();
+        hideError(); // Alte Fehler ausblenden
+        
         const email = emailInput.value.trim();
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+        // Validierung der E-Mail
         if (!email) return showError("Bitte E-Mail Adresse eingeben.");
         if (!emailRegex.test(email)) return showError("Das ist keine gültige E-Mail Adresse.");
 
-        const btn = e.target as HTMLButtonElement;
+        // Button deaktivieren, um Mehrfachklicks zu verhindern
+        const btn = e.target;
         btn.innerText = "Sende...";
         btn.disabled = true;
 
+        // Anfrage an Supabase senden
         const { error } = await supabase.auth.signInWithOtp({ email });
 
         if (error) {
             showError("Fehler: " + error.message);
-            btn.innerText = "Code anfordern";
+            btn.innerText = "Code anfordern"; // Reset Button
             btn.disabled = false;
         } else {
+            // UI umschalten: Email-Feld weg, Code-Feld her
             if(stepEmail) stepEmail.style.display = 'none';
             if(stepCode) stepCode.style.display = 'block';
             if(statusText) statusText.innerText = `Code gesendet an: ${email}`;
@@ -106,7 +125,7 @@ import Footer from '../components/Footer.astro';
         }
     });
 
-    // 2. OTP VERIFIZIEREN
+    // --- SCHRITT 2: OTP-CODE VERIFIZIEREN ---
     document.getElementById('btn-verify')?.addEventListener('click', async (e) => {
         hideError();
         const email = emailInput.value.trim();
@@ -114,14 +133,16 @@ import Footer from '../components/Footer.astro';
 
         if (token.length < 6) return showError("Der Code muss 6-stellig sein.");
 
-        const btn = e.target as HTMLButtonElement;
+        const btn = e.target;
         btn.innerText = "Prüfe...";
         btn.disabled = true;
 
+        // Versuch 1: Login als bestehender User ('email')
         let { data: authData, error: authError } = await supabase.auth.verifyOtp({
             email, token, type: 'email'
         });
 
+        // Versuch 2: Falls Login fehlschlägt, ist es vielleicht eine Neuanmeldung ('signup')
         if (authError) {
             const signupRes = await supabase.auth.verifyOtp({
                 email, token, type: 'signup'
@@ -130,11 +151,13 @@ import Footer from '../components/Footer.astro';
             authError = signupRes.error;
         }
 
+        // Ergebnis prüfen
         if (authError || !authData.user) {
             showError("Code ungültig oder abgelaufen.");
             btn.innerText = "Anmelden & Weiter";
             btn.disabled = false;
         } else {
+            // Prüfen, ob der User schon ein Profil hat
             const { data: profile } = await supabase
                 .from('profiles')
                 .select('has_completed_onboarding')
@@ -142,9 +165,11 @@ import Footer from '../components/Footer.astro';
                 .single();
 
             if (profile?.has_completed_onboarding) {
+                // User existiert schon -> Weiterleitung zum Dashboard
                 const urlParams = new URLSearchParams(window.location.search);
                 window.location.href = urlParams.get('redirect') || "/dashboard";
             } else {
+                // Neuer User -> UI umschalten zum Profil-Erstellen
                 if(stepCode) stepCode.style.display = 'none';
                 if(stepRegister) stepRegister.style.display = 'block';
                 if(mainTitle) mainTitle.innerText = "Willkommen!";
@@ -153,28 +178,41 @@ import Footer from '../components/Footer.astro';
         }
     });
 
-    // 3. PROFIL SPEICHERN
+    // --- SCHRITT 3: PROFIL ERSTELLEN & SPEICHERN ---
     document.getElementById('btn-complete-profile')?.addEventListener('click', async (e) => {
         hideError();
+        
+        // Aktuelle Session holen
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return window.location.reload();
+        if (!session) return window.location.reload(); // Falls Session weg ist -> Reload
 
-        const nickname = (document.getElementById('nickname') as HTMLInputElement).value.trim();
-        const first_name = (document.getElementById('vorname') as HTMLInputElement).value.trim();
-        const last_name = (document.getElementById('nachname') as HTMLInputElement).value.trim();
+        // Eingabewerte auslesen
+        const nickname = document.getElementById('nickname').value.trim();
+        const first_name = document.getElementById('vorname').value.trim();
+        const last_name = document.getElementById('nachname').value.trim();
+        
+        // +++ NEU: AGB CHECKBOX PRÜFEN +++
+        const agbCheckbox = document.getElementById('agb-consent');
+        
+        if (!agbCheckbox || !agbCheckbox.checked) {
+             return showError("Bitte stimme den AGB zu, um fortzufahren.");
+        }
+        // +++ ENDE NEU +++
 
-        // VALIDIERUNG
+        // Regex-Definitionen für Validierung
         const nicknameRegex = /^[a-zA-Z0-9_]{3,20}$/; 
         const nameRegex = /^[a-zA-ZÀ-ÿ\s\-]{2,30}$/;
 
+        // Eingaben validieren
         if (!nameRegex.test(first_name)) return showError("Vorname ungültig (Nur Buchstaben, 2-30 Zeichen).");
         if (!nameRegex.test(last_name)) return showError("Nachname ungültig (Nur Buchstaben, 2-30 Zeichen).");
         if (!nicknameRegex.test(nickname)) return showError("Nickname ungültig: 3-20 Zeichen, nur Buchstaben, Zahlen & Unterstrich.");
 
-        const btn = e.target as HTMLButtonElement;
+        const btn = e.target;
         btn.innerText = "Speichere...";
         btn.disabled = true;
 
+        // Daten in Supabase 'profiles' Tabelle speichern
         const { error } = await supabase.from('profiles').upsert({
             id: session.user.id,
             nickname,
@@ -184,8 +222,9 @@ import Footer from '../components/Footer.astro';
             has_completed_onboarding: true
         });
 
+        // Fehlerbehandlung beim Speichern
         if (error) {
-            if (error.code === '23505') {
+            if (error.code === '23505') { // Postgres Error Code für "Unique Violation"
                 showError("Dieser Nickname ist bereits vergeben.");
             } else {
                 showError("Fehler: " + error.message);
@@ -193,10 +232,12 @@ import Footer from '../components/Footer.astro';
             btn.innerText = "Profil speichern & Starten";
             btn.disabled = false;
         } else {
+            // Erfolg -> Weiterleitung
             window.location.href = "/dashboard";
         }
     });
 
+    // --- ZURÜCK-BUTTON ---
     document.getElementById('btn-back')?.addEventListener('click', () => {
         hideError();
         if(stepEmail) stepEmail.style.display = 'block';
@@ -278,4 +319,42 @@ import Footer from '../components/Footer.astro';
 
     #step-email, #step-code, #step-register { animation: fadeIn 0.4s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    
+    /* Container für Checkbox und Text */
+.checkbox-group {
+    display: flex;
+    align-items: center; /* Vertikale Zentrierung */
+    margin-top: 15px;    /* Abstand zum Eingabefeld darüber */
+    margin-bottom: 20px; /* Abstand zum Button darunter */
+}
+
+/* Styling der Checkbox selbst */
+.checkbox-group input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px; /* Abstand zwischen Box und Text */
+    cursor: pointer;
+    /* Färbt die Checkbox in unterstützten Browsern in der Brand-Farbe */
+    accent-color: #00bcd4; 
+}
+
+/* Styling des Labels (der normale Text) */
+.agb-label {
+    color: #e0e0e0; /* Helle Textfarbe für gute Lesbarkeit */
+    font-size: 0.95rem;
+    cursor: pointer; /* Zeiger auch auf dem Text */
+}
+
+/* Styling des AGB-Links */
+.agb-link {
+    color: #00bcd4; /* Deine türkise Brand-Farbe */
+    text-decoration: underline;
+    font-weight: 600; /* Optional: etwas fetter */
+    transition: color 0.2s ease;
+}
+
+/* Hover-Effekt für den Link */
+.agb-link:hover {
+    color: #00acc1; /* Ein etwas dunklerer Türkis-Ton */
+}
 </style>
