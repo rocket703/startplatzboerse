@@ -11,7 +11,7 @@ import Popup from '../components/Popup.astro';
             <header class="dash-header-new">
                 <div class="user-greeting">
                     <span class="eyebrow">Willkommen zurück</span>
-                    <h1 id="user-name-display">Dein Dashboard</h1>
+                    <h1 id="dash-heading" class="gradient-text">Dashboard</h1>
                 </div>
                 <div class="header-stats-pill">
                     <div class="stat-group">
@@ -284,9 +284,22 @@ import Popup from '../components/Popup.astro';
         }
     }
 
+    // --- 1. User Session holen ---
     async function init() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) { window.location.href = "/login"; return; }
+
+    // --- NICKNAME HOLEN & ANZEIGEN ---
+        const { data: profile } = await supabase
+            .from('profiles')
+            .select('nickname')
+            .eq('id', user.id)
+            .single();
+
+        const heading = document.getElementById('dash-heading');
+        if (heading && profile?.nickname) {
+            heading.innerText = `${profile.nickname}`;
+        }
 
         // Beide Feeds laden
         await Promise.all([fetchListings(user.id), fetchChats(user.id)]);
@@ -317,9 +330,10 @@ import Popup from '../components/Popup.astro';
 
     async function fetchListings(userId) {
         const grid = document.getElementById('listings-grid');
+        // WICHTIG: Hier 'old_price' mit abfragen
         const { data, error } = await supabase
             .from('listings')
-            .select('*')
+            .select('*') 
             .eq('user_id', userId)
             .order('created_at', {ascending: false});
 
@@ -333,18 +347,34 @@ import Popup from '../components/Popup.astro';
             return;
         }
         
-        grid.innerHTML = data.map(item => `
+        grid.innerHTML = data.map(item => {
+            // Logik für die Anzeige des Preises (Streichpreis vs Normal)
+            let priceHtml = `<div class="price-tag-new">${item.price}€</div>`;
+            
+            if (item.old_price && item.old_price > item.price) {
+                priceHtml = `
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="text-decoration: line-through; color: #888; font-size: 0.9em;">${item.old_price}€</span>
+                        <div class="price-tag-new" style="color: #00bcd4; font-weight: bold;">${item.price}€</div>
+                    </div>
+                `;
+            }
+
+            return `
             <div class="glass-card">
                 <span class="eyebrow">${item.category}</span>
                 <h3 style="margin: 10px 0 5px 0;">${item.event_name}</h3>
                 <p style="color:#555; font-size:0.8rem;">${new Date(item.event_date).toLocaleDateString()}</p>
-                <div class="price-tag-new">${item.price}€</div>
+                
+                ${priceHtml}
+
                 <div class="card-footer-btns">
                     <button class="btn-dash-edit" onclick="window.openEditModal('${item.id}', '${item.price}')">Preis</button>
                     <button class="btn-dash-delete" onclick="window.askDelete('${item.id}')">Löschen</button>
                 </div>
             </div>
-        `).join('');
+            `;
+        }).join('');
     }
 
     async function fetchChats(userId) {
@@ -429,11 +459,49 @@ import Popup from '../components/Popup.astro';
         document.getElementById('edit-modal').style.display = 'flex';
     };
 
+    // --- HIER IST DIE KORRIGIERTE PREIS-LOGIK ---
     document.getElementById('save-price')?.addEventListener('click', async () => {
         const id = (document.getElementById('edit-listing-id') as HTMLInputElement).value;
-        const price = (document.getElementById('new-price') as HTMLInputElement).value;
-        const { error } = await supabase.from('listings').update({ price: parseFloat(price) }).eq('id', id);
-        if (!error) location.reload();
+        const newPrice = parseFloat((document.getElementById('new-price') as HTMLInputElement).value);
+        
+        const btn = document.getElementById('save-price');
+        btn.innerText = "Speichere...";
+        btn.disabled = true;
+
+        // 1. Hole aktuellen Datensatz, um old_price zu prüfen
+        const { data: currentItem, error: fetchError } = await supabase
+            .from('listings')
+            .select('price, old_price')
+            .eq('id', id)
+            .single();
+
+        if (fetchError) {
+            alert("Fehler beim Laden des Inserats.");
+            location.reload();
+            return;
+        }
+
+        let updateData = { price: newPrice };
+
+        // 2. Intelligente Logik für old_price
+        if (!currentItem.old_price) {
+            // Wenn noch kein alter Preis da ist, speichere den aktuellen als "Alt"
+            updateData.old_price = currentItem.price;
+        } else if (newPrice >= currentItem.old_price) {
+            // Wenn neuer Preis wieder höher/gleich dem Original ist -> Streichpreis entfernen
+            updateData.old_price = null;
+        }
+
+        // 3. Update durchführen
+        const { error } = await supabase.from('listings').update(updateData).eq('id', id);
+        
+        if (!error) {
+            location.reload();
+        } else {
+            alert("Fehler beim Speichern: " + error.message);
+            btn.innerText = "Speichern";
+            btn.disabled = false;
+        }
     });
 
     init();
