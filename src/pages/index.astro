@@ -46,6 +46,26 @@ const { data: listings, error } = await supabase
         </div>
     </div>
 
+  <div class="launch-banner">
+    <div class="launch-badge">Live</div>
+    <h2 class="launch-title">Wir sind am Start – Sei von Anfang an dabei!</h2>
+    <p class="launch-text">
+        Willkommen auf der neuen Startplatzbörse! Diese Plattform ist gerade frisch geschlüpft. 
+        Damit wir die beste Anlaufstelle für Ausdauersportler werden, brauchen wir <strong>dich</strong>: 
+        Hast du ein Ticket übrig? Inseriere es. Erzähl deinen Trainingsbuddys von uns – jedes geteilte Event hilft uns zu wachsen!
+    </p>
+    <div class="launch-buttons">
+        <button id="share-platform-btn" class="btn-secondary" style="min-height: 50px; font-size: 1rem;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+            Plattform teilen
+        </button>
+    </div>
+</div>
+
+<div id="custom-toast" class="toast-hidden">✅ Link kopiert! Danke fürs Teilen.</div>
+
+<div id="custom-toast" class="toast-hidden">✅ Link kopiert! Danke fürs Teilen.</div>
+
    <section class="listings-preview" id="listings">
     <div class="container">
         <div class="section-header">
@@ -278,4 +298,291 @@ const { data: listings, error } = await supabase
         
         .hero { min-height: 70vh; padding-top: 80px; }
     }
+
+<style>
+    /* --- VARIABLEN & RESET --- */
+    :root {
+        --bg-actual: #323232; 
+        --bg-card: #1a1a1a;   
+        --cyan: #00bcd4;
+        --text-muted: #aaa;
+    }
+
+    :global(body) {
+        background-color: var(--bg-actual);
+        margin: 0;
+        padding: 0;
+    }
+
+    /* --- HERO SEKTION --- */
+    .hero {
+        min-height: 85vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        background: linear-gradient(to bottom, #454545 0%, #383838 60%, var(--bg-actual) 100%);
+        padding: 120px 20px 80px;
+        margin: 0;
+        border: none;
+    }
+
+    .hero-content {
+        max-width: 900px;
+        z-index: 10;
+    }
+
+    .beta-badge {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #888;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        padding: 8px 20px;
+        border-radius: 50px;
+        display: inline-block;
+        margin-bottom: 25px;
+    }
+
+    h1 {
+        font-size: clamp(2.8rem, 9vw, 5.5rem);
+        font-weight: 900;
+        line-height: 1.05;
+        margin-bottom: 30px;
+        letter-spacing: -3px;
+        color: white;
+    }
+
+    .text-cyan { 
+        color: var(--cyan); 
+        text-shadow: 0 0 40px rgba(0, 188, 212, 0.3); 
+    }
+
+    .hero-sub {
+        font-size: 1.3rem;
+        color: var(--text-muted);
+        max-width: 650px;
+        margin: 0 auto 50px;
+        line-height: 1.6;
+    }
+
+    /* --- HERO BUTTONS --- */
+    .btn-group { 
+        display: flex; 
+        gap: 20px; 
+        justify-content: center; 
+        flex-wrap: wrap; 
+        align-items: center; 
+    }
+
+    .btn-primary, .btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box; 
+        min-height: 64px;       
+        padding: 0 38px;
+        border-radius: 50px; 
+        text-decoration: none;
+        font-size: 1.1rem;
+        transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .btn-primary {
+        background: var(--cyan); 
+        color: white; 
+        font-weight: 700;
+        border: 5px solid transparent;
+        box-shadow: 0 10px 20px rgba(0, 188, 212, 0.2);
+    }
+
+    .btn-primary:hover { 
+        transform: translateY(-3px); 
+        box-shadow: 0 15px 30px rgba(0, 188, 212, 0.4); 
+    }
+
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.03); 
+        color: white; 
+        font-weight: 600;
+        border: 5px solid rgba(255,255,255,0.1); 
+    }
+
+    .btn-secondary:hover { 
+        background: rgba(255,255,255,0.08); 
+        border-color: white; 
+    }
+
+    /* --- CONTAINER & LISTINGS PREVIEW --- */
+    .container { 
+        max-width: 1200px; 
+        margin: 0 auto;
+        padding: 0 20px;
+    }
+
+    .listings-preview {
+        padding: 80px 0 100px;
+        background-color: var(--bg-actual);
+    }
+    
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        margin-bottom: 60px;
+    }
+
+    .badge { 
+        color: var(--cyan); 
+        font-weight: 800; 
+        text-transform: uppercase; 
+        font-size: 0.8rem; 
+        letter-spacing: 1px; 
+    }
+
+    h2 { 
+        font-size: 2.8rem; 
+        color: white; 
+        font-weight: 900; 
+        margin-top: 10px; 
+        letter-spacing: -1px; 
+    }
+
+    .view-all { 
+        color: var(--cyan); 
+        text-decoration: none; 
+        font-weight: 600; 
+        transition: 0.3s; 
+    }
+
+    .view-all:hover { opacity: 0.8; }
+
+    .event-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr); 
+        gap: 30px; 
+    }
+
+    /* --- CSS FÜR DAS NEUE LAUNCH BANNER --- */
+    .launch-banner {
+        background-color: var(--bg-card); /* Dunkles Karten-Design */
+        border: 1px solid rgba(0, 188, 212, 0.3); /* Dezenter Cyan-Rand */
+        border-radius: 20px;
+        padding: 40px;
+        margin: 40px auto 60px; /* Zentriert mit Abstand */
+        max-width: 900px;
+        text-align: center;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 188, 212, 0.05);
+    }
+
+    .launch-badge {
+        display: inline-block;
+        background: rgba(0, 188, 212, 0.1);
+        color: var(--cyan);
+        padding: 6px 16px;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 20px;
+    }
+
+    .launch-title {
+        font-size: 2.2rem;
+        color: white;
+        margin: 0 0 15px 0;
+        font-weight: 900;
+        letter-spacing: -1px;
+    }
+
+    .launch-text {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+        line-height: 1.6;
+        max-width: 700px;
+        margin: 0 auto 30px;
+    }
+
+    .launch-text strong {
+        color: white;
+    }
+
+    .launch-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    /* Das Toast Popup CSS */
+    #custom-toast {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%) translateY(100px);
+        background: var(--bg-card);
+        color: white;
+        padding: 14px 28px;
+        border-radius: 50px;
+        border: 1px solid var(--cyan);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 188, 212, 0.2);
+        font-weight: 600;
+        z-index: 9999;
+        opacity: 0;
+        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        pointer-events: none;
+    }
+
+    #custom-toast.toast-visible {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+    
+    /* Mobil-Optimierung */
+    @media (max-width: 600px) {
+        .launch-banner { padding: 30px 20px; border-radius: 16px; }
+        .launch-title { font-size: 1.6rem; }
+        .launch-buttons { flex-direction: column; }
+        .launch-buttons .btn-primary, .launch-buttons .btn-secondary { width: 100%; }
+    }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const shareBtn = document.getElementById('share-platform-btn');
+        const toast = document.getElementById('custom-toast');
+        
+        function showToast() {
+            if (!toast) return;
+            toast.className = 'toast-visible';
+            setTimeout(() => {
+                toast.className = 'toast-hidden';
+            }, 3000); // Verschwindet nach 3 Sekunden
+        }
+
+        if (shareBtn) {
+            shareBtn.addEventListener('click', async () => {
+                const shareData = {
+                    title: 'Startplatzbörse',
+                    text: 'Die neue Plattform von Athleten für Athleten! Finde und inseriere Startplätze für Triathlon, Laufen, Radrennen und Hyrox.',
+                    url: 'https://startplatzboerse.com'
+                };
+
+                try {
+                    if (navigator.share) {
+                        await navigator.share(shareData);
+                    } else {
+                        // Der schicke Fallback für den PC
+                        await navigator.clipboard.writeText(shareData.url);
+                        showToast();
+                    }
+                } catch (err) {
+                    console.log('Teilen abgebrochen.', err);
+                }
+            });
+        }
+    });
+</script>
