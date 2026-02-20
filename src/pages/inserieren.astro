@@ -396,12 +396,17 @@ import Footer from '../components/Footer.astro';
                     displayDist = `Freie Distanz (${s}/${b}/${r} km)`;
                     filterKm = b; 
                 } else {
-                    const matches = displayDist.match(/(\d+[,\.]?\d*)/g);
-                    if (matches && matches.length >= 3) {
-                        s = parseFloat(matches[0].replace(',', '.'));
-                        b = parseFloat(matches[1].replace(',', '.'));
-                        r = parseFloat(matches[2].replace(',', '.'));
-                        filterKm = b;
+                    // FIX: Isoliert den Text in den Klammern, z.B. "(1,9/90/21 km)"
+                    const bracketMatch = displayDist.match(/\((.*?)\)/);
+                    if (bracketMatch) {
+                        // Zieht nur die Zahlenfolge AUS der Klammer
+                        const parts = bracketMatch[1].match(/(\d+[,\.]?\d*)/g);
+                        if (parts && parts.length >= 3) {
+                            s = parseFloat(parts[0].replace(',', '.')); // Schwimmen
+                            b = parseFloat(parts[1].replace(',', '.')); // Rad
+                            r = parseFloat(parts[2].replace(',', '.')); // Laufen
+                            filterKm = b;
+                        }
                     }
                 }
             }
