@@ -548,6 +548,23 @@ const { data: listings, error } = await supabase
         .launch-buttons { flex-direction: column; }
         .launch-buttons .btn-primary, .launch-buttons .btn-secondary { width: 100%; }
     }
+
+    @media (max-width: 768px) {
+        .event-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+            width: 100%; /* Zwingt das Grid auf volle Breite */
+        }
+        
+        /* Zwingt die Karten im Grid, die volle Breite zu nutzen */
+        .event-grid > * {
+            width: 100%;
+            max-width: 100%; 
+            margin: 0 auto;
+        }
+        
+
+    }
 </style>
 
 <script>
