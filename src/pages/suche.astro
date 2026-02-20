@@ -68,15 +68,15 @@ import Footer from '../components/Footer.astro';
                         </div>
 
                         <div class="f-section grid-2">
-                            <div>
-                                <label>Preis bis (€)</label>
-                                <input type="number" id="max-price" placeholder="Max" />
-                            </div>
-                            <div>
-                                <label>Distanz (km)</label>
-                                <input type="number" id="max-dist" placeholder="Max" />
-                            </div>
-                        </div>
+    <div>
+        <label>Preis bis (€)</label>
+        <input type="number" id="max-price" placeholder="Max" />
+    </div>
+    <div>
+        <label>Distanz (z.B. 42 oder Halbmarathon)</label>
+        <input type="text" id="max-dist" placeholder="Suchen..." />
+    </div>
+</div>
 
                         <div class="f-actions">
                             <button id="reset-btn" class="r-btn">Zurücksetzen</button>
@@ -398,6 +398,8 @@ import Footer from '../components/Footer.astro';
     const drawer = document.getElementById('filter-drawer') as HTMLElement;
     const grid = document.getElementById('results-grid') as HTMLElement;
     const reset = document.getElementById('reset-btn') as HTMLElement;
+    const applyBtn = document.getElementById('apply-btn') as HTMLElement;
+    
     let activeCat = "";
 
     if (toggle && drawer) {
@@ -407,43 +409,54 @@ import Footer from '../components/Footer.astro';
         });
     }
 
-    if (reset) {
-        reset.addEventListener('click', () => {
-            (document.getElementById('main-search') as HTMLInputElement).value = "";
-            (document.getElementById('city-input') as HTMLInputElement).value = "";
-            (document.getElementById('max-price') as HTMLInputElement).value = "";
-            (document.getElementById('max-dist') as HTMLInputElement).value = "";
-            
-            document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
-            document.querySelector('.pill[data-cat=""]')?.classList.add('active');
-            
-            activeCat = "";
-            fetch(); 
-        });
-    }
-
-    async function fetch() {
+    async function performFetch() {
         if (!grid) return;
-
-        let query = supabase.from('listings').select('*');
         
-        const searchInput = document.getElementById('main-search') as HTMLInputElement;
-        const cityInput = document.getElementById('city-input') as HTMLInputElement;
-        const priceInput = document.getElementById('max-price') as HTMLInputElement;
+        const countDisplay = document.getElementById('res-count');
+        if (countDisplay) countDisplay.innerText = "Suche läuft...";
 
-        const search = searchInput?.value;
-        const city = cityInput?.value;
-        const price = priceInput?.value;
+        let query = supabase.from('listings').select('*').eq('approved', true); // Zeige nur freigegebene
+        
+        const searchVal = (document.getElementById('main-search') as HTMLInputElement).value;
+        const cityVal = (document.getElementById('city-input') as HTMLInputElement).value;
+        const priceVal = (document.getElementById('max-price') as HTMLInputElement).value;
+        const distVal = (document.getElementById('max-dist') as HTMLInputElement).value;
 
-        if (search) query = query.ilike('event_name', `%${search}%`);
-        if (city) query = query.ilike('location', `%${city}%`);
+        // 1. Textsuche
+        if (searchVal) query = query.ilike('event_name', `%${searchVal}%`);
+        
+        // 2. Ort-Suche
+        if (cityVal) query = query.ilike('location', `%${cityVal}%`);
+        
+        // 3. Kategorie
         if (activeCat) query = query.eq('category', activeCat);
-        if (price) query = query.lte('price', price);
-
-        const { data } = await query.order('event_date', { ascending: true });
         
-        if (data && grid) {
-            grid.innerHTML = data.map(e => `
+        // 4. Preis (Maximaler Preis)
+        if (priceVal) query = query.lte('price', parseFloat(priceVal));
+
+        // 5. INTELLIGENTE DISTANZ-LOGIK
+        // Wir nutzen die neue numerische Spalte "distance_km"
+        if (distVal && activeCat !== 'Hyrox') {
+            query = query.lte('distance_km', parseFloat(distVal));
+        }
+
+        const { data, error } = await query.order('event_date', { ascending: true });
+        
+        if (error) {
+            console.error(error);
+            if (grid) grid.innerHTML = "<p>Fehler beim Laden.</p>";
+            return;
+        }
+
+        if (data) {
+            grid.innerHTML = data.map(e => {
+                // Sonder-Layout für Triathlon-Distanzen in der Karte
+                let distanceAnzeige = `<span class="meta-value">${e.distance || 'N/A'}</span>`;
+                if (e.category === 'Triathlon' && e.swim_dist !== null) {
+                    distanceAnzeige = `<span class="meta-value" style="font-size: 0.85em;">🏊 ${e.swim_dist}km | 🚴 ${e.bike_dist}km | 🏃 ${e.run_dist}km</span>`;
+                }
+
+                return `
                 <div class="e-card">
                     <div class="c-top">
                         <div class="event-name">${e.event_name}</div>
@@ -463,7 +476,7 @@ import Footer from '../components/Footer.astro';
                         </div>
                         <div class="meta-row">
                             <span class="meta-label">Distanz:</span>
-                            <span class="meta-value">${e.distance || 'N/A'}</span>
+                            ${distanceAnzeige}
                         </div>
                     </div>
                     
@@ -474,30 +487,74 @@ import Footer from '../components/Footer.astro';
                         </a>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
             
-            const countDisplay = document.getElementById('res-count');
             if (countDisplay) {
-                countDisplay.innerText = `${data.length} Events gefunden`;
+                countDisplay.innerText = data.length === 0 ? "Keine Events gefunden" : `${data.length} Events gefunden`;
             }
         }
     }
 
+    // Event Listener für die Pillen (Kategorien)
     document.querySelectorAll('.pill').forEach(p => p.addEventListener('click', (e) => {
         const currentPill = e.currentTarget as HTMLElement;
         document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
         currentPill.classList.add('active');
         activeCat = currentPill.dataset.cat || "";
-        fetch();
+
+        // UI-INTELLIGENZ: Eingabefeld anpassen
+        const distInput = document.getElementById('max-dist') as HTMLInputElement;
+        if (distInput) {
+            if (activeCat === 'Hyrox') {
+                distInput.disabled = true;
+                distInput.value = "";
+                distInput.placeholder = "Nicht relevant für Hyrox";
+                distInput.style.opacity = "0.5";
+            } else if (activeCat === 'Triathlon') {
+                distInput.disabled = false;
+                distInput.placeholder = "Max. Rad-Strecke (km)";
+                distInput.style.opacity = "1";
+            } else {
+                distInput.disabled = false;
+                distInput.placeholder = "Max. Distanz (km)";
+                distInput.style.opacity = "1";
+            }
+        }
+
+        performFetch();
     }));
 
-    document.getElementById('apply-btn')?.addEventListener('click', () => { 
-        drawer?.classList.remove('open'); 
-        toggle?.classList.remove('active'); 
-        fetch(); 
+    // Reset Funktion
+    reset?.addEventListener('click', () => {
+        (document.getElementById('main-search') as HTMLInputElement).value = "";
+        (document.getElementById('city-input') as HTMLInputElement).value = "";
+        (document.getElementById('max-price') as HTMLInputElement).value = "";
+        
+        const distInput = document.getElementById('max-dist') as HTMLInputElement;
+        if (distInput) {
+            distInput.value = "";
+            distInput.disabled = false;
+            distInput.placeholder = "Max. Distanz (km)";
+            distInput.style.opacity = "1";
+        }
+
+        document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+        document.querySelector('.pill[data-cat=""]')?.classList.add('active');
+        activeCat = "";
+        performFetch();
     });
 
-    document.getElementById('main-search')?.addEventListener('input', fetch);
-    
-    fetch();
+    applyBtn?.addEventListener('click', () => {
+        drawer?.classList.remove('open');
+        toggle?.classList.remove('active');
+        performFetch();
+    });
+
+    // Sofortige Suche beim Tippen im Hauptfeld
+    document.getElementById('main-search')?.addEventListener('input', () => {
+        performFetch();
+    });
+
+    // Initialer Aufruf
+    performFetch();
 </script>

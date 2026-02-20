@@ -69,29 +69,66 @@ import Footer from '../components/Footer.astro';
                         <label class="input-label">Name des Events</label>
                         <input required class="input" type="text" name="event_name" placeholder="z.B. Berlin Marathon" maxlength="100">
                         
-                        <div class="row">
-                            <div class="col">
-                                <label class="input-label">Distanz</label>
-                                <select required class="input select-input" id="distance-select" name="distance">
-                                    <option value="">Erst Sportart wählen</option>
-                                </select>
-                            </div>
-                            <div class="col">
-                                <label class="input-label">Datum</label>
-                                <input required class="input" type="date" id="event_date" name="event_date">
-                            </div>
-                        </div>
+           <div class="row" id="main-distance-row">
+    <div class="col" id="distance-dropdown-wrapper">
+        <label class="input-label">Distanz / Kategorie</label>
+        <select required class="input select-input" id="distance-select" name="distance">
+            <option value="">Erst Sportart wählen</option>
+        </select>
+    </div>
+    
+    <div class="col" id="custom-distance-wrapper" style="display: none;">
+        <label class="input-label" id="custom-distance-label">Kilometer (km)</label>
+        <input class="input" type="number" id="custom-distance" placeholder="z.B. 65" step="0.1" inputmode="decimal">
+    </div>
 
-                        <div class="row">
-                            <div class="col">
-                                <label class="input-label">PLZ</label>
-                                <input required class="input" type="text" id="plz" name="plz" placeholder="12345" maxlength="5" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                            </div>
-                            <div class="col">
-                                <label class="input-label">Ort</label>
-                                <input required class="input" type="text" id="location" name="location" placeholder="Ort eingeben" maxlength="50">
-                            </div>
-                        </div>
+    <div class="col" id="date-wrapper">
+        <label class="input-label">Datum</label>
+        <input required class="input" type="date" id="event_date" name="event_date">
+    </div>
+</div>
+
+<div class="row" id="custom-triathlon-wrapper" style="display: none; margin-top: 15px;">
+    <div class="col">
+        <label class="input-label">Schwimmen (km)</label>
+        <input class="input" type="number" id="custom-swim" placeholder="z.B. 2" step="0.1" inputmode="decimal">
+    </div>
+    <div class="col">
+        <label class="input-label">Rad (km)</label>
+        <input class="input" type="number" id="custom-bike" placeholder="z.B. 60" step="0.1" inputmode="decimal">
+    </div>
+    <div class="col">
+        <label class="input-label">Laufen (km)</label>
+        <input class="input" type="number" id="custom-run" placeholder="z.B. 15" step="0.1" inputmode="decimal">
+    </div>
+</div>
+
+<div class="row">
+    <div class="col">
+        <label class="input-label">PLZ</label>
+        <input required class="input" type="text" id="plz" name="plz" placeholder="12345" maxlength="5" inputmode="numeric">
+    </div>
+   <div class="col">
+    <label class="input-label">Ort</label>
+    <input required class="input" type="text" id="location" name="location" list="location-list" placeholder="Ort suchen..." autocomplete="off">
+    <datalist id="location-list">
+        </datalist>
+</div>
+</div>
+
+<label class="input-label">Beschreibung (Optional)</label>
+<textarea 
+    class="input" 
+    id="description" 
+    name="description" 
+    placeholder="Z.B. Startplatz inklusive Ummeldegebühr, Startblock A..." 
+    rows="4" 
+    maxlength="500"
+    style="resize: none; height: auto;"
+></textarea>
+<div id="char-count" style="text-align: right; font-size: 0.75rem; color: #666; margin-top: 5px;">
+    0 / 500 Zeichen
+</div>
 
                         <label class="input-label">Dein Preis (in €)</label>
                         <div class="price-input-wrapper">
@@ -124,7 +161,7 @@ import Footer from '../components/Footer.astro';
         import.meta.env.PUBLIC_SUPABASE_ANON_KEY
     );
 
-    // --- DOM ELEMENTE ---
+    // --- 1. DOM ELEMENTE (Alle nur EINMAL deklariert) ---
     const authSection = document.getElementById('auth-section');
     const authStepEmail = document.getElementById('auth-step-email');
     const authStepOtp = document.getElementById('auth-step-otp');
@@ -137,162 +174,37 @@ import Footer from '../components/Footer.astro';
     const stepDot2 = document.getElementById('step-dot-2');
     const progressLine = document.getElementById('progress-line');
 
-    // FEHLER LOGIK
+    const categorySelect = document.getElementById('category') as HTMLSelectElement;
+    const distanceSelect = document.getElementById('distance-select') as HTMLSelectElement;
+    
+    // Die neuen Wrapper & Inputs für Distanzen
+    const dropdownWrapper = document.getElementById('distance-dropdown-wrapper');
+    const customSingleWrapper = document.getElementById('custom-distance-wrapper');
+    const customTriWrapper = document.getElementById('custom-triathlon-wrapper');
+    const customSingleInput = document.getElementById('custom-distance') as HTMLInputElement;
+    const customSwim = document.getElementById('custom-swim') as HTMLInputElement;
+    const customBike = document.getElementById('custom-bike') as HTMLInputElement;
+    const customRun = document.getElementById('custom-run') as HTMLInputElement;
+
+    const dateInput = document.getElementById('event_date') as HTMLInputElement;
+    const plzInput = document.getElementById('plz') as HTMLInputElement;
+    const locationInput = document.getElementById('location') as HTMLInputElement;
+    const locationList = document.getElementById('location-list');
+    const descArea = document.getElementById('description') as HTMLTextAreaElement;
+    const charDisplay = document.getElementById('char-count');
+
+    // --- 2. HILFSFUNKTIONEN ---
     function showError(msg: string) {
         if (errorDisplay) {
             errorDisplay.innerText = msg;
             errorDisplay.style.display = 'block';
+            errorDisplay.style.background = "rgba(255, 59, 48, 0.1)";
+            errorDisplay.style.color = "#ff3b30";
         }
     }
     function hideError() {
         if (errorDisplay) errorDisplay.style.display = 'none';
     }
-
-    // --- 0. INITIALER SESSION CHECK ---
-    async function checkExistingSession() {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('has_completed_onboarding')
-                .eq('id', session.user.id)
-                .single();
-
-            if (profile?.has_completed_onboarding) {
-                showListingForm();
-            } else {
-                if(authStepEmail) authStepEmail.style.display = 'none';
-                if(authStepProfile) authStepProfile.style.display = 'block';
-            }
-        }
-    }
-    checkExistingSession();
-
-    // --- 1. OTP SENDEN ---
-    document.getElementById('btn-send-otp')?.addEventListener('click', async (e) => {
-        hideError();
-        const email = inputEmail.value.trim();
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-        if(!emailRegex.test(email)) return showError("Bitte gib eine gültige E-Mail Adresse ein.");
-
-        const btn = e.target as HTMLButtonElement;
-        btn.disabled = true;
-        btn.innerText = "Sende...";
-
-        const { error } = await supabase.auth.signInWithOtp({ email });
-        
-        if (error) {
-            showError("Fehler: " + error.message);
-            btn.disabled = false;
-            btn.innerText = "Code anfordern";
-        } else {
-            if(authStepEmail) authStepEmail.style.display = 'none';
-            if(authStepOtp) authStepOtp.style.display = 'block';
-            const info = document.getElementById('auth-info');
-            if(info) info.innerText = "Prüfe dein Postfach!";
-        }
-    });
-
-    // --- 2. OTP VERIFIZIEREN ---
-    document.getElementById('btn-verify-otp')?.addEventListener('click', async (e) => {
-        hideError();
-        const email = inputEmail.value.trim();
-        const token = inputOtp.value.trim();
-
-        const btn = e.target as HTMLButtonElement;
-        btn.innerText = "Prüfe...";
-        btn.disabled = true;
-
-        let { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
-        
-        if (error) {
-            const signupRes = await supabase.auth.verifyOtp({ email, token, type: 'signup' });
-            data = signupRes.data;
-            error = signupRes.error;
-        }
-
-        if (error || !data.user) {
-            showError("Code ungültig oder abgelaufen.");
-            btn.innerText = "Identität bestätigen";
-            btn.disabled = false;
-            return;
-        }
-
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('has_completed_onboarding')
-            .eq('id', data.user.id)
-            .single();
-
-        if (profile?.has_completed_onboarding) {
-            showListingForm();
-        } else {
-            if(authStepOtp) authStepOtp.style.display = 'none';
-            if(authStepProfile) authStepProfile.style.display = 'block';
-            const heading = document.getElementById('auth-heading');
-            if(heading) heading.innerText = "Willkommen!";
-        }
-    });
-
-    // --- 3. PROFIL SPEICHERN ---
-    document.getElementById('btn-save-profile')?.addEventListener('click', async (e) => {
-        hideError(); // Fehleranzeige zurücksetzen
-
-        // Session prüfen
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return window.location.reload();
-
-        // Input-Werte holen
-        const nickname = (document.getElementById('nickname') as HTMLInputElement).value.trim();
-        const first_name = (document.getElementById('vorname') as HTMLInputElement).value.trim();
-        const last_name = (document.getElementById('nachname') as HTMLInputElement).value.trim();
-
-        // +++ NEU: AGB CHECKBOX PRÜFEN +++
-        // Wir suchen das Checkbox-Element im DOM
-        const agbCheckbox = document.getElementById('agb-consent') as HTMLInputElement;
-        
-        // Wenn die Checkbox nicht existiert ODER nicht angehakt ist (.checked ist false)
-        if (!agbCheckbox || !agbCheckbox.checked) {
-             // Zeige Fehlermeldung und brich die Funktion ab (return)
-             return showError("Bitte stimme den AGB zu, um fortzufahren.");
-        }
-        // +++ ENDE NEU +++
-
-        // REGEX VALIDIERUNG
-        const nicknameRegex = /^[a-zA-Z0-9_]{3,20}$/; 
-        const nameRegex = /^[a-zA-ZÀ-ÿ\s\-]{2,30}$/;
-
-        if (!nameRegex.test(first_name)) return showError("Vorname ungültig (Nur Buchstaben, 2-30 Zeichen).");
-        if (!nameRegex.test(last_name)) return showError("Nachname ungültig (Nur Buchstaben, 2-30 Zeichen).");
-        if (!nicknameRegex.test(nickname)) return showError("Nickname ungültig: 3-20 Zeichen, nur Buchstaben, Zahlen & Unterstrich.");
-
-        const btn = e.target as HTMLButtonElement;
-        btn.innerText = "Speichere...";
-        btn.disabled = true;
-
-        // DATEN AN SUPABASE SENDEN
-        const { error } = await supabase.from('profiles').upsert({
-            id: session.user.id,
-            nickname,
-            first_name,
-            last_name,
-            registered_email: session.user.email,
-            has_completed_onboarding: true
-        });
-
-        if (error) {
-            if (error.code === '23505') {
-                showError("Dieser Nickname ist bereits vergeben.");
-            } else {
-                showError("Fehler: " + error.message);
-            }
-            btn.innerText = "Profil speichern & weiter";
-            btn.disabled = false;
-        } else {
-            showListingForm();
-        }
-    });
 
     function showListingForm() {
         if(authSection) authSection.style.display = 'none';
@@ -301,29 +213,147 @@ import Footer from '../components/Footer.astro';
         if(progressLine) progressLine.style.background = '#00bcd4';
     }
 
-    // --- 4. KATEGORIEN & DISTANZEN ---
-    const categorySelect = document.getElementById('category') as HTMLSelectElement;
-    const distanceSelect = document.getElementById('distance-select') as HTMLSelectElement;
+    // Datumssperre
+    if (dateInput) {
+        dateInput.setAttribute('min', new Date().toISOString().split('T')[0]);
+    }
+
+    // --- 3. AUTH LOGIK ---
+    async function checkExistingSession() {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+            const { data: profile } = await supabase.from('profiles').select('has_completed_onboarding').eq('id', session.user.id).single();
+            if (profile?.has_completed_onboarding) showListingForm();
+            else {
+                if(authStepEmail) authStepEmail.style.display = 'none';
+                if(authStepProfile) authStepProfile.style.display = 'block';
+            }
+        }
+    }
+    checkExistingSession();
+
+    document.getElementById('btn-send-otp')?.addEventListener('click', async (e) => {
+        hideError();
+        const email = inputEmail.value.trim();
+        if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showError("Bitte gültige E-Mail eingeben.");
+        const btn = e.target as HTMLButtonElement;
+        btn.disabled = true;
+        const { error } = await supabase.auth.signInWithOtp({ email });
+        if (error) { showError(error.message); btn.disabled = false; }
+        else {
+            if(authStepEmail) authStepEmail.style.display = 'none';
+            if(authStepOtp) authStepOtp.style.display = 'block';
+        }
+    });
+
+    document.getElementById('btn-verify-otp')?.addEventListener('click', async (e) => {
+        hideError();
+        const btn = e.target as HTMLButtonElement;
+        btn.disabled = true;
+        const { data, error } = await supabase.auth.verifyOtp({ email: inputEmail.value, token: inputOtp.value, type: 'email' });
+        if (error || !data.user) { showError("Code ungültig."); btn.disabled = false; return; }
+        checkExistingSession();
+    });
+
+    document.getElementById('btn-save-profile')?.addEventListener('click', async (e) => {
+        hideError();
+        const agb = document.getElementById('agb-consent') as HTMLInputElement;
+        if (!agb?.checked) return showError("Bitte stimme den AGB zu.");
+        
+        const nickname = (document.getElementById('nickname') as HTMLInputElement).value.trim();
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+
+        const { error } = await supabase.from('profiles').upsert({
+            id: session.user.id,
+            nickname,
+            has_completed_onboarding: true
+        });
+        if (error) showError(error.message); else showListingForm();
+    });
+
+    // --- 4. KATEGORIEN & UI LOGIK (Das smarte Distanz-Feld) ---
     const distances = {
-        Laufen: ['5 km', '10 km', 'Halbmarathon', 'Marathon', 'Ultra'],
-        Radrennen: ['Jedermann (kurz)', 'Jedermann (lang)', 'RTF', 'Kriterium', 'Radmarathon'],
-        Triathlon: ['Sprint', 'Olympisch', 'Mitteldistanz', 'Langdistanz'],
-        Hyrox: ['Open Men/Women', 'Pro Men/Women', 'Doubles', 'Relay']
+        Laufen: ['5 km', '10 km', '21,1 km Halbmarathon', '42,2 km Marathon', 'Ultra', 'Freie Distanz'],
+        Radrennen: ['Freie Distanz'], 
+        Triathlon: ['Sprint (0,75/20/5 km)', 'Olympisch (1,5/40/10 km)', '70.3 Mitteldistanz (1,9/90/21 km)', '140.6 Langdistanz (3,8/180/42 km)', 'Freie Distanz'],
+        Hyrox: ['Open Men/Women', 'Pro Men/Women', 'Doubles', 'Relay', 'Freie Distanz']
     };
+
+    function updateDistanceUI() {
+        const cat = categorySelect?.value;
+        const dist = distanceSelect?.value;
+
+        // Alles erstmal verstecken
+        if(dropdownWrapper) dropdownWrapper.style.display = 'block';
+        if(customSingleWrapper) customSingleWrapper.style.display = 'none';
+        if(customTriWrapper) customTriWrapper.style.display = 'none';
+        
+        if(customSingleInput) customSingleInput.required = false;
+        if(customSwim) customSwim.required = false;
+        if(customBike) customBike.required = false;
+        if(customRun) customRun.required = false;
+
+        // Logik anwenden
+        if (cat === 'Radrennen') {
+            if(dropdownWrapper) dropdownWrapper.style.display = 'none';
+            if(customSingleWrapper) customSingleWrapper.style.display = 'block';
+            if(customSingleInput) customSingleInput.required = true;
+        } 
+        else if (cat === 'Triathlon' && dist === 'Freie Distanz') {
+            if(customTriWrapper) customTriWrapper.style.display = 'flex';
+            if(customSwim) customSwim.required = true;
+            if(customBike) customBike.required = true;
+            if(customRun) customRun.required = true;
+        } 
+        else if (dist === 'Freie Distanz') {
+            if(customSingleWrapper) customSingleWrapper.style.display = 'block';
+            if(customSingleInput) customSingleInput.required = true;
+        }
+    }
 
     categorySelect?.addEventListener('change', () => {
         const selected = categorySelect.value as keyof typeof distances;
         if (distanceSelect) {
-            distanceSelect.innerHTML = '';
+            distanceSelect.innerHTML = '<option value="" disabled selected>Bitte wählen...</option>';
             distances[selected].forEach(dist => {
                 const opt = document.createElement('option');
                 opt.value = dist; opt.textContent = dist;
                 distanceSelect.appendChild(opt);
             });
+            if (selected === 'Radrennen') distanceSelect.value = 'Freie Distanz';
+            updateDistanceUI();
         }
     });
 
-    // --- 5. LISTING ABSENDEN ---
+    distanceSelect?.addEventListener('change', updateDistanceUI);
+
+    // --- 5. TEXTFELD & PLZ LOGIK ---
+    descArea?.addEventListener('input', () => {
+        if (charDisplay) charDisplay.innerText = `${descArea.value.length} / 500 Zeichen`;
+    });
+
+    plzInput?.addEventListener('input', async (e) => {
+        const val = (e.target as HTMLInputElement).value.replace(/\D/g, '');
+        plzInput.value = val; 
+        if (val.length === 5) {
+            try {
+                const res = await fetch(`https://api.zippopotam.us/de/${val}`);
+                const data = await res.json();
+                if (locationList) {
+                    locationList.innerHTML = '';
+                    data.places.forEach((p: any) => {
+                        const o = document.createElement('option');
+                        o.value = p['place name'];
+                        locationList.appendChild(o);
+                    });
+                    if (data.places.length === 1 && locationInput) locationInput.value = data.places[0]['place name'];
+                }
+            } catch (e) {}
+        }
+    });
+
+    // --- 6. FINALER SUBMIT ---
     document.getElementById('listing-form')?.addEventListener('submit', async (e) => {
         e.preventDefault();
         hideError();
@@ -333,36 +363,79 @@ import Footer from '../components/Footer.astro';
 
         try {
             const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error("Sitzung abgelaufen. Bitte lade die Seite neu.");
+            if (!user) throw new Error("Sitzung abgelaufen.");
 
             const formData = new FormData(e.target as HTMLFormElement);
             const vals = Object.fromEntries(formData);
+            const category = vals.category as string;
+            
+            let displayDist = vals.distance as string;
+            let filterKm = 0;
+            let s = null, b = null, r = null;
 
-            const { error: insertError } = await supabase.from('listings').insert([{
-                user_id: user.id, 
+            // Intelligente Datenaufbereitung
+            if (category === "Radrennen") {
+                const val = customSingleInput.value;
+                displayDist = val + " km";
+                filterKm = parseFloat(val.replace(',', '.'));
+            }
+            else if (category === "Laufen") {
+                if (displayDist === 'Freie Distanz') {
+                    const val = customSingleInput.value;
+                    displayDist = val + " km";
+                    filterKm = parseFloat(val.replace(',', '.'));
+                } else {
+                    filterKm = parseFloat(displayDist.match(/(\d+[,\.]?\d*)/)?.[0].replace(',', '.') || "0");
+                }
+            } 
+            else if (category === "Triathlon") {
+                if (displayDist === 'Freie Distanz') {
+                    s = parseFloat(customSwim.value.replace(',', '.'));
+                    b = parseFloat(customBike.value.replace(',', '.'));
+                    r = parseFloat(customRun.value.replace(',', '.'));
+                    displayDist = `Freie Distanz (${s}/${b}/${r} km)`;
+                    filterKm = b; 
+                } else {
+                    const matches = displayDist.match(/(\d+[,\.]?\d*)/g);
+                    if (matches && matches.length >= 3) {
+                        s = parseFloat(matches[0].replace(',', '.'));
+                        b = parseFloat(matches[1].replace(',', '.'));
+                        r = parseFloat(matches[2].replace(',', '.'));
+                        filterKm = b;
+                    }
+                }
+            }
+            else if (category === "Hyrox") {
+                if (displayDist === 'Freie Distanz') displayDist = customSingleInput.value + " (Eigene Kategorie)";
+                filterKm = 8;
+            }
+
+            // In die DB schreiben
+            const { error } = await supabase.from('listings').insert([{
+                user_id: user.id,
                 vorname: (document.getElementById('vorname') as HTMLInputElement)?.value || "",
                 nachname: (document.getElementById('nachname') as HTMLInputElement)?.value || "",
                 seller_email: user.email,
-                category: vals.category,
+                category,
                 event_name: vals.event_name,
-                distance: vals.distance,
+                distance: displayDist,
+                distance_km: filterKm,
+                swim_dist: s, bike_dist: b, run_dist: r,
                 event_date: vals.event_date,
                 plz: vals.plz,
-                location: (document.getElementById('location') as HTMLInputElement).value,
+                location: locationInput.value,
                 price: parseFloat(vals.price as string),
                 approved: true
             }]);
 
-            if (insertError) throw insertError;
+            if (error) throw error;
 
-            // Erfolgsmeldung im Fehler-Banner (Grün umstylen für Erfolg)
             if (errorDisplay) {
                 errorDisplay.style.background = "rgba(0, 188, 212, 0.1)";
-                errorDisplay.style.color = "var(--cyan)";
-                errorDisplay.innerText = "Erfolg! Dein Inserat ist online. Weiterleitung zum Dashboard...";
+                errorDisplay.style.color = "#00bcd4";
+                errorDisplay.innerText = "Erfolg! Dein Inserat ist online.";
                 errorDisplay.style.display = "block";
             }
-            
             setTimeout(() => window.location.href = "/dashboard", 2000);
 
         } catch (err: any) {
@@ -374,7 +447,7 @@ import Footer from '../components/Footer.astro';
 </script>
 
 <style>
-    /* CSS BLEIBT IDENTISCH - NUR DIE ERROR-MSG WURDE GEADDET */
+
     :root { --cyan: #00bcd4; --bg: #323232; }
     
     .page-wrapper {
@@ -410,8 +483,49 @@ import Footer from '../components/Footer.astro';
     .input { width: 100%; background: #000; border: 1px solid #333; padding: 15px; border-radius: 12px; color: white; font-size: 1rem; transition: 0.3s; box-sizing: border-box; outline: none; }
     .input:focus { border-color: var(--cyan); }
     
-    .row { display: flex; gap: 15px; }
-    .col { flex: 1; }
+    .row { 
+        display: flex; 
+        gap: 15px; 
+    }
+    .col { flex: 1; min-width: 0; }
+
+    /* MOBILE OPTIMIERUNG: Spalten stapeln */
+    @media (max-width: 480px) {
+        .row {
+            flex-direction: column;
+            gap: 0; /* Abstand wird durch margin-top der Labels geregelt */
+        }
+    }
+
+    /* PFEILE BEI NUMBER-INPUTS ENTFERNEN */
+    /* Chrome, Safari, Edge, Opera */
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
+    }
+
+    /* SPEZIAL-STYLING FÜR DAS FREIE DISTANZ FELD */
+    #custom-distance-wrapper .input {
+        border-color: rgba(0, 188, 212, 0.3); /* Leichtes Cyan als Hinweis */
+        text-align: center;
+        font-weight: bold;
+    }
+
+    /* SELECT-FELDER OPTIK ANPASSEN (Dropdown-Pfeil Styling) */
+    .select-input {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23666666'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 15px center;
+        background-size: 18px;
+        padding-right: 40px;
+    }
 
     .login-button { width: 100%; background: var(--cyan); color: black; border: none; padding: 16px; border-radius: 12px; font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 1rem; margin-top: 25px; }
     .login-button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 188, 212, 0.3); }
@@ -464,5 +578,20 @@ import Footer from '../components/Footer.astro';
     
     /* Wichtig: Padding wird in die Breite eingerechnet */
     box-sizing: border-box; 
+}
+
+textarea.input {
+    min-height: 100px;
+    line-height: 1.5;
+    padding: 12px;
+}
+
+/* Scrollbar für die Textarea verschönern */
+textarea.input::-webkit-scrollbar {
+    width: 8px;
+}
+textarea.input::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 10px;
 }
 </style>
