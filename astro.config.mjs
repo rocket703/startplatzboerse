@@ -1,15 +1,20 @@
 import { defineConfig } from 'astro/config';
-import vercel from '@astrojs/vercel/serverless'; // Geändert auf serverless
+import vercel from '@astrojs/vercel/serverless';
+import sitemap from '@astrojs/sitemap';
 
-// https://astro.build/config
 export default defineConfig({
-  // 1. WICHTIG: Erlaubt Astro, Seiten live auf dem Server zu generieren (für Login & DB)
-  output: 'server', 
+  site: 'https://startplatzboerse.com',
 
-  // 2. Saubere URLs
+  // 2. Erlaubt Astro, Seiten live auf dem Server zu generieren
+  output: 'server',
+
+  // 3. Saubere URLs
   trailingSlash: 'never',
 
-  // 3. Der Adapter für Vercel (muss für Server-Output konfiguriert sein)
+  // 4. Integrations
+  integrations: [sitemap()],
+
+  // 5. Adapter für Vercel
   adapter: vercel({
     webAnalytics: {
       enabled: true,

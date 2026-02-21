@@ -1,0 +1,12 @@
+# Alle Suchmaschinen ansprechen
+User-agent: *
+Allow: /
+
+# Private Bereiche schützen (Diese Seiten sollen nicht bei Google auftauchen)
+Disallow: /dashboard
+Disallow: /login
+Disallow: /api/
+Disallow: /admin/
+
+# Der Wegweiser zur Sitemap (Wichtig!)
+Sitemap: https://startplatzboerse.com/sitemap-index.xml
