@@ -264,11 +264,15 @@ import Footer from '../components/Footer.astro';
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) return;
 
-        const { error } = await supabase.from('profiles').upsert({
-            id: session.user.id,
-            nickname,
-            has_completed_onboarding: true
-        });
+       const { error } = await supabase.from('profiles').upsert({
+        id: session.user.id,
+        first_name: (document.getElementById('vorname') as HTMLInputElement).value, // Hinzufügen
+        last_name: (document.getElementById('nachname') as HTMLInputElement).value, // Hinzufügen
+        registered_email: session.user.email, // EXTREM WICHTIG!
+        nickname,
+        has_completed_onboarding: true,
+        updated_at: new Date()
+    });
         if (error) showError(error.message); else showListingForm();
     });
 
