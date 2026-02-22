@@ -1,6 +1,5 @@
 import { defineConfig } from 'astro/config';
 import vercel from '@astrojs/vercel/serverless';
-import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
   site: 'https://startplatzboerse.com',
@@ -11,8 +10,8 @@ export default defineConfig({
   // 3. Saubere URLs
   trailingSlash: 'never',
 
-  // 4. Integrations
-  integrations: [sitemap()],
+  // 4. Integrations (Standard-Sitemap entfernt, damit unser eigenes Script greift)
+  integrations: [],
 
   // 5. Adapter für Vercel
   adapter: vercel({
