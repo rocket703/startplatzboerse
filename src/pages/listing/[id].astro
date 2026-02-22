@@ -5,7 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 
 const { id } = Astro.params;
 const { searchParams } = Astro.url;
-const origin = searchParams.get('from'); // Erkennt 'index' oder 'search'
+const origin = searchParams.get('from'); 
 
 const supabase = createClient(
   import.meta.env.PUBLIC_SUPABASE_URL,
@@ -22,16 +22,20 @@ if (error) {
   console.error("Supabase Error:", error.message);
 }
 
-// Dynamischer Text für den Button
 const backLabel = origin === 'search' ? "← Zurück zur Suche" : "← Zurück zur Übersicht";
+
+const pageTitle = item ? item.event_name : "Inserat nicht gefunden";
+const seoDescription = item 
+  ? `Sichere dir jetzt einen Startplatz für ${item.event_name} am ${new Date(item.event_date).toLocaleDateString('de-DE')} in ${item.location}. Preis: ${item.price}€. Sicherer Kauf via Startplatzbörse.`
+  : "Details zum Startplatz auf der Startplatzbörse.";
 ---
 
-<Layout title={item ? item.event_name : "Details"}>
+<Layout title={pageTitle} description={seoDescription}>
     <main class="listing-page">
         <div class="container">
-            <a href="/#listings" class="back-link button-style">
-    {backLabel}
-</a>
+            <a href="/#listings" class="back-link button-style" id="dynamic-back-btn">
+                {backLabel}
+            </a>
 
             {!item ? (
                 <div class="error-box card">
@@ -43,7 +47,14 @@ const backLabel = origin === 'search' ? "← Zurück zur Suche" : "← Zurück z
                 <div class="listing-layout">
                     
                     <div class="content-side">
-                        <span class="badge">{item.category}</span>
+                        <div class="header-actions">
+                            <span class="badge">{item.category}</span>
+                            <button id="share-btn" class="share-btn" aria-label="Inserat teilen">
+                                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                                Teilen
+                            </button>
+                        </div>
+
                         <h1 class="glow-title">{item.event_name}</h1>
                         
                         <div class="price-section mobile-only">
@@ -106,16 +117,44 @@ const backLabel = origin === 'search' ? "← Zurück zur Suche" : "← Zurück z
 <script>
     import { createClient } from '@supabase/supabase-js';
 
+    // TEILEN LOGIK (Native Web Share API)
+    const shareBtn = document.getElementById('share-btn');
+    if (shareBtn) {
+        shareBtn.addEventListener('click', async () => {
+            const shareData = {
+                title: document.title,
+                text: 'Schau dir diesen Startplatz an:',
+                url: window.location.href
+            };
+
+            // Prüfen, ob das Gerät native Teilen-Menüs unterstützt (Handys & moderne Browser)
+            if (navigator.share) {
+                try {
+                    await navigator.share(shareData);
+                } catch (err) {
+                    console.log('Teilen abgebrochen oder fehlgeschlagen', err);
+                }
+            } else {
+                // Fallback für alte Desktop-Browser: Link in Zwischenablage kopieren
+                navigator.clipboard.writeText(window.location.href);
+                const originalHTML = shareBtn.innerHTML;
+                shareBtn.innerHTML = '✓ Link kopiert';
+                setTimeout(() => { shareBtn.innerHTML = originalHTML; }, 2000);
+            }
+        });
+    }
+
     // BACK-LOGIK
     const backBtn = document.getElementById('dynamic-back-btn');
     if (backBtn) {
-        backBtn.addEventListener('click', () => {
+        backBtn.addEventListener('click', (e) => {
+            e.preventDefault(); 
             const urlParams = new URLSearchParams(window.location.search);
             const origin = urlParams.get('from');
 
             if (origin === 'search') {
                 if (window.history.length > 1) {
-                    window.history.back(); // Behält Filter in der Suche
+                    window.history.back(); 
                 } else {
                     window.location.href = '/suche';
                 }
@@ -132,7 +171,6 @@ const backLabel = origin === 'search' ? "← Zurück zur Suche" : "← Zurück z
 
     const form = document.getElementById('contact-form');
     
-    // Draft wiederherstellen
     document.addEventListener('DOMContentLoaded', () => {
         const savedDraft = localStorage.getItem('draft_msg');
         const textArea = document.querySelector('textarea[name="message"]');
@@ -216,61 +254,54 @@ const backLabel = origin === 'search' ? "← Zurück zur Suche" : "← Zurück z
         --border: #222;
     }
 
-    /* PFEILE IN NUMMERNFELDERN ENTFERNEN */
+    /* NEU: Styles für den Teilen-Button und die obere Reihe */
+    .header-actions { 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-bottom: 5px;
+    }
+
+    .share-btn { 
+        background: transparent; 
+        border: 1px solid #444; 
+        color: #ccc; 
+        padding: 6px 14px; 
+        border-radius: 20px; 
+        font-size: 0.8rem; 
+        font-weight: 600;
+        cursor: pointer; 
+        display: flex; 
+        align-items: center; 
+        gap: 6px; 
+        transition: all 0.2s ease; 
+    }
+    .share-btn:hover { 
+        color: white; 
+        border-color: var(--cyan); 
+        background: rgba(0, 188, 212, 0.1);
+    }
+
     input::-webkit-outer-spin-button,
     input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
 
-    .listing-page { 
-        background: var(--bg); 
-        min-height: 100vh; 
-        padding: 100px 15px 60px; 
-        color: white; 
-    }
-    
-    .container { 
-    max-width: 1100px; 
-    margin: 0 auto;
-    }
-    
-    .listing-layout { 
-        display: grid; 
-        grid-template-columns: 1fr;
-        gap: 30px; 
-        margin-top: 20px; 
-    }
+    .listing-page { background: var(--bg); min-height: 100vh; padding: 100px 15px 60px; color: white; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .listing-layout { display: grid; grid-template-columns: 1fr; gap: 30px; margin-top: 20px; }
     
     @media (min-width: 992px) {
         .listing-layout { grid-template-columns: 1fr 380px; gap: 60px; }
-        .listing-page { padding: 160px 20px 80px; } /* Mehr Abstand Desktop */
+        .listing-page { padding: 160px 20px 80px; }
     }
 
-    .glow-title { 
-        font-size: 2.2rem;
-        font-weight: 900; 
-        margin: 10px 0; 
-        line-height: 1.1; 
-    }
-
-    @media (min-width: 768px) {
-        .glow-title { font-size: 3.5rem; }
-    }
+    .glow-title { font-size: 2.2rem; font-weight: 900; margin: 10px 0; line-height: 1.1; }
+    @media (min-width: 768px) { .glow-title { font-size: 3.5rem; } }
 
     .badge { color: var(--cyan); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; font-size: 0.7rem; }
     
-    .info-grid { 
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px; 
-        margin: 25px 0; 
-        padding: 20px 0; 
-        border-top: 1px solid #1a1a1a; 
-        border-bottom: 1px solid #1a1a1a; 
-    }
-
-    @media (min-width: 768px) {
-        .info-grid { display: flex; gap: 40px; }
-    }
+    .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin: 25px 0; padding: 20px 0; border-top: 1px solid #1a1a1a; border-bottom: 1px solid #1a1a1a; }
+    @media (min-width: 768px) { .info-grid { display: flex; gap: 40px; } }
 
     .label { color: #555; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; margin-bottom: 4px; display: block;}
     .val { font-size: 1rem; font-weight: 700; }
@@ -281,18 +312,9 @@ const backLabel = origin === 'search' ? "← Zurück zur Suche" : "← Zurück z
 
     .mobile-only { display: flex; }
     .desktop-only { display: none; }
+    @media (min-width: 992px) { .mobile-only { display: none; } .desktop-only { display: flex; } .main-price { font-size: 3.5rem; } }
 
-    @media (min-width: 992px) {
-        .mobile-only { display: none; }
-        .desktop-only { display: flex; }
-        .main-price { font-size: 3.5rem; }
-    }
-
-    .description-box { 
-    margin: 20px 0; 
-    line-height: 1.6; 
-    color: #aaa;
-    }
+    .description-box { margin: 20px 0; line-height: 1.6; color: #aaa; }
 
     .card { background: var(--card); border: 5px solid var(--border); border-radius: 24px; padding: 25px; }
     .contact-card h3 { margin-bottom: 8px; font-weight: 800; font-size: 1.2rem; }
@@ -305,18 +327,6 @@ const backLabel = origin === 'search' ? "← Zurück zur Suche" : "← Zurück z
     .btn-cyan-glow { width: 100%; background: var(--cyan); color: black; border: none; padding: 16px; border-radius: 14px; font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 1rem; }
     .btn-cyan-glow:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0, 188, 212, 0.2); }
 
-    .back-link { 
-        background: transparent;
-        border: none;
-        color: #00bcd4; 
-        text-decoration: none; 
-        font-weight: 700; 
-        font-size: 0.8rem; 
-        margin-bottom: 15px; 
-        display: inline-block; 
-        cursor: pointer;
-        padding: 0;
-        transition: color 0.3s ease;
-    }
+    .back-link { background: transparent; border: none; color: #00bcd4; text-decoration: none; font-weight: 700; font-size: 0.8rem; margin-bottom: 15px; display: inline-block; cursor: pointer; padding: 0; transition: color 0.3s ease; }
     .back-link:hover { color: white; }
 </style>

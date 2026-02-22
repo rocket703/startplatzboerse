@@ -1,36 +1,49 @@
 ---
 import Header from '../components/Header.astro';
-import '../styles/global.css'; // Lädt dein Design
+import '../styles/global.css';
 
-const { title } = Astro.props;
+// Props erweitern, um Beschreibung und Bild für Social Media zu empfangen
+const { 
+  title, 
+  description = "Die größte Community für Startplätze. Kaufe & verkaufe Tickets für Marathon, Triathlon und Radrennen sicher und unkompliziert.",
+  image = "/og-default.png", // Ein Standardbild für Social Media im /public Ordner
+  canonicalURL = Astro.url.href 
+} = Astro.props;
 ---
 
 <!DOCTYPE html>
 <html lang="de">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="description" content="Startplatzbörse">
-		<meta name="viewport" content="width=device-width" />
-		<!-- klassische Favicons -->
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-  <link rel="shortcut icon" href="/favicon.ico" />
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width" />
+        <meta name="generator" content={Astro.generator} />
 
-  <!-- Apple / Mobil -->
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-  <link rel="manifest" href="/site.webmanifest" />
+        <title>{title} | Startplatzbörse</title>
+        <meta name="title" content={`${title} | Startplatzbörse`} />
+        <meta name="description" content={description} />
+        <link rel="canonical" href={canonicalURL} />
 
-  <!-- optional Android große Icons -->
-  <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png" />
-  <link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512x512.png" />
-		<meta name="generator" content={Astro.generator} />
-		<title>{title} | Startplatzbörse</title>
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={Astro.url.href} />
+        <meta property="og:title" content={`${title} | Startplatzbörse`} />
+        <meta property="og:description" content={description} />
+        <meta property="og:image" content={new URL(image, Astro.url)} />
+
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content={Astro.url.href} />
+        <meta property="twitter:title" content={`${title} | Startplatzbörse`} />
+        <meta property="twitter:description" content={description} />
+        <meta property="twitter:image" content={new URL(image, Astro.url)} />
+
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/site.webmanifest" />
+
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
-	</head>
-	<body>
+    </head>
+    <body>
         <Header />
-
         <slot />
-
-	</body>
+    </body>
 </html>

@@ -54,15 +54,26 @@ const { data: listings, error } = await supabase
         Damit wir die beste Anlaufstelle für Ausdauersportler werden, brauchen wir <strong>dich</strong>: 
         Hast du ein Ticket übrig? Inseriere es. Erzähl deinen Trainingsbuddys von uns – jedes geteilte Event hilft uns zu wachsen!
     </p>
-    <div class="launch-buttons">
-        <button id="share-platform-btn" class="btn-secondary" style="min-height: 50px; font-size: 1rem;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+    
+    <div class="launch-buttons" style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 20px;">
+        
+        <button id="share-platform-btn" class="btn-secondary" style="min-height: 50px; font-size: 1rem; display: flex; align-items: center; justify-content: center; padding: 0 24px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px;">
+                <circle cx="18" cy="5" r="3"></circle>
+                <circle cx="6" cy="12" r="3"></circle>
+                <circle cx="18" cy="19" r="3"></circle>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+            </svg>
             Plattform teilen
         </button>
+
+        <a href="/ueber-uns" class="btn-outline-info" style="min-height: 50px; font-size: 1rem; display: flex; align-items: center; justify-content: center; text-decoration: none; border: 2px solid #00bcd4; color: #00bcd4; padding: 0 24px; border-radius: 8px; transition: 0.3s; font-weight: bold;">
+            Mehr über uns
+        </a>
+
     </div>
 </div>
-
-<div id="custom-toast" class="toast-hidden">✅ Link kopiert! Danke fürs Teilen.</div>
 
 <div id="custom-toast" class="toast-hidden">✅ Link kopiert! Danke fürs Teilen.</div>
 
