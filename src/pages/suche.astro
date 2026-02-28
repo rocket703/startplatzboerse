@@ -409,89 +409,129 @@ import Footer from '../components/Footer.astro';
         });
     }
 
-    async function performFetch() {
+   async function performFetch() {
         if (!grid) return;
         
         const countDisplay = document.getElementById('res-count');
         if (countDisplay) countDisplay.innerText = "Suche läuft...";
 
-        let query = supabase.from('listings').select('*').eq('approved', true); // Zeige nur freigegebene
-        
         const searchVal = (document.getElementById('main-search') as HTMLInputElement).value;
         const cityVal = (document.getElementById('city-input') as HTMLInputElement).value;
         const priceVal = (document.getElementById('max-price') as HTMLInputElement).value;
-        const distVal = (document.getElementById('max-dist') as HTMLInputElement).value;
-
-        // 1. Textsuche
-        if (searchVal) query = query.ilike('event_name', `%${searchVal}%`);
+        const distVal = (document.getElementById('max-dist') as HTMLInputElement).value; // Das ist die Renn-Distanz (z.B. 10km Lauf)
         
-        // 2. Ort-Suche
-        if (cityVal) query = query.ilike('location', `%${cityVal}%`);
-        
-        // 3. Kategorie
-        if (activeCat) query = query.eq('category', activeCat);
-        
-        // 4. Preis (Maximaler Preis)
-        if (priceVal) query = query.lte('price', parseFloat(priceVal));
+        // NEU: Wir brauchen ein Feld für den geografischen Umkreis (z.B. radiusVal)
+        // Falls du kein extra Feld hast, nehmen wir hier mal fix 50 (km) als Beispiel oder du fügst ein Feld 'radius-input' hinzu
+        const radiusVal = 50; 
 
-        // 5. INTELLIGENTE DISTANZ-LOGIK
-        // Wir nutzen die neue numerische Spalte "distance_km"
-        if (distVal && activeCat !== 'Hyrox') {
-            query = query.lte('distance_km', parseFloat(distVal));
-        }
+        let data = [];
+        let error = null;
 
-        const { data, error } = await query.order('event_date', { ascending: true });
-        
-        if (error) {
-            console.error(error);
-            if (grid) grid.innerHTML = "<p>Fehler beim Laden.</p>";
-            return;
-        }
+        // --- FALL A: Umkreissuche (Wenn ein Ort eingegeben wurde) ---
+        if (cityVal) {
+            // 1. Koordinaten der Stadt via OpenStreetMap (Nominatim) holen
+            try {
+                const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cityVal)}&limit=1`);
+                const geoData = await geoRes.json();
 
-        if (data) {
-            grid.innerHTML = data.map(e => {
-                // Sonder-Layout für Triathlon-Distanzen in der Karte
-                let distanceAnzeige = `<span class="meta-value">${e.distance || 'N/A'}</span>`;
-                if (e.category === 'Triathlon' && e.swim_dist !== null) {
-                    distanceAnzeige = `<span class="meta-value" style="font-size: 0.85em;">🏊 ${e.swim_dist}km | 🚴 ${e.bike_dist}km | 🏃 ${e.run_dist}km</span>`;
+                if (geoData.length > 0) {
+                    const { lat, lon } = geoData[0];
+
+                    // 2. Deine neue Supabase-Funktion aufrufen
+                    const { data: rpcData, error: rpcError } = await supabase.rpc('get_listings_in_radius', {
+                        target_lat: parseFloat(lat),
+                        target_lng: parseFloat(lon),
+                        radius_km: parseFloat(radiusVal.toString())
+                    });
+                    
+                    data = rpcData;
+                    error = rpcError;
                 }
+            } catch (err) {
+                console.error("Geocoding Fehler:", err);
+            }
+        } 
+        
+        // --- FALL B: Normale Suche (Wenn kein Ort oder Geocoding fehlgeschlagen) ---
+        if (!cityVal || data.length === 0) {
+            let query = supabase.from('listings').select('*').eq('approved', true).eq('status', 'active');
+            if (searchVal) query = query.ilike('event_name', `%${searchVal}%`);
+            if (cityVal) query = query.ilike('location', `%${cityVal}%`); // Fallback auf Textsuche
+            
+            const { data: normalData, error: normalError } = await query;
+            data = normalData;
+            error = normalError;
+        }
 
-                return `
-                <div class="e-card">
-                    <div class="c-top">
-                        <div class="event-name">${e.event_name}</div>
-                        <div class="sport-badge">${e.category}</div>
-                    </div>
-                    
-                    <div class="c-meta">
-                        <div class="meta-row split">
-                            <div class="meta-item">
-                                <span class="meta-label">Ort:</span>
-                                <span class="meta-value">${e.location}</span>
-                            </div>
-                            <div class="meta-item">
-                                <span class="meta-label">Datum:</span>
-                                <span class="meta-value">${new Date(e.event_date).toLocaleDateString('de-DE')}</span>
-                            </div>
+        // --- MANUELLES FILTERN (Für die restlichen Felder nach der RPC-Abfrage) ---
+        if (data) {
+            let filtered = data;
+
+            // Kategorie Filter
+            if (activeCat) {
+                filtered = filtered.filter(e => e.category === activeCat);
+            }
+            // Preis Filter
+            if (priceVal) {
+                filtered = filtered.filter(e => e.price <= parseFloat(priceVal));
+            }
+            // Renn-Distanz Filter (distance_km)
+            if (distVal && activeCat !== 'Hyrox') {
+                filtered = filtered.filter(e => e.distance_km <= parseFloat(distVal));
+            }
+            // Textsuche Filter (falls RPC genutzt wurde)
+            if (searchVal && cityVal) {
+                filtered = filtered.filter(e => e.event_name.toLowerCase().includes(searchVal.toLowerCase()));
+            }
+
+            renderGrid(filtered); // Wir lagern das Rendern aus
+        }
+    }
+
+    // Hilfsfunktion zum Anzeigen der Karten
+    function renderGrid(data) {
+        const grid = document.getElementById('results-grid');
+        const countDisplay = document.getElementById('res-count');
+        
+        if (!grid) return;
+
+        grid.innerHTML = data.map(e => {
+            let distanceAnzeige = `<span class="meta-value">${e.distance || 'N/A'}</span>`;
+            if (e.category === 'Triathlon' && e.swim_dist !== null) {
+                distanceAnzeige = `<span class="meta-value" style="font-size: 0.85em;">🏊 ${e.swim_dist}km | 🚴 ${e.bike_dist}km | 🏃 ${e.run_dist}km</span>`;
+            }
+
+            return `
+            <div class="e-card">
+                <div class="c-top">
+                    <div class="event-name">${e.event_name}</div>
+                    <div class="sport-badge">${e.category}</div>
+                </div>
+                <div class="c-meta">
+                    <div class="meta-row split">
+                        <div class="meta-item">
+                            <span class="meta-label">Ort:</span>
+                            <span class="meta-value">${e.location}</span>
                         </div>
-                        <div class="meta-row">
-                            <span class="meta-label">Distanz:</span>
-                            ${distanceAnzeige}
+                        <div class="meta-item">
+                            <span class="meta-label">Datum:</span>
+                            <span class="meta-value">${new Date(e.event_date).toLocaleDateString('de-DE')}</span>
                         </div>
                     </div>
-                    
-                    <div class="c-bottom">
-                        <div class="price-val">${e.price}€</div>
-                        <a href="/listing/${e.id}?from=search" class="details-link">
-                            Details →
-                        </a>
+                    <div class="meta-row">
+                        <span class="meta-label">Distanz:</span>
+                        ${distanceAnzeige}
                     </div>
                 </div>
-            `}).join('');
-            
-            if (countDisplay) {
-                countDisplay.innerText = data.length === 0 ? "Keine Events gefunden" : `${data.length} Events gefunden`;
-            }
+                <div class="c-bottom">
+                    <div class="price-val">${e.price}€</div>
+                    <a href="/listing/${e.id}?from=search" class="details-link">Details →</a>
+                </div>
+            </div>
+        `}).join('');
+
+        if (countDisplay) {
+            countDisplay.innerText = data.length === 0 ? "Aktuell keine passenden Startplätze gefunden" : `${data.length} aktive Events gefunden`;
         }
     }
 

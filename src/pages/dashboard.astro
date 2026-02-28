@@ -250,6 +250,12 @@ import Popup from '../components/Popup.astro';
     50% { opacity: 0.6; transform: scale(1.2); }
     100% { opacity: 1; transform: scale(1); }
 }
+/* Falls das Inserat archiviert ist, machen wir die Karte etwas blasser */
+.dashboard-card.is-archived {
+    opacity: 0.7;
+    filter: grayscale(0.5);
+    border-left: 4px solid #666;
+}
 </style>
 
 <script>
@@ -259,6 +265,7 @@ import Popup from '../components/Popup.astro';
         import.meta.env.PUBLIC_SUPABASE_URL,
         import.meta.env.PUBLIC_SUPABASE_ANON_KEY
     );
+
 
     let deleteId = null;
 
@@ -330,7 +337,6 @@ import Popup from '../components/Popup.astro';
 
     async function fetchListings(userId) {
         const grid = document.getElementById('listings-grid');
-        // WICHTIG: Hier 'old_price' mit abfragen
         const { data, error } = await supabase
             .from('listings')
             .select('*') 
@@ -348,9 +354,20 @@ import Popup from '../components/Popup.astro';
         }
         
         grid.innerHTML = data.map(item => {
-            // Logik für die Anzeige des Preises (Streichpreis vs Normal)
+            // --- 1. BERECHNUNG DEAKTIVIERUNGSDATUM ---
+            const eventDate = new Date(item.event_date);
+            const deactivationDate = new Date(eventDate);
+            deactivationDate.setDate(eventDate.getDate() + 1);
+            const formattedDeactivation = deactivationDate.toLocaleDateString('de-DE');
+
+            // --- 2. STATUS-LOGIK (Aktiv vs Archiviert) ---
+            const isArchived = item.status === 'archived';
+            const statusNotice = isArchived 
+                ? `<span style="color: #ff4444; font-weight: bold;">Archiviert</span>`
+                : `<span style="color: #888;">Deaktivierung: <strong>${formattedDeactivation}</strong> (03:00)</span>`;
+
+            // Logik für die Anzeige des Preises
             let priceHtml = `<div class="price-tag-new">${item.price}€</div>`;
-            
             if (item.old_price && item.old_price > item.price) {
                 priceHtml = `
                     <div style="display: flex; align-items: center; gap: 8px;">
@@ -361,17 +378,25 @@ import Popup from '../components/Popup.astro';
             }
 
             return `
-            <div class="glass-card">
+            <div class="glass-card" style="${isArchived ? 'opacity: 0.7;' : ''}">
                 <span class="eyebrow">${item.category}</span>
                 <h3 style="margin: 10px 0 5px 0;">${item.event_name}</h3>
-                <p style="color:#555; font-size:0.8rem;">${new Date(item.event_date).toLocaleDateString()}</p>
+                
+                <div style="margin-bottom: 10px;">
+                    <p style="color:#555; font-size:0.8rem; margin:0;">Event am: ${new Date(item.event_date).toLocaleDateString()}</p>
+                    <p style="font-size:0.7rem; margin: 2px 0 0 0;">${statusNotice}</p>
+                </div>
                 
                 ${priceHtml}
 
-                <div class="card-footer-btns">
-                    <button class="btn-dash-edit" onclick="window.openEditModal('${item.id}', '${item.price}')">Preis</button>
-                    <button class="btn-dash-delete" onclick="window.askDelete('${item.id}')">Löschen</button>
-                </div>
+               <div class="card-footer-btns">
+    ${!isArchived ? `
+        <button class="btn-dash-edit" onclick="window.openEditModal('${item.id}', '${item.price}')">Preis</button>
+        <button class="btn-dash-delete" onclick="window.askDelete('${item.id}', '${item.status}')">Löschen</button>
+    ` : `
+        <button class="btn-dash-delete" style="width: 100%;" onclick="window.askDelete('${item.id}', 'archived')">Endgültig löschen</button>
+    `}
+</div>
             </div>
             `;
         }).join('');
@@ -441,18 +466,72 @@ import Popup from '../components/Popup.astro';
         }
     }
 
-    // --- WINDOW GLOBALS ---
-    window.askDelete = (id) => {
-        deleteId = id;
-        showPopup("Inserat löschen", "Bist du sicher? Das Inserat wird unwiderruflich entfernt.", true);
-        
-        const confirmBtn = document.getElementById('confirm-action-btn');
-        confirmBtn.onclick = async () => {
-            const { error } = await supabase.from('listings').delete().eq('id', deleteId);
-            if (!error) location.reload();
-        };
-    };
+   // --- LÖSCHEN/ARCHIVIEREN LOGIK ---
+ window.askDelete = (id, currentStatus) => {
+    deleteId = id;
+    const isAlreadyArchived = currentStatus === 'archived';
+    
+    // Wir holen uns den Button aus dem Popup, um seinen Text zu ändern
+    const confirmBtn = document.getElementById('confirm-action-btn');
+    if (!confirmBtn) return;
 
+    if (!isAlreadyArchived) {
+        // FALL 1: Inserat ist noch aktiv -> Archivieren vorbereiten
+        showPopup(
+            "Inserat archivieren", 
+            "Das Inserat wird aus der öffentlichen Suche entfernt, bleibt aber in deinem Archiv erhalten.", 
+            true
+        );
+        
+        // Button-Text anpassen
+        confirmBtn.innerText = "Jetzt archivieren";
+        confirmBtn.style.backgroundColor = "#444"; // Neutrales Grau/Schwarz
+
+        confirmBtn.onclick = async () => {
+            confirmBtn.disabled = true;
+            confirmBtn.innerText = "Wird archiviert...";
+            const { error } = await supabase
+                .from('listings')
+                .update({ status: 'archived' })
+                .eq('id', deleteId);
+            
+            if (!error) {
+                location.reload();
+            } else {
+                alert("Fehler beim Archivieren: " + error.message);
+                confirmBtn.disabled = false;
+            }
+        };
+    } else {
+        // FALL 2: Inserat ist schon archiviert -> Löschen vorbereiten
+        showPopup(
+            "Endgültig löschen", 
+            "Möchtest du dieses Inserat wirklich unwiderruflich aus deinem Konto entfernen? Diese Aktion kann nicht rückgängig gemacht werden.", 
+            true
+        );
+        
+        // Button-Text anpassen (Gefahr signalisieren!)
+        confirmBtn.innerText = "Unwiderruflich löschen";
+        confirmBtn.style.backgroundColor = "#ff4d4d"; // Warn-Rot
+
+        confirmBtn.onclick = async () => {
+            confirmBtn.disabled = true;
+            confirmBtn.innerText = "Lösche...";
+            const { error } = await supabase
+                .from('listings')
+                .delete()
+                .eq('id', deleteId);
+            
+            if (!error) {
+                location.reload();
+            } else {
+                alert("Fehler beim Löschen: " + error.message);
+                confirmBtn.disabled = false;
+            }
+        };
+    }
+};
+// --- PREIS BEARBEITEN WINDOW AUF DASHBOARD ---
     window.openEditModal = (id, price) => {
         document.getElementById('edit-listing-id').value = id;
         document.getElementById('new-price').value = price;
@@ -503,6 +582,7 @@ import Popup from '../components/Popup.astro';
             btn.disabled = false;
         }
     });
+
 
     init();
 </script>

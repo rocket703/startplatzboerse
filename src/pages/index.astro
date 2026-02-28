@@ -18,8 +18,9 @@ const { data: listings, error } = await supabase
   .select(`
     *,
     profiles (nickname)
-  `) // <--- WICHTIG: Backticks (`) nutzen, nicht einfache Anführungszeichen (')
+  `)
   .eq('approved', true)
+  .eq('status', 'active')
   .order('created_at', { ascending: false })
   .limit(4);
 ---
@@ -85,7 +86,6 @@ const { data: listings, error } = await supabase
       distance={item.distance}
       price={item.price}
       oldPrice={item.old_price}
-      /* Das ?. sorgt dafür, dass es nicht abstürzt, wenn kein Profil da ist */
       nickname={item.profiles?.nickname || "Gast"}
     />
   ))}
