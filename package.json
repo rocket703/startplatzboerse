@@ -13,6 +13,7 @@
     "@astrojs/vercel": "^9.0.4",
     "@supabase/supabase-js": "^2.95.3",
     "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0",
     "astro": "^5.17.1"
   },
   "devDependencies": {
