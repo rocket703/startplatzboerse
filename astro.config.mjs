@@ -19,4 +19,13 @@ export default defineConfig({
       enabled: true,
     },
   }),
+
+  // HIER SIND DIE NEUEN WEITERLEITUNGEN
+  redirects: {
+    // Trage links den alten Pfad ein (ohne die Domain) und rechts das Ziel
+    '/faq': '/#faq',
+    '/projekt': '/ueber-uns',
+    '/startplatz-inserieren': '/inserieren',
+    '/startplatz': '/suche',
+  }
 });
