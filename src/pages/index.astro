@@ -6,6 +6,7 @@ import Infos from '../components/Infos.astro';
 import Faq from '../components/Faq.astro';
 import EventCard from '../components/EventCard.astro';
 import { createClient } from '@supabase/supabase-js';
+import { getCollection } from 'astro:content';
 
 const supabase = createClient(
   import.meta.env.PUBLIC_SUPABASE_URL,
@@ -23,6 +24,9 @@ const { data: listings, error } = await supabase
   .eq('status', 'active')
   .order('created_at', { ascending: false })
   .limit(4);
+
+  const allRatgeber = await getCollection('ratgeber');
+const ratgeberTeaser = allRatgeber.slice(0, 4);
 ---
 
 <Layout title="Startplätze kaufen & verkaufen">
@@ -97,6 +101,30 @@ const { data: listings, error } = await supabase
         </div> </div> </section>
 
     <Infos />
+
+    <section class="ratgeber-section">
+        <div class="container">
+            <div class="section-header">
+                <div class="header-title">
+                    <span class="badge">Wissen & Tipps</span>
+                    <h2>Ratgeber</h2>
+                </div>
+            </div>
+
+            <div class="ratgeber-grid">
+                {ratgeberTeaser.map((artikel) => (
+                    <a href={`/ratgeber/${artikel.slug}`} class="ratgeber-card">
+                        <div class="ratgeber-image" style={`background-image: url(${artikel.data.image})`}></div>
+                        <div class="ratgeber-content">
+                            <h3>{artikel.data.title}</h3>
+                            <p>{artikel.data.teaser}</p>
+                            <span class="read-more">Artikel lesen →</span>
+                        </div>
+                    </a>
+                ))}
+            </div>
+        </div>
+    </section>
 
     <Faq />
 
@@ -297,7 +325,6 @@ const { data: listings, error } = await supabase
         .hero { min-height: 70vh; padding-top: 80px; }
     }
 
-<style>
     /* --- VARIABLEN & RESET --- */
     :root {
         --bg-actual: #323232; 
@@ -562,6 +589,72 @@ const { data: listings, error } = await supabase
         }
         
 
+    }
+
+    /* --- RATGEBER SEKTION --- */
+    .ratgeber-section {
+        padding: 80px 0;
+        background-color: var(--bg-actual);
+    }
+
+    .ratgeber-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 30px;
+    }
+
+    .ratgeber-card {
+        background: var(--bg-card);
+        border-radius: 20px;
+        overflow: hidden;
+        text-decoration: none;
+        transition: transform 0.3s ease, border-color 0.3s ease;
+        border: 5px solid rgba(255, 255, 255, 0.05);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .ratgeber-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--cyan);
+    }
+
+    .ratgeber-image {
+        height: 200px;
+        background-size: cover;
+        background-position: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .ratgeber-content {
+        padding: 30px;
+    }
+
+    .ratgeber-content h3 {
+        color: white;
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+        line-height: 1.3;
+    }
+
+    .ratgeber-content p {
+        color: var(--text-muted);
+        font-size: 1rem;
+        line-height: 1.5;
+        margin-bottom: 20px;
+    }
+
+    .read-more {
+        color: var(--cyan);
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+
+    /* Mobil-Anpassung für Ratgeber */
+    @media (max-width: 768px) {
+        .ratgeber-grid {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
 
