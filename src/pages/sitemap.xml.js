@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { getCollection } from 'astro:content'; // NEU: Astro's Content-API laden
 
 export async function GET() {
     // 1. Supabase Verbindung aufbauen
@@ -21,10 +22,11 @@ export async function GET() {
 
     // 4. Deine statischen Seiten
     const staticPages = [
-        '',             // Startseite
-        '/suche',       // Suche
-        '/ueber-uns',   // Über uns
-        '/kontakt'      // Kontakt
+        '',             
+        '/suche',       
+        '/ueber-uns',   
+        '/kontakt',
+        '/ratgeber'     // NEU: Die Ratgeber-Übersichtsseite direkt mit indexieren
     ];
 
     // 5. XML für statische Seiten generieren
@@ -47,19 +49,40 @@ export async function GET() {
     </url>`;
     }).join('');
 
-    // 7. Alles zum fertigen XML-Dokument zusammenbauen
+    // 7. NEU: XML für alle Ratgeber-Artikel generieren
+    let articleUrls = '';
+    try {
+        // Holt alle Markdown-Dateien aus der Collection (wir gehen davon aus, sie heißt "ratgeber")
+        // Falls dein Ordner unter src/content anders heißt, passe [PLATZHALTER_COLLECTION_NAME] an
+        const articles = await getCollection('ratgeber'); 
+        
+        articleUrls = articles.map((entry) => {
+            // Nutzt deinen im Frontmatter definierten Slug oder automatisch den Dateinamen
+            const targetSlug = entry.data.slug || entry.slug;
+            
+            return `
+    <url>
+        <loc>${baseUrl}/ratgeber/${targetSlug}</loc>
+        <changefreq>monthly</changefreq>
+        <priority>0.8</priority>
+    </url>`;
+        }).join('');
+    } catch (err) {
+        console.error('Sitemap: Keine Ratgeber-Artikel gefunden', err);
+    }
+
+    // 8. Alles zum fertigen XML-Dokument zusammenbauen
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-    ${staticUrls}
-    ${listingUrls}
+${staticUrls}
+${listingUrls}
+${articleUrls}
 </urlset>`;
 
-    // 8. Die Sitemap an den Browser/Google ausliefern
+    // 9. Die Sitemap an den Browser/Google ausliefern
     return new Response(sitemap, {
         headers: {
             'Content-Type': 'application/xml',
-            // Caching: Speichert die Sitemap für eine Stunde bei Vercel, 
-            // damit die Supabase-Datenbank geschont wird
             'Cache-Control': 'public, max-age=3600' 
         }
     });
