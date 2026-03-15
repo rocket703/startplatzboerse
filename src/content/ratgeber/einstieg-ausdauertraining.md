@@ -79,5 +79,3 @@ Die aerobe Basis trägt jetzt das Gewicht. Eine längere Einheit pro Woche (60�
 ## Nach den ersten 12 Wochen — was jetzt?
 
 Nach drei Monaten hast du eine aerobe Basis, auf der wirklich etwas gebaut werden kann. Jetzt ist der richtige Zeitpunkt für einen ersten Wettkampf — einen 5-km-Lauf, einen Radmarathon, ein erstes HYROX-Event.
-
-Und wenn du noch keinen Startplatz hast — oder jemanden kennst, der einen abgeben muss: Genau dafür gibt es **[startplatzboerse.com](/)**.
