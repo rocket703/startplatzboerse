@@ -336,4 +336,31 @@ const { Content } = await entry.render();
   .prose :global(tbody tr:hover td) { 
     background-color: #1a1a1a; 
   }
+    /* Bestehendes Style für Desktop (ungefähr so) */
+.cta-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+/* DER FIX FÜR MOBIL */
+@media (max-width: 600px) {
+    .cta-actions {
+        flex-direction: column; /* Buttons untereinander */
+        align-items: stretch;    /* Buttons auf volle Breite dehnen */
+        width: 100%;
+        padding: 0 10px;        /* Kleiner Sicherheitsabstand zum Rand */
+    }
+
+    /* Damit die Buttons wirklich die ganze Breite füllen */
+    .cta-actions .btn-primary, 
+    .cta-actions .btn-secondary,
+    .cta-actions .btn-ghost {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+        min-height: 60px; /* Schön groß für den Daumen */
+    }
+}
 </style>

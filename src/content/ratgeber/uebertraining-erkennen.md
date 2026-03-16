@@ -7,7 +7,7 @@ category: "Training & Gesundheit"
 readingTime: "7 Min."
 tags: ["Übertraining", "Regeneration", "Verletzungspause", "Krankheit", "Startplatzbörse", "Trainingssteuerung"]
 slug: "uebertraining-warnsignale-symptome-startplatz-retten"
-pubDate: 2024-03-20
+pubDate: 2024-03-13
 ---
 
 Du trainierst konsequent, der Startplatz ist gebucht, der Plan steht — und dann streikt der Körper. Übertraining ist einer der häufigsten Gründe, warum Athleten verletzt ins Rennen gehen oder gar nicht erst erscheinen. Das Gemeine daran: Es kündigt sich an. Man ignoriert es nur meistens.

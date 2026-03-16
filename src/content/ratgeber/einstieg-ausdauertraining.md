@@ -7,7 +7,7 @@ category: "Einstieg & Grundlagen"
 readingTime: "9 Min."
 tags: ["Einsteiger", "Grundlagenausdauer", "Zone 2", "Trainingsplanung", "Laufen", "HYROX"]
 slug: "einstieg-ausdauertraining-grundlagen-tipps"
-pubDate: 2024-03-20
+pubDate: 2024-03-14
 ---
 
 Die meisten Einsteiger machen denselben Fehler: Sie starten zu schnell, zu ambitioniert — und hören nach vier Wochen wieder auf. Nicht weil sie zu schwach sind. Sondern weil sie gegen die Physiologie trainiert haben statt mit ihr. Was die aktuelle Sportwissenschaft dazu sagt, ist überraschend klar — und für viele überraschend kontraintuitiv.

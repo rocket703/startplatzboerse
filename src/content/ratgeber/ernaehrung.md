@@ -7,7 +7,7 @@ category: "Ernährung & Energie"
 readingTime: "8 Min."
 tags: ["Sporternährung", "Ausdauersport", "Marathon", "Triathlon", "Radsport", "Wettkampfvorbereitung"]
 slug: "ernaehrung-ausdauersport-training-wettkampf"
-pubDate: 2024-03-20
+pubDate: 2024-03-15
 ---
 
 Wochenlang solide trainiert, der Startplatz liegt bereit — und dann bricht man bei Kilometer 30 ein, weil man sich drei Stunden vorher "gesund ernährt" hat. Sporternährung ist nicht kompliziert. Aber sie wird von den meisten Hobbyathleten konsequent falsch gemacht. Dieser Guide räumt auf.
