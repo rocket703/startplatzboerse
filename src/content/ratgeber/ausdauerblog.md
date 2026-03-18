@@ -1,14 +1,16 @@
 ---
-title: "Mit 50 anfangen zu laufen: Was wirklich funktioniert — und was du vergessen kannst."
+title: "Laufen in der Lebensmitte: Was wirklich funktioniert."
 teaser: "Claudia hat dreimal angefangen zu laufen — und dreimal aufgehört. Nicht weil sie zu schwach war. Sondern weil die Programme nie für jemanden wie sie gemacht waren. Das ist kein Einzelfall. Und es muss nicht so bleiben."
 image: "https://images.unsplash.com/photo-1538805060514-97d9cc17730c?w=1400&auto=format&fit=crop&q=80"
 category: "Laufen mit 40+"
-readingTime: "9 Min."
+readingTime: "6 Min."
 tags: ["Laufen mit 50", "Laufen ab 45", "Laufen anfangen", "Lauftraining Lebensmitte", "Ausdauertraining 50+", "Motivation Laufen"]
-slug: "laufen-mit-50-anfangen-tipps"
+slug: "ausdauerblog-laufen-anfangen-leicht-gemacht"
 seoKeywords: "laufen mit 50, laufen anfangen mit 50, laufen ab 45, lauftraining lebensmitte, ausdauertraining 50 plus tipps"
-pubDate: 2026-03-17
+pubDate: 2026-03-18
 ---
+
+Hier beginnt der Artikel:
 
 Claudia ist 52. Sie hat dreimal angefangen zu laufen — und dreimal aufgehört. Nicht weil sie zu schwach war. Sondern weil die Programme, die sie probiert hat, nie für jemanden wie sie gemacht waren. Das ist keine Ausnahme. Das ist der Normalfall. Und es muss nicht so bleiben.
 
@@ -74,11 +76,10 @@ Menschen, die Teil einer Community sind, trainieren nachweislich konsistenter al
 
 ## Der erste Wettkampf — ein Ziel, das alles ändert
 
-Irgendwann kommt der Punkt, an dem Laufen eine andere Qualität bekommt. Wenn aus "ich gehe manchmal laufen" ein "ich bin Läufer:in" wird. Für viele ist das der Moment, in dem sie sich zum ersten Mal für ein Rennen anmelden.
+Irgendwann kommt der Punkt, an dem Laufen eine andere Qualität bekommt. Wenn aus "ich gehe manchmal laufen" ein "ich bin Läufer" wird. Für viele ist das der Moment, in dem sie sich zum ersten Mal für ein Rennen anmelden.
 
 Es muss kein Halbmarathon sein. Ein 5-km-Lauf in der Stadt. Ein lokaler Herbstlauf. Einfach dabei sein — und ins Ziel kommen.
 
-Das Praktische: Gerade beliebtere Läufe sind oft ausgebucht. Was viele nicht wissen — Startplätze können übertragen werden. Wer kurzfristig nicht kann, gibt seinen Platz weiter. Wer einen Platz sucht, findet ihn auf **[startplatzboerse.com](https://startplatzboerse.com)** — Lauf-, Rad- und Triathlonplätze von Sportler zu Sportler, kostenlos und ohne Aufschlag.
 
 ## Dein Einstieg — konkret und ohne Druck
 
@@ -90,5 +91,5 @@ Der ausdauerclub ist kein Hochleistungs-Umfeld. Keine Bestzeiten-Pflicht, kein P
 
 ---
 
-*Laufen in der Lebensmitte — dauerhaft, smart, ohne Kompromisse.*
-*[Jetzt Mitglied werden →](https://ausdauerclub.de/preis)*
+*Laufen in der Lebensmitte — dauerhaft und smart*
+*[Jetzt Mitglied werden →](https://ausdauerclub.de)*
