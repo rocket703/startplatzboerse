@@ -24,7 +24,7 @@ Kurz gesagt: Dein Körper ist eine Maschine. Und Maschinen, die man auf leeren T
 
 * **Vor dem Training (Tank füllen)** 2–3 Stunden vorher eine vollständige Mahlzeit mit Kohlenhydraten und etwas Protein. 30–60 Minuten vorher ein kleiner, leicht verdaulicher Snack. Kein Fett, kein Ballaststoff-Feuerwerk.
 * **Während der Einheit (Nachfüllen)** Unter einer Stunde reicht Wasser. Ab 60–75 Minuten: 30–60g Kohlenhydrate pro Stunde. Ab 90 Minuten: regelmäßig nachfüllen — nicht warten, bis der Hunger kommt, dann ist es zu spät.
-* **Nach dem Training (Das 30-Minuten-Fenster)** Innerhalb von 30 Minuten Protein und Kohlenhydrate zuführen. Das "anabole Fenster" ist real. Wer hier schläft, schläft auch bei der Anpassung.
+* **Nach dem Training (Das anabole-Fenster)** Je schneller, desto besser. Wer die Nahrungsaufnahme nach einer harten Einheit um Stunden hinauszögert, verschenkt wertvolle Anpassung und Regeneration.
 
 > **Red Flag:** Lange Einheit, kaum gegessen davor, nichts dabei — und danach erstmal eine Stunde Duschen, Dehnen, Dösen. Wenn du dann irgendwas isst, sind zwei Stunden vergangen. Dein Körper hat in dieser Zeit begonnen, Muskelprotein abzubauen um die Energielücke zu schließen. Du hast trainiert und dich gleichzeitig geschwächt.
 
