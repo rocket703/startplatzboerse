@@ -10,8 +10,6 @@ seoKeywords: "laufen mit 50, laufen anfangen mit 50, laufen ab 45, lauftraining 
 pubDate: 2026-03-18
 ---
 
-Hier beginnt der Artikel:
-
 Claudia ist 52. Sie hat dreimal angefangen zu laufen — und dreimal aufgehört. Nicht weil sie zu schwach war. Sondern weil die Programme, die sie probiert hat, nie für jemanden wie sie gemacht waren. Das ist keine Ausnahme. Das ist der Normalfall. Und es muss nicht so bleiben.
 
 ---
