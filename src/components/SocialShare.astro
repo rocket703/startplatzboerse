@@ -1,0 +1,84 @@
+---
+const fbLink = "https://www.facebook.com/share/1BmCtKb9oj/?mibextid=wwXIfr";
+const igLink = "https://www.instagram.com/startplatzboerse?igsh=eDN6ZWxuNXRoeWFh&utm_source=qr";
+---
+
+<div class="badge-container">
+  <div class="social-badge">
+    <span class="badge-text">Folge uns:</span>
+    <div class="icon-group">
+      <a href={fbLink} target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+      <a href={igLink} target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+    </div>
+  </div>
+</div>
+
+<style>
+  .badge-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem; /* Perfekter Abstand zur Überschrift */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+
+  .social-badge {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.03); /* Sehr dezenter, heller Hintergrund */
+    border: 1px solid rgba(255, 255, 255, 0.08); /* Feiner Rahmen */
+    border-radius: 40px; /* Die Pillen-Form */
+    padding: 6px 8px 6px 16px;
+    backdrop-filter: blur(10px); /* Moderner Glassmorphism-Touch */
+  }
+
+  .badge-text {
+    color: #888888;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 600;
+  }
+
+  .icon-group {
+    display: flex;
+    gap: 6px;
+  }
+
+  .icon-group a {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 32px; /* Perfekte Größe für den Finger auf dem Handy */
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    color: #b0b0b0;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Der Glow-Effekt in deiner Brandfarbe */
+  .icon-group a:hover,
+  .icon-group a:active {
+    background: #00bcd4;
+    color: #1a1a1a; /* Dunkles Icon auf hellem Cyan */
+    transform: scale(1.1);
+    box-shadow: 0 0 12px rgba(0, 188, 212, 0.4); /* Sanftes Leuchten */
+  }
+
+  /* Mobile Optimierung */
+  @media (max-width: 480px) {
+    .badge-container {
+      margin-bottom: 1.5rem;
+    }
+    .social-badge {
+      padding: 5px 6px 5px 14px;
+    }
+    .icon-group a {
+      width: 36px; /* Auf dem Handy minimal größer für bessere Touch-Bedienung */
+      height: 36px;
+    }
+  }
+</style>
