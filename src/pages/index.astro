@@ -26,8 +26,15 @@ const { data: listings, error } = await supabase
   .order('created_at', { ascending: false })
   .limit(4);
 
-  const allRatgeber = await getCollection('ratgeber');
-const ratgeberTeaser = allRatgeber.slice(0, 4);
+  // ARTIKEL AUF STARTSEITE ALDEN UND SORTIEREN
+ const allRatgeber = await getCollection('ratgeber');
+
+const ratgeberTeaser = allRatgeber
+  .sort((a, b) => {
+    // Wir wandeln beide Daten in Zahlen um und vergleichen sie
+    return new Date(b.data.pubDate).getTime() - new Date(a.data.pubDate).getTime();
+  })
+  .slice(0, 4);
 ---
 
 <Layout title="Startplätze kaufen & verkaufen">
