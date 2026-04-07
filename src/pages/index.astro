@@ -77,63 +77,70 @@ const ratgeberTeaser = allRatgeber
 
 <div id="custom-toast" class="toast-hidden">✅ Link kopiert! Danke fürs Teilen.</div>
 
-   <section class="listings-preview" id="listings">
+  <section class="listings-preview" id="listings">
     <div class="container">
         <div class="section-header">
             <div class="header-title">
                 <span class="badge">Aktuell</span>
                 <h2>Neueste Inserate</h2>
             </div>
+            </div>
+
+        <div class="event-grid">
+            {listings && listings.map((item: any) => (
+                <EventCard 
+                    id={item.id}
+                    category={item.category}
+                    title={item.event_name}
+                    date={new Date(item.event_date).toLocaleDateString('de-DE')}
+                    location={item.location}
+                    distance={item.distance}
+                    price={item.price}
+                    oldPrice={item.old_price}
+                    nickname={item.profiles?.nickname || "Gast"}
+                />
+            ))}
+        </div>
+            
+        {(!listings || listings.length === 0) && (
+            <p class="no-listings">Aktuell keine Startplätze verfügbar. Inseriere den ersten!</p>
+        )}
+
+        <div class="section-footer">
             <a href="/suche" class="view-all">Alle anzeigen →</a>
         </div>
-
-       <div class="event-grid">
-  {listings && listings.map((item: any) => (
-    <EventCard 
-      id={item.id}
-      category={item.category}
-      title={item.event_name}
-      date={new Date(item.event_date).toLocaleDateString('de-DE')}
-      location={item.location}
-      distance={item.distance}
-      price={item.price}
-      oldPrice={item.old_price}
-      nickname={item.profiles?.nickname || "Gast"}
-    />
-  ))}
-</div>
-            
-            {(!listings || listings.length === 0) && (
-                <p class="no-listings">Aktuell keine Startplätze verfügbar. Inseriere den ersten!</p>
-            )}
-        </div> </div> </section>
+    </div> 
+</section>
 
     <Infos />
 
-    <section class="ratgeber-section">
-        <div class="container">
-            <div class="section-header">
-                <div class="header-title">
-                    <span class="badge">Wissen & Tipps</span>
-                    <h2>Ratgeber</h2>
-                </div>
-                 <a href="/ratgeber" class="view-all">Alle anzeigen →</a>
+    <section class="listings-preview">
+    <div class="container">
+        <div class="section-header">
+            <div class="header-title">
+                <span class="badge">Wissen & Tipps</span>
+                <h2>Ratgeber</h2>
+            </div>
             </div>
 
-            <div class="ratgeber-grid">
-                {ratgeberTeaser.map((artikel) => (
-                    <a href={`/ratgeber/${artikel.slug}`} class="ratgeber-card">
-                        <div class="ratgeber-image" style={`background-image: url(${artikel.data.image})`}></div>
-                        <div class="ratgeber-content">
-                            <h3>{artikel.data.title}</h3>
-                            <p>{artikel.data.teaser}</p>
-                            <span class="read-more">Artikel lesen →</span>
-                        </div>
-                    </a>
-                ))}
-            </div>
+        <div class="ratgeber-grid">
+            {ratgeberTeaser.map((artikel) => (
+                <a href={`/ratgeber/${artikel.slug}`} class="ratgeber-card">
+                    <div class="ratgeber-image" style={`background-image: url(${artikel.data.image})`}></div>
+                    <div class="ratgeber-content">
+                        <h3>{artikel.data.title}</h3>
+                        <p>{artikel.data.teaser}</p>
+                        <span class="read-more">Artikel lesen →</span>
+                    </div>
+                </a>
+            ))}
         </div>
-    </section>
+
+        <div class="section-footer">
+             <a href="/ratgeber" class="view-all">Alle anzeigen →</a>
+        </div>
+    </div>
+</section>
 
     <Faq />
 
@@ -665,6 +672,29 @@ const ratgeberTeaser = allRatgeber
             grid-template-columns: 1fr;
         }
     }
+
+.section-footer {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end; /* Schiebt den Inhalt ganz nach rechts */
+    margin-top: 3rem; /* Sorgt für ordentlich Abstand nach oben (ca. 48px) */
+}
+
+.section-footer .view-all {
+    font-size: 1.25rem; /* Macht die Schrift etwas größer (ca. 20px) */
+    font-weight: 600; /* Macht die Schrift etwas kräftiger, damit sie auffällt */
+}
+
+.section-header {
+    display: flex;
+    justify-content: flex-start; /* Zwingt den gesamten Inhalt nach links */
+    width: 100%;
+}
+
+.header-title {
+    text-align: left; /* Stellt sicher, dass auch der Text selbst linksbündig ist */
+    margin-right: auto; /* Nimmt den restlichen Platz rechts ein und drückt die Überschrift nach links */
+}
 </style>
 
 <script>
