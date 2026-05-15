@@ -57,10 +57,23 @@ const seoDescription = item
                     <div class="content-side">
                         <div class="header-actions">
                             <span class="badge">{item.category}</span>
-                            <button id="share-btn" class="share-btn" aria-label="Inserat teilen">
+                            <div class="header-actions-right">
+                                <button
+                                    type="button"
+                                    class="heart-btn"
+                                    data-watchlist-id={item.id}
+                                    aria-label="Merken"
+                                    aria-pressed="false"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="heart-icon" aria-hidden="true">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                                    </svg>
+                                </button>
+                                <button id="share-btn" class="share-btn" aria-label="Inserat teilen">
                                 <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
                                 Teilen
                             </button>
+                            </div>
                         </div>
 
                         <h1 class="glow-title">{item.event_name}</h1>
@@ -130,6 +143,9 @@ const seoDescription = item
 
 <script>
     import { createClient } from '@supabase/supabase-js';
+    import { initWatchlistUi } from '../../lib/watchlist';
+
+    initWatchlistUi();
 
     // TEILEN LOGIK (Native Web Share API)
     const shareBtn = document.getElementById('share-btn');
@@ -275,6 +291,33 @@ const seoDescription = item
         align-items: center; 
         margin-bottom: 5px;
     }
+
+    .header-actions-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .heart-btn {
+        background: none;
+        border: 1px solid #444;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        cursor: pointer;
+        padding: 0;
+        color: #666;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+    .heart-icon { width: 18px; height: 18px; }
+    .heart-btn:hover { color: #e53935; border-color: #e53935; }
+    .heart-btn.is-saved { color: #e53935; border-color: #e53935; }
+    .heart-btn.is-saved .heart-icon { fill: currentColor; }
+    .heart-btn:disabled { opacity: 0.5; cursor: wait; }
 
     .share-btn { 
         background: transparent; 

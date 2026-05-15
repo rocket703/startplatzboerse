@@ -66,8 +66,9 @@ import Popup from '../components/Popup.astro';
                 </section>
 
                 <section id="section-watchlist" class="dash-section">
-                    <div class="glass-card">
-                        <p style="color:#666; text-align: center;">Demnächst verfügbar: Merke dir Inserate für später.</p>
+                    <div id="watchlist-grid" class="smart-grid watchlist-grid"></div>
+                    <div id="no-watchlist" class="empty-state" style="display:none;">
+                        <p>Noch nichts auf der Merkliste. Speichere Startplätze über das Herz-Symbol.</p>
                     </div>
                 </section>
             </div>
@@ -294,11 +295,69 @@ import Popup from '../components/Popup.astro';
     .unread-highlight { border-color: var(--cyan) !important; background: rgba(0, 188, 212, 0.08) !important; }
     .unread-dot { position: absolute; top: 18px; right: 18px; width: 12px; height: 12px; background: var(--cyan); border-radius: 50%; animation: pulse 2s infinite; }
     @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
+
+    .smart-grid, .watchlist-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    @media (min-width: 768px) {
+        .smart-grid, .watchlist-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    .watch-card { opacity: 1; }
+    .watch-card.is-unavailable { opacity: 0.65; }
+    .watch-card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+    .watch-card-top .eyebrow { margin: 0; }
+    .heart-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+        color: #444;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+    }
+    .heart-icon { width: 22px; height: 22px; }
+    .heart-btn:hover { color: #e53935; transform: scale(1.1); }
+    .heart-btn.is-saved { color: #e53935; }
+    .heart-btn.is-saved .heart-icon { fill: currentColor; }
+    .heart-btn:disabled { opacity: 0.5; cursor: wait; }
+    .watch-unavailable-badge {
+        display: inline-block;
+        margin-top: 8px;
+        font-size: 0.7rem;
+        font-weight: 800;
+        color: #ff4444;
+        text-transform: uppercase;
+    }
+    .watch-card-link {
+        display: inline-block;
+        margin-top: 14px;
+        color: var(--cyan);
+        font-weight: 800;
+        font-size: 0.85rem;
+        text-decoration: none;
+    }
+    .watch-card-link:hover { text-decoration: underline; }
 </style>
 
 <script>
     // Supabase Client initialisieren
     import { createClient } from '@supabase/supabase-js';
+    import {
+        bindWatchlistDelegation,
+        heartButtonHtml,
+        loadWatchlistIds,
+        syncHeartButtons,
+        updateWatchlistCountDisplay,
+    } from '../lib/watchlist';
 
     const supabase = createClient(
         import.meta.env.PUBLIC_SUPABASE_URL,
@@ -306,6 +365,7 @@ import Popup from '../components/Popup.astro';
     );
 
     let deleteId = null;
+    let currentUserId = null;
 
     function showPopup(title, message, isDelete = false) {
         const popup = document.getElementById('status-popup');
@@ -588,8 +648,16 @@ container.style.overflow = 'hidden';
                 openCropModal(file, user);
             });
         }
-// Paralleles Laden von Listings und Chats
-        await Promise.all([fetchListings(user.id), fetchChats(user.id)]);
+        currentUserId = user.id;
+        bindWatchlistDelegation();
+
+        window.addEventListener('watchlist:changed', (e) => {
+            const count = e.detail?.count;
+            if (typeof count === 'number') updateWatchlistCountDisplay(count);
+            if (currentUserId) fetchWatchlist(currentUserId);
+        });
+
+        await Promise.all([fetchListings(user.id), fetchChats(user.id), fetchWatchlist(user.id)]);
         setupTabs();
 
         document.getElementById('logout-trigger')?.addEventListener('click', async () => {
@@ -666,6 +734,83 @@ container.style.overflow = 'hidden';
                 window.openEditModal(button.dataset.id, button.dataset.price, button.dataset.description);
             });
         });
+    }
+
+    async function fetchWatchlist(userId) {
+        const grid = document.getElementById('watchlist-grid');
+        const empty = document.getElementById('no-watchlist');
+
+        const { data, error } = await supabase
+            .from('watchlist')
+            .select(`
+                id,
+                listing_id,
+                listings (
+                    id,
+                    category,
+                    event_name,
+                    event_date,
+                    location,
+                    distance,
+                    price,
+                    old_price,
+                    status,
+                    approved,
+                    profiles ( nickname )
+                )
+            `)
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error('Merkliste laden fehlgeschlagen:', error.message);
+            return;
+        }
+
+        const entries = (data || []).filter((row) => row.listings);
+        updateWatchlistCountDisplay(entries.length);
+
+        if (!entries.length) {
+            if (grid) grid.innerHTML = '';
+            if (empty) empty.style.display = 'block';
+            return;
+        }
+
+        if (empty) empty.style.display = 'none';
+        if (!grid) return;
+
+        grid.innerHTML = entries.map((row) => {
+            const item = row.listings;
+            const isUnavailable = item.status !== 'active' || !item.approved;
+            const eventDate = new Date(item.event_date).toLocaleDateString('de-DE');
+            let priceHtml = '<div class="price-tag-new">' + item.price + '€</div>';
+            if (item.old_price && item.old_price > item.price) {
+                priceHtml = '<div style="display:flex;align-items:center;gap:8px;"><span style="text-decoration:line-through;color:#888;font-size:0.9em;">' + item.old_price + '€</span><span class="price-tag-new">' + item.price + '€</span></div>';
+            }
+
+            const unavailableHtml = isUnavailable
+                ? '<span class="watch-unavailable-badge">Nicht mehr verfügbar</span>'
+                : '';
+            const linkHtml = isUnavailable
+                ? ''
+                : '<a href="/listing/' + item.id + '" class="watch-card-link">Details ansehen →</a>';
+
+            return '<div class="glass-card watch-card' + (isUnavailable ? ' is-unavailable' : '') + '">' +
+                '<div class="watch-card-top">' +
+                '<span class="eyebrow">' + item.category + '</span>' +
+                heartButtonHtml(item.id) +
+                '</div>' +
+                '<h3 style="margin:10px 0 5px 0;">' + item.event_name + '</h3>' +
+                '<p style="color:#555;font-size:0.8rem;margin:0;">' + item.location + ' · ' + eventDate + '</p>' +
+                '<p style="color:#666;font-size:0.75rem;margin:4px 0 0 0;">' + (item.distance || 'Startplatz') + '</p>' +
+                unavailableHtml +
+                priceHtml +
+                linkHtml +
+                '</div>';
+        }).join('');
+
+        const ids = await loadWatchlistIds();
+        syncHeartButtons(ids, grid);
     }
 
     async function fetchChats(userId) {

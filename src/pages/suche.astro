@@ -239,13 +239,37 @@ import Footer from '../components/Footer.astro';
         box-shadow: 0 8px 20px rgba(0, 188, 212, 0.15);
     }
 
-    /* Top Row: Event Name + Sport Badge */
+    /* Top Row: Event Name + Herz + Sport Badge */
     .c-top {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
         gap: 10px;
     }
+
+    .c-top-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    .heart-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+        color: #444;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+    }
+
+    .heart-icon { width: 22px; height: 22px; }
+    .heart-btn:hover { color: #e53935; transform: scale(1.1); }
+    .heart-btn.is-saved { color: #e53935; }
+    .heart-btn.is-saved .heart-icon { fill: currentColor; }
+    .heart-btn:disabled { opacity: 0.5; cursor: wait; }
 
     .event-name {
         color: white;
@@ -392,7 +416,11 @@ import Footer from '../components/Footer.astro';
 
 <script>
     import { createClient } from '@supabase/supabase-js';
+    import { heartButtonHtml, initWatchlistUi, loadWatchlistIds, syncHeartButtons } from '../lib/watchlist';
+
     const supabase = createClient(import.meta.env.PUBLIC_SUPABASE_URL, import.meta.env.PUBLIC_SUPABASE_ANON_KEY);
+
+    initWatchlistUi();
 
     const toggle = document.getElementById('filter-toggle') as HTMLElement;
     const drawer = document.getElementById('filter-drawer') as HTMLElement;
@@ -489,7 +517,7 @@ import Footer from '../components/Footer.astro';
     }
 
     // Hilfsfunktion zum Anzeigen der Karten
-    function renderGrid(data) {
+    async function renderGrid(data) {
         const grid = document.getElementById('results-grid');
         const countDisplay = document.getElementById('res-count');
         
@@ -505,7 +533,10 @@ import Footer from '../components/Footer.astro';
             <div class="e-card">
                 <div class="c-top">
                     <div class="event-name">${e.event_name}</div>
-                    <div class="sport-badge">${e.category}</div>
+                    <div class="c-top-actions">
+                        ${heartButtonHtml(e.id)}
+                        <div class="sport-badge">${e.category}</div>
+                    </div>
                 </div>
                 <div class="c-meta">
                     <div class="meta-row split">
@@ -533,6 +564,9 @@ import Footer from '../components/Footer.astro';
         if (countDisplay) {
             countDisplay.innerText = data.length === 0 ? "Aktuell keine passenden Startplätze gefunden" : `${data.length} aktive Events gefunden`;
         }
+
+        const ids = await loadWatchlistIds();
+        syncHeartButtons(ids, grid);
     }
 
     // Event Listener für die Pillen (Kategorien)
