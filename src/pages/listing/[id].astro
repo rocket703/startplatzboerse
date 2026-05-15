@@ -25,6 +25,14 @@ if (error) {
 const backLabel = origin === 'search' ? "← Zurück zur Suche" : "← Zurück zur Übersicht";
 
 const pageTitle = item ? item.event_name : "Inserat nicht gefunden";
+const distanceLabel = item ? (
+  item.distance === 'Freie Distanz' ? (
+    item.category === 'Triathlon' && (item.swim_dist || item.bike_dist || item.run_dist) ?
+      `Freie Distanz – Schwimmen ${item.swim_dist ?? '?'} km · Rad ${item.bike_dist ?? '?'} km · Laufen ${item.run_dist ?? '?'} km` :
+      item.distance_km ? `Freie Distanz (${item.distance_km} km)` :
+      'Freie Distanz'
+  ) : item.distance || 'K.A.'
+) : 'K.A.';
 const seoDescription = item 
   ? `Sichere dir jetzt einen Startplatz für ${item.event_name} am ${new Date(item.event_date).toLocaleDateString('de-DE')} in ${item.location}. Preis: ${item.price}€. Sicherer Kauf via Startplatzbörse.`
   : "Details zum Startplatz auf der Startplatzbörse.";
@@ -71,9 +79,15 @@ const seoDescription = item
                                 <span class="label">Ort</span>
                                 <span class="val">{item.location} {item.plz ? `(${item.plz})` : ''}</span>
                             </div>
+                            {item.event_url && (
+                                <div class="info-item">
+                                    <span class="label">Website</span>
+                                    <span class="val"><a href={item.event_url} target="_blank" rel="noopener noreferrer">{item.event_url}</a></span>
+                                </div>
+                            )}
                             <div class="info-item">
                                 <span class="label">Distanz</span>
-                                <span class="val">{item.distance || 'K.A.'}</span>
+                                <span class="val">{distanceLabel}</span>
                             </div>
                         </div>
 

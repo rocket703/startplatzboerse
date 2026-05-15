@@ -83,11 +83,12 @@ import Popup from '../components/Popup.astro';
 
         <div id="edit-modal" class="modal-overlay" style="display:none;">
             <div class="modal-content glass-card">
-                <h3 style="margin-bottom: 20px;">Preis anpassen</h3>
+                <h3 style="margin-bottom: 20px;">Inserat bearbeiten</h3>
                 <div class="input-glow-wrap">
                     <input type="number" id="new-price" placeholder="0">
                     <span>€</span>
                 </div>
+                <textarea id="edit-description" placeholder="Beschreibung" rows="5" style="width:100%; margin-top: 12px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); background: transparent; color: white; padding: 14px; resize: vertical; font-size: 0.95rem;"></textarea>
                 <input type="hidden" id="edit-listing-id">
                 <div class="modal-footer-btns">
                     <button onclick="document.getElementById('edit-modal').style.display='none'" class="btn-close-modal">Abbrechen</button>
@@ -284,6 +285,7 @@ import Popup from '../components/Popup.astro';
     #new-price[type=number] { -moz-appearance: textfield; }
     .input-glow-wrap { display: flex; align-items: center; justify-content: center; position: relative; margin: 20px 0; }
     .input-glow-wrap span { font-size: 2.5rem; color: var(--cyan); font-weight: 900; margin-left: 5px; }
+    #edit-description { min-height: 120px; font-family: inherit; }
 
     .dash-section { display: none; }
     .dash-section.active { display: block; animation: fadeIn 0.3s ease-in; }
@@ -295,6 +297,7 @@ import Popup from '../components/Popup.astro';
 </style>
 
 <script>
+    // Supabase Client initialisieren
     import { createClient } from '@supabase/supabase-js';
 
     const supabase = createClient(
@@ -325,6 +328,7 @@ import Popup from '../components/Popup.astro';
         }
     }
 
+// Bild-Cropper Modal Logik
    function openCropModal(file, user) {
     const modal = document.getElementById('crop-modal');
     const cropImg = document.getElementById('crop-image');
@@ -398,7 +402,7 @@ container.style.overflow = 'hidden';
         centerImage();
         applyTransform();
     };
-
+// Zoom-Logik als Slider
     zoomSlider.oninput = () => {
         const prevZoom = zoom;
         zoom = parseFloat(zoomSlider.value);
@@ -584,7 +588,7 @@ container.style.overflow = 'hidden';
                 openCropModal(file, user);
             });
         }
-
+// Paralleles Laden von Listings und Chats
         await Promise.all([fetchListings(user.id), fetchChats(user.id)]);
         setupTabs();
 
@@ -608,6 +612,16 @@ container.style.overflow = 'hidden';
                 if (targetSection) targetSection.classList.add('active');
             });
         });
+    }
+
+    function escapeHtmlAttr(value) {
+        return String(value || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            .replace(/\n/g, ' ');
     }
 
     async function fetchListings(userId) {
@@ -644,8 +658,14 @@ container.style.overflow = 'hidden';
                 priceHtml = '<div style="display: flex; align-items: center; gap: 8px;"><span style="text-decoration: line-through; color: #888; font-size: 0.9em;">' + item.old_price + '€</span><div class="price-tag-new" style="color: #00bcd4; font-weight: bold;">' + item.price + '€</div></div>';
             }
 
-            return '<div class="glass-card" style="' + (isArchived ? 'opacity: 0.7;' : '') + '"><span class="eyebrow">' + item.category + '</span><h3 style="margin: 10px 0 5px 0;">' + item.event_name + '</h3><div style="margin-bottom: 10px;"><p style="color:#555; font-size:0.8rem; margin:0;">Event am: ' + new Date(item.event_date).toLocaleDateString() + '</p><p style="font-size:0.7rem; margin: 2px 0 0 0;">' + statusNotice + '</p></div>' + priceHtml + '<div class="card-footer-btns">' + (!isArchived ? '<button class="btn-dash-edit" onclick="window.openEditModal(\'' + item.id + '\', \'' + item.price + '\')">Preis</button><button class="btn-dash-delete" onclick="window.askDelete(\'' + item.id + '\', \'' + item.status + '\')">Löschen</button>' : '<button class="btn-dash-delete" style="width: 100%;" onclick="window.askDelete(\'' + item.id + '\', \'archived\')">Endgültig löschen</button>') + '</div></div>';
+            return '<div class="glass-card" style="' + (isArchived ? 'opacity: 0.7;' : '') + '"><span class="eyebrow">' + item.category + '</span><h3 style="margin: 10px 0 5px 0;">' + item.event_name + '</h3><div style="margin-bottom: 10px;"><p style="color:#555; font-size:0.8rem; margin:0;">Event am: ' + new Date(item.event_date).toLocaleDateString() + '</p><p style="font-size:0.7rem; margin: 2px 0 0 0;">' + statusNotice + '</p></div>' + priceHtml + '<div class="card-footer-btns">' + (!isArchived ? '<button class="btn-dash-edit" onclick="window.openEditModal(\'' + item.id + '\', \'' + item.price + '\')">Bearbeiten</button><button class="btn-dash-delete" onclick="window.askDelete(\'' + item.id + '\', \'' + item.status + '\')">Löschen</button>' : '<button class="btn-dash-delete" style="width: 100%;" onclick="window.askDelete(\'' + item.id + '\', \'archived\')">Endgültig löschen</button>') + '</div></div>';
         }).join('');
+
+        grid.querySelectorAll('.btn-dash-edit').forEach(button => {
+            button.addEventListener('click', () => {
+                window.openEditModal(button.dataset.id, button.dataset.price, button.dataset.description);
+            });
+        });
     }
 
     async function fetchChats(userId) {
@@ -749,18 +769,45 @@ container.style.overflow = 'hidden';
             };
         }
     };
+    
+// Öffnet das Bearbeitungsmodal und lädt die aktuelle Beschreibung
+    /** @param {string} id @param {string} price */
+    window.openEditModal = async (id, price) => {
+    const idInput = document.getElementById('edit-listing-id');
+    const priceInput = document.getElementById('new-price');
+    const descriptionInput = document.getElementById('edit-description');
+    const editModal = document.getElementById('edit-modal');
 
-    window.openEditModal = (id, price) => {
-        document.getElementById('edit-listing-id').value = id;
-        document.getElementById('new-price').value = price;
-        document.getElementById('edit-modal').style.display = 'flex';
-    };
+    if (idInput instanceof HTMLInputElement) idInput.value = id;
+    if (editModal instanceof HTMLElement) editModal.style.display = 'flex';
+
+    // Beides aus DB laden – kein Vertrauen in den Parameter
+    const { data: currentItem, error } = await supabase
+        .from('listings')
+        .select('price, description')
+        .eq('id', id)
+        .single();
+
+    if (!error && currentItem) {
+        if (priceInput instanceof HTMLInputElement)
+            priceInput.value = currentItem.price ?? price; // Fallback auf Parameter
+        if (descriptionInput instanceof HTMLTextAreaElement)
+            descriptionInput.value = currentItem.description ?? '';
+    }
+};
 
     document.getElementById('save-price')?.addEventListener('click', async () => {
-        const id = document.getElementById('edit-listing-id').value;
-        const newPrice = parseFloat(document.getElementById('new-price').value);
-        
+        const idInput = document.getElementById('edit-listing-id');
+        const priceInput = document.getElementById('new-price');
+        const descriptionInput = document.getElementById('edit-description');
         const btn = document.getElementById('save-price');
+
+        if (!(btn instanceof HTMLButtonElement)) return;
+        if (!(idInput instanceof HTMLInputElement) || !(priceInput instanceof HTMLInputElement)) return;
+
+        const id = idInput.value;
+        const newPrice = parseFloat(priceInput.value);
+        
         btn.innerText = "Speichere...";
         btn.disabled = true;
 
@@ -776,7 +823,9 @@ container.style.overflow = 'hidden';
             return;
         }
 
-        let updateData = { price: newPrice };
+        const descriptionValue = descriptionInput instanceof HTMLTextAreaElement ? descriptionInput.value.trim() : '';
+        /** @type {{ price: number; description: string; old_price?: number | null }} */
+        let updateData = { price: newPrice, description: descriptionValue };
 
         if (!currentItem.old_price) {
             updateData.old_price = currentItem.price;
