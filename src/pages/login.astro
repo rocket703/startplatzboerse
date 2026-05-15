@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import Footer from '../components/Footer.astro';
+import FeedbackBanner from '../components/FeedbackBanner.astro';
 ---
 
 <Layout title="Anmelden - Startplatzbörse">
@@ -53,7 +54,7 @@ import Footer from '../components/Footer.astro';
     <button id="btn-complete-profile" class="btn-primary">Profil speichern & Starten</button>
 </div>
             
-            <div id="error-msg" style="color: #ff3b30; font-size: 0.85rem; margin-top: 15px; display: none; text-align: center; font-weight: 600; background: rgba(255, 59, 48, 0.1); padding: 10px; border-radius: 8px; line-height: 1.4;"></div>
+            <FeedbackBanner id="error-msg" />
         </div>
     </main>
     <Footer />
@@ -62,6 +63,7 @@ import Footer from '../components/Footer.astro';
 <script>
     // --- IMPORT & INITIALISIERUNG ---
     import { createClient } from '@supabase/supabase-js';
+    import { hideFeedback, showFeedbackError } from '../lib/feedback-banner';
 
     // Supabase-Client starten
     const supabase = createClient(
@@ -81,16 +83,12 @@ import Footer from '../components/Footer.astro';
     const stepRegister = document.getElementById('step-register');
     const errorDisplay = document.getElementById('error-msg');
 
-    // --- HILFSFUNKTIONEN FÜR FEHLERMELDUNGEN ---
-    function showError(message) {
-        if (errorDisplay) {
-            errorDisplay.innerText = message;
-            errorDisplay.style.display = 'block';
-        }
+    function showError(message: string) {
+        showFeedbackError(errorDisplay, message);
     }
 
     function hideError() {
-        if (errorDisplay) errorDisplay.style.display = 'none';
+        hideFeedback(errorDisplay);
     }
 
     // --- SCHRITT 1: LOGIN-CODE ANFORDERN ---

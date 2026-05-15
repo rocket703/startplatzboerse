@@ -1,0 +1,101 @@
+---
+interface Props {
+    id?: string;
+}
+
+const { id = 'feedback-banner' } = Astro.props;
+---
+
+<div id={id} class="feedback-banner" role="alert" aria-live="polite" hidden>
+    <span class="feedback-banner__icon" aria-hidden="true"></span>
+    <p class="feedback-banner__text"></p>
+</div>
+
+<style>
+    .feedback-banner {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        margin-top: 20px;
+        padding: 16px 18px;
+        border-radius: 16px;
+        border: 1px solid transparent;
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        font-size: 0.9rem;
+        line-height: 1.5;
+        font-weight: 500;
+        animation: feedback-enter 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .feedback-banner[hidden] {
+        display: none !important;
+    }
+
+    .feedback-banner.is-error {
+        background: linear-gradient(145deg, rgba(255, 69, 58, 0.14) 0%, rgba(255, 59, 48, 0.05) 100%);
+        border-color: rgba(255, 99, 88, 0.35);
+        box-shadow:
+            0 8px 32px rgba(255, 59, 48, 0.12),
+            inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+
+    .feedback-banner.is-error .feedback-banner__text {
+        color: #ffc9c5;
+    }
+
+    .feedback-banner.is-error .feedback-banner__icon {
+        color: #ff8a82;
+        background: rgba(255, 59, 48, 0.22);
+    }
+
+    .feedback-banner.is-success {
+        background: linear-gradient(145deg, rgba(0, 188, 212, 0.2) 0%, rgba(0, 120, 140, 0.08) 100%);
+        border-color: rgba(0, 188, 212, 0.45);
+        box-shadow:
+            0 8px 32px rgba(0, 188, 212, 0.16),
+            inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    .feedback-banner.is-success .feedback-banner__text {
+        color: #c5f5fa;
+    }
+
+    .feedback-banner.is-success .feedback-banner__icon {
+        color: #5ee9f7;
+        background: rgba(0, 188, 212, 0.25);
+    }
+
+    .feedback-banner__icon {
+        flex-shrink: 0;
+        width: 38px;
+        height: 38px;
+        border-radius: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .feedback-banner__icon :global(svg) {
+        width: 21px;
+        height: 21px;
+        stroke-width: 2;
+    }
+
+    .feedback-banner__text {
+        margin: 0;
+        padding-top: 8px;
+        flex: 1;
+    }
+
+    @keyframes feedback-enter {
+        from {
+            opacity: 0;
+            transform: translateY(-10px) scale(0.98);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+</style>
