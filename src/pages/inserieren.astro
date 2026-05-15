@@ -167,6 +167,7 @@ import Footer from '../components/Footer.astro';
 
                         <!-- Zusammenfassung -->
                         <div class="summary-box" id="summary-box"></div>
+                    
 
                         <div class="checkbox-wrapper">
                             <input type="checkbox" required id="confirm-transfer">
@@ -398,21 +399,40 @@ import Footer from '../components/Footer.astro';
         }
 
         const summaryBox = document.getElementById('summary-box');
-        if (summaryBox) {
-            summaryBox.innerHTML = `
-                <p class="summary-title">Deine Angaben</p>
-                <div class="summary-grid">
-                    <span class="summary-label">Sportart</span><span class="summary-val">${cat}</span>
-                    <span class="summary-label">Event</span><span class="summary-val">${evtName}</span>
-                    <span class="summary-label">Datum</span><span class="summary-val">${evtDate}</span>
-                    <span class="summary-label">Ort</span><span class="summary-val">${street ? street + ', ' : ''}${plz} ${loc}</span>
-                    <span class="summary-label">Distanz</span><span class="summary-val">${dist}</span>
-                    ${eventUrl ? `<span class="summary-label">Homepage</span><span class="summary-val">${eventUrl}</span>` : ''}
-                </div>
-            `;
-        }
-        goToStep(4);
-    });
+       if (summaryBox) {
+    summaryBox.innerHTML = `
+        <p class="summary-title">Zusammenfassung</p>
+        <div class="summary-grid">
+            <div class="summary-item">
+                <div class="summary-label">Sportart</div>
+                <div class="summary-val">${cat}</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Event</div>
+                <div class="summary-val">${evtName}</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Datum</div>
+                <div class="summary-val">${evtDate}</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Ort</div>
+                <div class="summary-val">${street ? street + ', ' : ''}${plz} ${loc}</div>
+            </div>
+            <div class="summary-item">
+                <div class="summary-label">Distanz</div>
+                <div class="summary-val">${dist}</div>
+            </div>
+            ${eventUrl ? `
+            <div class="summary-item">
+                <div class="summary-label">Homepage</div>
+                <div class="summary-val"><a href="${eventUrl}" target="_blank" class="summary-link">${eventUrl}</a></div>
+            </div>` : ''}
+        </div>
+    `;
+}
+            goToStep(4);
+        });
 
 
     // --- DISTANZ UI LOGIK ---
@@ -700,34 +720,69 @@ listingForm?.addEventListener('submit', async (e) => {
     textarea.input { min-height: 100px; line-height: 1.5; padding: 12px; }
     textarea.input::-webkit-scrollbar { width: 8px; }
     textarea.input::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+/* ZUSAMMENFASSUNG - komplett neu */
+.summary-box {
+    background: #0a0a0a;
+    border: 1px solid rgba(0, 188, 212, 0.25);
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 24px;
+}
 
-    /* ZUSAMMENFASSUNG */
-    .summary-box {
-        background: #0a0a0a;
-        border: 1px solid #1a1a1a;
-        border-radius: 16px;
-        padding: 20px;
-        margin-top: 20px;
-    }
-    .summary-title {
-        font-size: 0.7rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        color: #444;
-        letter-spacing: 1px;
-        margin: 0 0 14px;
-    }
-    .summary-grid {
-        display: grid;
-        grid-template-columns: auto 1fr;
-        gap: 8px 20px;
-        align-items: baseline;
-    }
-    .summary-label { font-size: 0.75rem; color: #444; font-weight: 700; text-transform: uppercase; white-space: nowrap; }
-    .summary-val { font-size: 0.9rem; color: #ccc; font-weight: 600; word-break: break-word; }
+p.summary-title {
+    font-size: 0.75rem !important;
+    font-weight: 800 !important;
+    color: #00bcd4 !important;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin: 0 0 16px 0;
+}
 
-    #error-msg {
-        font-size: 0.85rem; margin-top: 20px; text-align: center;
-        font-weight: 600; padding: 12px; border-radius: 12px; line-height: 1.4;
-    }
+.summary-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0 !important;
+}
+
+.summary-item {
+    display: grid !important;
+    grid-template-columns: 110px 1fr !important;
+    align-items: baseline;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    background: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-top: none !important;
+    border-radius: 0 !important;
+}
+
+.summary-item:last-child {
+    border-bottom: none;
+}
+
+.summary-label {
+    font-size: 0.7rem !important;
+    color: #00bcd4 !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 !important;
+}
+
+.summary-val {
+    font-size: 0.9rem !important;
+    color: #aaaaaa !important;
+    font-weight: 400 !important;
+    word-break: break-word;
+}
+
+.summary-link {
+    color: #00bcd4 !important;
+    text-decoration: none;
+}
+.summary-link:hover {
+    text-decoration: underline;
+}
 </style>
