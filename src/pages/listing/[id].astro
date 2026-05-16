@@ -22,6 +22,18 @@ if (error) {
   console.error("Supabase Error:", error.message);
 }
 
+// Verkäufer-Profil laden
+const sellerId = item?.user_id;
+const { data: seller } = sellerId ? await supabase
+  .from('profiles')
+  .select('nickname, updated_at, avatar_url')
+  .eq('id', sellerId)
+  .single() : { data: null };
+
+const memberSince = seller?.updated_at
+  ? new Date(seller.updated_at).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })
+  : null;
+
 const backLabel = origin === 'search' ? "← Zurück zur Suche" : "← Zurück zur Übersicht";
 
 const pageTitle = item ? item.event_name : "Inserat nicht gefunden";
@@ -118,6 +130,22 @@ const seoDescription = item
                     </div>
 
                     <aside class="sidebar">
+
+                        {seller && (
+                            <div class="card seller-card-block">
+                                <div class="seller-avatar-wrap">
+                                    {seller.avatar_url
+                                        ? <img src={seller.avatar_url} alt={seller.nickname ?? 'Verkäufer'} />
+                                        : <span>👤</span>
+                                    }
+                                </div>
+                                <div class="seller-info">
+                                    <p class="seller-name">{seller.nickname || 'Anonym'}</p>
+                                    {memberSince && <p class="seller-meta">Mitglied seit {memberSince}</p>}
+                                </div>
+                            </div>
+                        )}
+
                         <div class="card contact-card">
                             <h3>Verkäufer kontaktieren</h3>
                             <p>Sende eine Nachricht, um Details oder die Übergabe zu klären.</p>
@@ -157,7 +185,6 @@ const seoDescription = item
                 url: window.location.href
             };
 
-            // Prüfen, ob das Gerät native Teilen-Menüs unterstützt (Handys & moderne Browser)
             if (navigator.share) {
                 try {
                     await navigator.share(shareData);
@@ -165,7 +192,6 @@ const seoDescription = item
                     console.log('Teilen abgebrochen oder fehlgeschlagen', err);
                 }
             } else {
-                // Fallback für alte Desktop-Browser: Link in Zwischenablage kopieren
                 navigator.clipboard.writeText(window.location.href);
                 const originalHTML = shareBtn.innerHTML;
                 shareBtn.innerHTML = '✓ Link kopiert';
@@ -284,7 +310,6 @@ const seoDescription = item
         --border: #222;
     }
 
-    /* NEU: Styles für den Teilen-Button und die obere Reihe */
     .header-actions { 
         display: flex; 
         justify-content: space-between; 
@@ -373,10 +398,52 @@ const seoDescription = item
 
     .description-box { margin: 20px 0; line-height: 1.6; color: #aaa; }
 
+    .sidebar { display: flex; flex-direction: column; gap: 12px; }
+
     .card { background: var(--card); border: 5px solid var(--border); border-radius: 24px; padding: 25px; }
     .contact-card h3 { margin-bottom: 8px; font-weight: 800; font-size: 1.2rem; }
     .contact-card p { color: #666; font-size: 0.85rem; margin-bottom: 20px; }
     .login-hint { font-size: 0.7rem; text-align: center; margin-top: 15px; color: #333; font-weight: 600; }
+
+    /* Verkäufer-Block */
+    .seller-card-block {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    .seller-avatar-wrap {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        flex-shrink: 0;
+        overflow: hidden;
+        background: linear-gradient(135deg, var(--cyan), rgba(0, 188, 212, 0.3));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        border: 2px solid rgba(255, 255, 255, 0.08);
+    }
+    .seller-avatar-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .seller-info { flex: 1; }
+    .seller-name {
+        font-size: 1rem;
+        font-weight: 900;
+        color: white;
+        margin: 0 0 3px;
+    }
+    .seller-meta {
+        font-size: 0.7rem;
+        color: #555;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 0;
+    }
 
     .input-field { width: 100%; background: #000; border: 1px solid #222; padding: 15px; border-radius: 12px; color: white; margin-bottom: 12px; font-family: inherit; font-size: 1rem; }
     .textarea { height: 110px; resize: none; }
