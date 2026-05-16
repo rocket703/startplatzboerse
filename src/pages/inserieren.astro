@@ -633,10 +633,12 @@ listingForm?.addEventListener('submit', async (e) => {
             console.warn('Geocoding fehlgeschlagen', geoErr);
         }
 
-        // Distanz-Logik
-        let displayDist = vals.distance || 'Freie Distanz';
+        // === OPTIMIERTE DISTANZ-LOGIK FÜR DIE FILTERUNG ===
+        let displayDist = (vals.distance as string) || 'Freie Distanz';
         let filterKm = 0;
-        let swimDist = null, bikeDist = null, runDist = null;
+        let swimDist: number | null = null;
+        let bikeDist: number | null = null;
+        let runDist: number | null = null;
 
         if (displayDist === 'Freie Distanz') {
             if (category === 'Triathlon') {
@@ -658,6 +660,38 @@ listingForm?.addEventListener('submit', async (e) => {
                     displayDist = `Freie Distanz (${customKm} km)`;
                     filterKm = customKm;
                 }
+            }
+        } else {
+            // Mapping für Standarddistanzen, um Suchfelder numerisch zu füttern
+            switch (displayDist) {
+                // Laufen
+                case '5 km': filterKm = 5; break;
+                case '10 km': filterKm = 10; break;
+                case '21,1 km Halbmarathon': filterKm = 21.1; break;
+                case '42,2 km Marathon': filterKm = 42.2; break;
+                
+                // Triathlon Standard-Distanzen splitten
+                case 'Sprint (0,75/20/5 km)':
+                    swimDist = 0.75; bikeDist = 20; runDist = 5;
+                    filterKm = 25.75;
+                    break;
+                case 'Olympisch (1,5/40/10 km)':
+                    swimDist = 1.5; bikeDist = 40; runDist = 10;
+                    filterKm = 51.5;
+                    break;
+                case '70.3 Mitteldistanz (1,9/90/21 km)':
+                    swimDist = 1.9; bikeDist = 90; runDist = 21;
+                    filterKm = 112.9;
+                    break;
+                case '140.6 Langdistanz (3,8/180/42 km)':
+                    swimDist = 3.8; bikeDist = 180; runDist = 42;
+                    filterKm = 225.8;
+                    break;
+                
+                // Hyrox oder andere Standard-Events ohne feste Strecken-KM
+                default:
+                    filterKm = 0; 
+                    break;
             }
         }
 

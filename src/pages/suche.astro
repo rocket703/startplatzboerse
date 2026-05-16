@@ -16,29 +16,20 @@ import Footer from '../components/Footer.astro';
                         <input type="text" id="main-search" placeholder="Event suchen..." autocomplete="off" />
                     </div>
                     
-                    <button id="filter-toggle" class="t-btn">
-    <svg 
-        width="24" 
-        height="24" 
-        viewBox="0 0 24 24" 
-        fill="none" 
-        stroke="currentColor" 
-        stroke-width="2.5" 
-        stroke-linecap="round" 
-        stroke-linejoin="round"
-        style="display: block; width: 24px; height: 24px;"
-    >
-        <line x1="4" y1="21" x2="4" y2="14"></line>
-        <line x1="4" y1="10" x2="4" y2="3"></line>
-        <line x1="12" y1="21" x2="12" y2="12"></line>
-        <line x1="12" y1="8" x2="12" y2="3"></line>
-        <line x1="20" y1="21" x2="20" y2="16"></line>
-        <line x1="20" y1="12" x2="20" y2="3"></line>
-        <line x1="1" y1="14" x2="7" y2="14"></line>
-        <line x1="9" y1="8" x2="15" y2="8"></line>
-        <line x1="17" y1="16" x2="23" y2="16"></line>
-    </svg>
-</button>
+                    <button id="filter-toggle" class="t-btn" aria-label="Filter öffnen">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block; width: 24px; height: 24px;">
+                            <line x1="4" y1="21" x2="4" y2="14"></line>
+                            <line x1="4" y1="10" x2="4" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12" y2="3"></line>
+                            <line x1="20" y1="21" x2="20" y2="16"></line>
+                            <line x1="20" y1="12" x2="20" y2="3"></line>
+                            <line x1="1" y1="14" x2="7" y2="14"></line>
+                            <line x1="9" y1="8" x2="15" y2="8"></line>
+                            <line x1="17" y1="16" x2="23" y2="16"></line>
+                        </svg>
+                        <span id="filter-badge" class="filter-badge" style="display:none;">0</span>
+                    </button>
                 </div>
 
                 <div id="filter-drawer" class="drawer">
@@ -58,25 +49,28 @@ import Footer from '../components/Footer.astro';
                         <div class="f-section">
                             <label>Standort & Umkreis</label>
                             <div class="loc-row">
-                                <input type="text" id="city-input" placeholder="Stadt..." />
+                                <input type="text" id="city-input" placeholder="Stadt eingeben..." />
                                 <select id="range-select">
-                                    <option value="0">Ort</option>
-                                    <option value="50">+50km</option>
-                                    <option value="100">+100km</option>
+                                    <option value="0">Nur Ort</option>
+                                    <option value="25">+25 km</option>
+                                    <option value="50" selected>+50 km</option>
+                                    <option value="100">+100 km</option>
+                                    <option value="200">+200 km</option>
                                 </select>
                             </div>
+                            <p id="geo-status" class="geo-status" style="display:none;"></p>
                         </div>
 
                         <div class="f-section grid-2">
-    <div>
-        <label>Preis bis (€)</label>
-        <input type="number" id="max-price" placeholder="Max" />
-    </div>
-    <div>
-        <label>Distanz (z.B. 42)</label>
-        <input type="text" id="max-dist" placeholder="Suchen..." />
-    </div>
-</div>
+                            <div>
+                                <label>Preis bis (€)</label>
+                                <input type="number" id="max-price" placeholder="Max. Preis" min="0" />
+                            </div>
+                            <div>
+                                <label id="dist-label">Renndistanz (km)</label>
+                                <input type="text" id="max-dist" placeholder="z.B. 42" />
+                            </div>
+                        </div>
 
                         <div class="f-actions">
                             <button id="reset-btn" class="r-btn">Zurücksetzen</button>
@@ -92,8 +86,7 @@ import Footer from '../components/Footer.astro';
         </div>
 
         <section class="feed">
-            <div id="results-grid" class="grid-layout">
-                </div>
+            <div id="results-grid" class="grid-layout"></div>
         </section>
 
     </main>
@@ -108,14 +101,12 @@ import Footer from '../components/Footer.astro';
         --bg: var(--bg-body);
     }
 
-    /* Damit der Content nicht unter den fixierten Filtern verschwindet */
     .page-base {
         background: var(--bg-body);
         min-height: 100dvh;
         padding-top: calc(var(--header-h) + var(--filter-h) + 30px);
     }
 
-    /* FIXIERTER BLOCK UNTER LOGO */
     .sticky-unit {
         position: absolute;
         top: var(--header-h);
@@ -161,8 +152,26 @@ import Footer from '../components/Footer.astro';
         background: #121212; border: 1px solid rgba(255,255,255,0.1);
         color: white; border-radius: 14px; width: 48px; height: 48px;
         display: flex; align-items: center; justify-content: center; cursor: pointer;
+        position: relative;
     }
     .t-btn.active { background: var(--cyan); color: black; }
+
+    /* Filter-Badge */
+    .filter-badge {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        background: #ff5252;
+        color: white;
+        font-size: 9px;
+        font-weight: 900;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 
     /* DRAWER */
     .drawer {
@@ -171,13 +180,14 @@ import Footer from '../components/Footer.astro';
         opacity: 0;
     }
     .drawer.open {
-        max-height: 500px; opacity: 1; padding-top: 20px;
+        max-height: 600px; opacity: 1; padding-top: 20px;
     }
 
     .f-section { margin-bottom: 18px; }
     .f-section label {
         display: block; color: #444; font-size: 10px;
         text-transform: uppercase; font-weight: 900; margin-bottom: 8px;
+        cursor: pointer;
     }
 
     .p-scroll { display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
@@ -193,7 +203,20 @@ import Footer from '../components/Footer.astro';
     input[type="text"], input[type="number"], select {
         background: #1a1a1a; border: 1px solid rgba(255,255,255,0.08);
         color: white; padding: 12px; border-radius: 12px; width: 100%; outline: none; font-size: 16px;
+        box-sizing: border-box;
     }
+
+    /* Geo-Status Hinweis */
+    .geo-status {
+        font-size: 0.72rem;
+        margin-top: 6px;
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+    .geo-status.success { color: var(--cyan); background: rgba(0,188,212,0.08); }
+    .geo-status.error { color: #ff5252; background: rgba(255,82,82,0.08); }
+    .geo-status.loading { color: #888; }
 
     .f-actions {
         display: flex; justify-content: space-between; align-items: center;
@@ -220,7 +243,7 @@ import Footer from '../components/Footer.astro';
         } 
     }
 
-    /* KOMPAKTE CARDS FÜR SUCHSEITE */
+    /* CARDS */
     .e-card {
         background: #111;
         padding: 18px;
@@ -232,39 +255,29 @@ import Footer from '../components/Footer.astro';
         flex-direction: column;
         gap: 12px;
     }
-    
     .e-card:hover {
         transform: translateY(-3px);
         border-color: var(--cyan);
         box-shadow: 0 8px 20px rgba(0, 188, 212, 0.15);
     }
 
-    /* Top Row: Event Name + Herz + Sport Badge */
     .c-top {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
         gap: 10px;
     }
-
     .c-top-actions {
         display: flex;
         align-items: center;
         gap: 8px;
         flex-shrink: 0;
     }
-
     .heart-btn {
-        background: none;
-        border: none;
-        cursor: pointer;
-        padding: 4px;
-        color: #444;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
+        background: none; border: none; cursor: pointer;
+        padding: 4px; color: #444; transition: all 0.2s ease;
+        display: flex; align-items: center;
     }
-
     .heart-icon { width: 22px; height: 22px; }
     .heart-btn:hover { color: #e53935; transform: scale(1.1); }
     .heart-btn.is-saved { color: #e53935; }
@@ -272,145 +285,74 @@ import Footer from '../components/Footer.astro';
     .heart-btn:disabled { opacity: 0.5; cursor: wait; }
 
     .event-name {
-        color: white;
-        font-size: 1.05rem;
-        font-weight: 900;
-        line-height: 1.2;
-        flex: 1;
+        color: white; font-size: 1.05rem; font-weight: 900; line-height: 1.2; flex: 1;
     }
-
     .sport-badge {
-        background: rgba(0, 188, 212, 0.1);
-        color: var(--cyan);
-        font-size: 0.65rem;
-        font-weight: 900;
-        text-transform: uppercase;
-        padding: 4px 10px;
-        border-radius: 6px;
-        white-space: nowrap;
-        letter-spacing: 0.5px;
-        flex-shrink: 0;
+        background: rgba(0, 188, 212, 0.1); color: var(--cyan);
+        font-size: 0.65rem; font-weight: 900; text-transform: uppercase;
+        padding: 4px 10px; border-radius: 6px; white-space: nowrap;
+        letter-spacing: 0.5px; flex-shrink: 0;
     }
 
-    /* Middle: Meta Info */
     .c-meta {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
+        display: flex; flex-direction: column; gap: 6px;
         padding: 10px 0;
         border-top: 1px solid rgba(255,255,255,0.05);
         border-bottom: 1px solid rgba(255,255,255,0.05);
     }
+    .meta-row { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; }
+    .meta-row.split { display: flex; justify-content: space-between; gap: 12px; }
+    .meta-item { display: flex; align-items: center; gap: 6px; }
+    .meta-label { color: #666; font-weight: 700; font-size: 0.65rem; text-transform: uppercase; }
+    .meta-value { color: #ccc; font-weight: 500; }
 
-    .meta-row {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 0.8rem;
-    }
-    
-    .meta-row.split {
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-    }
-    
-    .meta-item {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .meta-label {
-        color: #666;
-        font-weight: 700;
-        font-size: 0.65rem;
-        text-transform: uppercase;
-    }
-
-    .meta-value {
-        color: #ccc;
-        font-weight: 500;
-    }
-
-    /* Bottom: Price + Details Button */
-    .c-bottom {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .price-val {
+    /* Entfernungs-Badge auf Karten */
+    .distance-badge {
+        display: inline-block;
+        background: rgba(0,188,212,0.08);
         color: var(--cyan);
-        font-size: 1.8rem;
-        font-weight: 900;
-        line-height: 1;
-    }
-
-    .details-link {
-        background: var(--cyan);
-        color: #000;
-        text-decoration: none;
-        padding: 10px 20px;
-        border-radius: 8px;
-        font-size: 0.75rem;
+        font-size: 0.65rem;
         font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        transition: all 0.2s ease;
-        white-space: nowrap;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
+        padding: 2px 8px;
+        border-radius: 6px;
+        margin-left: 4px;
     }
 
-    .details-link:hover {
-        background: white;
-        transform: translateX(2px);
+    .c-bottom {
+        display: flex; justify-content: space-between; align-items: center; gap: 12px;
     }
+    .price-val { color: var(--cyan); font-size: 1.8rem; font-weight: 900; line-height: 1; }
+    .details-link {
+        background: var(--cyan); color: #000; text-decoration: none;
+        padding: 10px 20px; border-radius: 8px; font-size: 0.75rem; font-weight: 800;
+        text-transform: uppercase; letter-spacing: 0.5px; transition: all 0.2s ease;
+        white-space: nowrap; display: inline-flex; align-items: center; gap: 4px;
+    }
+    .details-link:hover { background: white; transform: translateX(2px); }
 
-    /* Desktop Spacing */
+    /* Leerer Zustand */
+    .empty-state {
+        grid-column: 1 / -1;
+        text-align: center;
+        padding: 60px 20px;
+        color: #444;
+    }
+    .empty-state p { font-size: 0.9rem; margin-top: 8px; }
+
     @media (min-width: 1024px) {
-        .page-base {
-            padding-top: calc(var(--header-h) + var(--filter-h) + 60px);
-        }
-        
-        .sticky-unit {
-            margin-top: 10px;
-        }
+        .page-base { padding-top: calc(var(--header-h) + var(--filter-h) + 60px); }
+        .sticky-unit { margin-top: 10px; }
     }
 
-    /* Chrome, Safari, Edge, Opera */
     input::-webkit-outer-spin-button,
-    input::-webkit-inner-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-    }
+    input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    input[type=number] { -moz-appearance: textfield; }
 
-    /* Firefox */
-    input[type=number] {
-        -moz-appearance: textfield;
-    }
-
-    /* Mobile Optimization */
     @media (max-width: 768px) {
-        .page-base {
-            padding-top: calc(var(--header-h) + var(--filter-h) + 25px);
-        }
-        
-        .event-name {
-            font-size: 0.95rem;
-        }
-        
-        .price-val {
-            font-size: 1.5rem;
-        }
-        
-        .details-link {
-            padding: 8px 16px;
-            font-size: 0.7rem;
-        }
+        .page-base { padding-top: calc(var(--header-h) + var(--filter-h) + 25px); }
+        .event-name { font-size: 0.95rem; }
+        .price-val { font-size: 1.5rem; }
+        .details-link { padding: 8px 16px; font-size: 0.7rem; }
     }
 </style>
 
@@ -427,9 +369,13 @@ import Footer from '../components/Footer.astro';
     const grid = document.getElementById('results-grid') as HTMLElement;
     const reset = document.getElementById('reset-btn') as HTMLElement;
     const applyBtn = document.getElementById('apply-btn') as HTMLElement;
-    
-    let activeCat = "";
+    const geoStatus = document.getElementById('geo-status') as HTMLElement;
+    const filterBadge = document.getElementById('filter-badge') as HTMLElement;
 
+    let activeCat = "";
+    let debounceTimer: ReturnType<typeof setTimeout>;
+
+    // Filter-Toggle
     if (toggle && drawer) {
         toggle.addEventListener('click', () => {
             drawer.classList.toggle('open');
@@ -437,97 +383,182 @@ import Footer from '../components/Footer.astro';
         });
     }
 
-   async function performFetch() {
-        if (!grid) return;
-        
-        const countDisplay = document.getElementById('res-count');
-        if (countDisplay) countDisplay.innerText = "Suche läuft...";
+    // Zählt aktive Filter und zeigt Badge am Filter-Button
+    function updateFilterBadge() {
+        let count = 0;
+        if (activeCat) count++;
+        if ((document.getElementById('city-input') as HTMLInputElement).value) count++;
+        if ((document.getElementById('max-price') as HTMLInputElement).value) count++;
+        if ((document.getElementById('max-dist') as HTMLInputElement).value) count++;
 
-        const searchVal = (document.getElementById('main-search') as HTMLInputElement).value;
-        const cityVal = (document.getElementById('city-input') as HTMLInputElement).value;
-        const priceVal = (document.getElementById('max-price') as HTMLInputElement).value;
-        const distVal = (document.getElementById('max-dist') as HTMLInputElement).value; // Das ist die Renn-Distanz (z.B. 10km Lauf)
-        
-        // NEU: Wir brauchen ein Feld für den geografischen Umkreis (z.B. radiusVal)
-        // Falls du kein extra Feld hast, nehmen wir hier mal fix 50 (km) als Beispiel oder du fügst ein Feld 'radius-input' hinzu
-        const radiusVal = 50; 
-
-        let data = [];
-        let error = null;
-
-        // --- FALL A: Umkreissuche (Wenn ein Ort eingegeben wurde) ---
-        if (cityVal) {
-            // 1. Koordinaten der Stadt via OpenStreetMap (Nominatim) holen
-            try {
-                const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cityVal)}&limit=1`);
-                const geoData = await geoRes.json();
-
-                if (geoData.length > 0) {
-                    const { lat, lon } = geoData[0];
-
-                    // 2. Deine neue Supabase-Funktion aufrufen
-                    const { data: rpcData, error: rpcError } = await supabase.rpc('get_listings_in_radius', {
-                        target_lat: parseFloat(lat),
-                        target_lng: parseFloat(lon),
-                        radius_km: parseFloat(radiusVal.toString())
-                    });
-                    
-                    data = rpcData;
-                    error = rpcError;
-                }
-            } catch (err) {
-                console.error("Geocoding Fehler:", err);
+        if (filterBadge) {
+            if (count > 0) {
+                filterBadge.innerText = String(count);
+                filterBadge.style.display = 'flex';
+            } else {
+                filterBadge.style.display = 'none';
             }
-        } 
-        
-        // --- FALL B: Normale Suche (Wenn kein Ort oder Geocoding fehlgeschlagen) ---
-        if (!cityVal || data.length === 0) {
-            let query = supabase.from('listings').select('*').eq('approved', true).eq('status', 'active');
-            if (searchVal) query = query.ilike('event_name', `%${searchVal}%`);
-            if (cityVal) query = query.ilike('location', `%${cityVal}%`); // Fallback auf Textsuche
-            
-            const { data: normalData, error: normalError } = await query;
-            data = normalData;
-            error = normalError;
-        }
-
-        // --- MANUELLES FILTERN (Für die restlichen Felder nach der RPC-Abfrage) ---
-        if (data) {
-            let filtered = data;
-
-            // Kategorie Filter
-            if (activeCat) {
-                filtered = filtered.filter(e => e.category === activeCat);
-            }
-            // Preis Filter
-            if (priceVal) {
-                filtered = filtered.filter(e => e.price <= parseFloat(priceVal));
-            }
-            // Renn-Distanz Filter (distance_km)
-            if (distVal && activeCat !== 'Hyrox') {
-                filtered = filtered.filter(e => e.distance_km <= parseFloat(distVal));
-            }
-            // Textsuche Filter (falls RPC genutzt wurde)
-            if (searchVal && cityVal) {
-                filtered = filtered.filter(e => e.event_name.toLowerCase().includes(searchVal.toLowerCase()));
-            }
-
-            renderGrid(filtered); // Wir lagern das Rendern aus
         }
     }
 
-    // Hilfsfunktion zum Anzeigen der Karten
-    async function renderGrid(data) {
-        const grid = document.getElementById('results-grid');
-        const countDisplay = document.getElementById('res-count');
-        
+    // Geocoding: Stadt → Koordinaten (mit Status-Feedback)
+    async function geocodeCity(city: string): Promise<{ lat: number; lon: number } | null> {
+        if (!city.trim()) return null;
+
+        setGeoStatus('loading', 'Standort wird gesucht...');
+
+        try {
+            const res = await fetch(
+                `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}&limit=1&countrycodes=de,at,ch`
+            );
+            const data = await res.json();
+
+            if (data.length > 0) {
+                setGeoStatus('success', `Standort gefunden: ${data[0].display_name.split(',').slice(0, 2).join(',')}`);
+                return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+            } else {
+                setGeoStatus('error', 'Ort nicht gefunden – bitte anderen Suchbegriff versuchen.');
+                return null;
+            }
+        } catch {
+            setGeoStatus('error', 'Geocoding fehlgeschlagen – Netzwerkfehler.');
+            return null;
+        }
+    }
+
+    function setGeoStatus(type: 'loading' | 'success' | 'error' | 'hidden', msg: string) {
+        if (!geoStatus) return;
+        if (type === 'hidden') { geoStatus.style.display = 'none'; return; }
+        geoStatus.className = `geo-status ${type}`;
+        geoStatus.innerText = msg;
+        geoStatus.style.display = 'block';
+    }
+
+    // Haversine-Formel: Entfernung zwischen zwei Koordinaten in km
+    function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    async function performFetch() {
         if (!grid) return;
+
+        const countDisplay = document.getElementById('res-count');
+        if (countDisplay) countDisplay.innerText = 'Suche läuft...';
+
+        const searchVal = (document.getElementById('main-search') as HTMLInputElement).value.trim();
+        const cityVal = (document.getElementById('city-input') as HTMLInputElement).value.trim();
+        const priceVal = (document.getElementById('max-price') as HTMLInputElement).value;
+        const distVal = (document.getElementById('max-dist') as HTMLInputElement).value;
+        const radiusVal = parseInt((document.getElementById('range-select') as HTMLSelectElement).value, 10);
+        updateFilterBadge();
+
+        // Alle aktiven Listings laden
+        let query = supabase
+            .from('listings')
+            .select('*')
+            .eq('approved', true)
+            .eq('status', 'active');
+
+        // Textsuche nach Event-Name
+        if (searchVal) {
+            query = query.ilike('event_name', `%${searchVal}%`);
+        }
+
+        // Kategorie-Filter direkt in der DB-Query
+        if (activeCat) {
+            query = query.eq('category', activeCat);
+        }
+
+        // Preis-Filter direkt in der DB-Query
+        if (priceVal) {
+            query = query.lte('price', parseFloat(priceVal));
+        }
+
+        const { data, error } = await query.order('event_date', { ascending: true });
+
+        if (error) {
+            if (countDisplay) countDisplay.innerText = 'Fehler beim Laden.';
+            console.error('Supabase Fehler:', error);
+            return;
+        }
+
+        let filtered = data || [];
+
+        // Renndistanz-Filter (clientseitig, da komplexere Logik)
+        if (distVal && activeCat !== 'Hyrox') {
+            const maxDist = parseFloat(distVal);
+            filtered = filtered.filter(e => {
+                if (activeCat === 'Triathlon') return (e.bike_dist ?? 999) <= maxDist;
+                return (e.distance_km ?? 999) <= maxDist;
+            });
+        }
+
+        // Umkreis-Filter (clientseitig mit Haversine)
+        let userCoords: { lat: number; lon: number } | null = null;
+        if (cityVal) {
+            if (radiusVal === 0) {
+                // Nur exakter Ort – Textsuche
+                filtered = filtered.filter(e =>
+                    e.location?.toLowerCase().includes(cityVal.toLowerCase())
+                );
+                setGeoStatus('hidden', '');
+            } else {
+                // Umkreissuche
+                userCoords = await geocodeCity(cityVal);
+                if (userCoords) {
+                    filtered = filtered.filter(e => {
+                        if (!e.lat || !e.lng) {
+                            // Fallback: Textsuche wenn keine Koordinaten gespeichert
+                            return e.location?.toLowerCase().includes(cityVal.toLowerCase());
+                        }
+                        const dist = haversineKm(userCoords!.lat, userCoords!.lon, e.lat, e.lng);
+                        e._distanceKm = Math.round(dist); // Für Anzeige auf der Karte speichern
+                        return dist <= radiusVal;
+                    });
+                } else {
+                    // Geocoding fehlgeschlagen → Textsuche als Fallback
+                    filtered = filtered.filter(e =>
+                        e.location?.toLowerCase().includes(cityVal.toLowerCase())
+                    );
+                }
+            }
+        } else {
+            setGeoStatus('hidden', '');
+        }
+
+        renderGrid(filtered, userCoords !== null);
+    }
+
+    async function renderGrid(data: any[], showDistance = false) {
+        if (!grid) return;
+        const countDisplay = document.getElementById('res-count');
+
+        if (!data || data.length === 0) {
+            grid.innerHTML = `
+                <div class="empty-state">
+                    <div style="font-size: 2rem;">🔍</div>
+                    <p>Keine passenden Startplätze gefunden.<br>Versuch andere Filter oder einen größeren Umkreis.</p>
+                </div>`;
+            if (countDisplay) countDisplay.innerText = 'Keine Ergebnisse';
+            return;
+        }
 
         grid.innerHTML = data.map(e => {
             let distanceAnzeige = `<span class="meta-value">${e.distance || 'N/A'}</span>`;
             if (e.category === 'Triathlon' && e.swim_dist !== null) {
-                distanceAnzeige = `<span class="meta-value" style="font-size: 0.85em;">🏊 ${e.swim_dist}km | 🚴 ${e.bike_dist}km | 🏃 ${e.run_dist}km</span>`;
+                distanceAnzeige = `<span class="meta-value" style="font-size:0.85em;">🏊 ${e.swim_dist}km · 🚴 ${e.bike_dist}km · 🏃 ${e.run_dist}km</span>`;
             }
+
+            // Entfernung zum gesuchten Ort anzeigen (nur bei Umkreissuche)
+            const distBadge = showDistance && e._distanceKm !== undefined
+                ? `<span class="distance-badge">~${e._distanceKm} km entfernt</span>`
+                : '';
 
             return `
             <div class="e-card">
@@ -542,7 +573,7 @@ import Footer from '../components/Footer.astro';
                     <div class="meta-row split">
                         <div class="meta-item">
                             <span class="meta-label">Ort:</span>
-                            <span class="meta-value">${e.location}</span>
+                            <span class="meta-value">${e.location}${distBadge}</span>
                         </div>
                         <div class="meta-item">
                             <span class="meta-label">Datum:</span>
@@ -558,75 +589,85 @@ import Footer from '../components/Footer.astro';
                     <div class="price-val">${e.price}€</div>
                     <a href="/listing/${e.id}?from=search" class="details-link">Details →</a>
                 </div>
-            </div>
-        `}).join('');
+            </div>`;
+        }).join('');
 
         if (countDisplay) {
-            countDisplay.innerText = data.length === 0 ? "Aktuell keine passenden Startplätze gefunden" : `${data.length} aktive Events gefunden`;
+            countDisplay.innerText = `${data.length} aktive Event${data.length !== 1 ? 's' : ''} gefunden`;
         }
 
         const ids = await loadWatchlistIds();
         syncHeartButtons(ids, grid);
     }
 
-    // Event Listener für die Pillen (Kategorien)
+    // Kategorie-Pillen
     document.querySelectorAll('.pill').forEach(p => p.addEventListener('click', (e) => {
-        const currentPill = e.currentTarget as HTMLElement;
+        const pill = e.currentTarget as HTMLElement;
         document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
-        currentPill.classList.add('active');
-        activeCat = currentPill.dataset.cat || "";
+        pill.classList.add('active');
+        activeCat = pill.dataset.cat || '';
 
-        // UI-INTELLIGENZ: Eingabefeld anpassen
+        // Distanz-Label & Placeholder je Sportart anpassen
         const distInput = document.getElementById('max-dist') as HTMLInputElement;
-        if (distInput) {
+        const distLabel = document.getElementById('dist-label') as HTMLElement;
+        if (distInput && distLabel) {
             if (activeCat === 'Hyrox') {
                 distInput.disabled = true;
-                distInput.value = "";
-                distInput.placeholder = "Nicht relevant für Hyrox";
-                distInput.style.opacity = "0.5";
+                distInput.value = '';
+                distInput.placeholder = 'Nicht relevant für Hyrox';
+                distInput.style.opacity = '0.4';
+                distLabel.innerText = 'Renndistanz (km)';
             } else if (activeCat === 'Triathlon') {
                 distInput.disabled = false;
-                distInput.placeholder = "Max. Rad-Strecke (km)";
-                distInput.style.opacity = "1";
+                distInput.placeholder = 'Max. Rad-Strecke (km)';
+                distInput.style.opacity = '1';
+                distLabel.innerText = 'Max. Rad-Strecke (km)';
             } else {
                 distInput.disabled = false;
-                distInput.placeholder = "Max. Distanz (km)";
-                distInput.style.opacity = "1";
+                distInput.placeholder = 'z.B. 42';
+                distInput.style.opacity = '1';
+                distLabel.innerText = 'Renndistanz (km)';
             }
         }
-
         performFetch();
     }));
 
-    // Reset Funktion
+    // Reset
     reset?.addEventListener('click', () => {
-        (document.getElementById('main-search') as HTMLInputElement).value = "";
-        (document.getElementById('city-input') as HTMLInputElement).value = "";
-        (document.getElementById('max-price') as HTMLInputElement).value = "";
-        
+        (document.getElementById('main-search') as HTMLInputElement).value = '';
+        (document.getElementById('city-input') as HTMLInputElement).value = '';
+        (document.getElementById('max-price') as HTMLInputElement).value = '';
+        (document.getElementById('range-select') as HTMLSelectElement).value = '50';
+
         const distInput = document.getElementById('max-dist') as HTMLInputElement;
+        const distLabel = document.getElementById('dist-label') as HTMLElement;
         if (distInput) {
-            distInput.value = "";
+            distInput.value = '';
             distInput.disabled = false;
-            distInput.placeholder = "Max. Distanz (km)";
-            distInput.style.opacity = "1";
+            distInput.placeholder = 'z.B. 42';
+            distInput.style.opacity = '1';
         }
+        if (distLabel) distLabel.innerText = 'Renndistanz (km)';
 
         document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
         document.querySelector('.pill[data-cat=""]')?.classList.add('active');
-        activeCat = "";
+        activeCat = '';
+        setGeoStatus('hidden', '');
+        updateFilterBadge();
         performFetch();
     });
 
+    // Anwenden + Drawer schließen
     applyBtn?.addEventListener('click', () => {
         drawer?.classList.remove('open');
         toggle?.classList.remove('active');
         performFetch();
     });
 
-    // Sofortige Suche beim Tippen im Hauptfeld
+    // Debounced Texteingabe (300ms Pause abwarten)
     document.getElementById('main-search')?.addEventListener('input', () => {
-        performFetch();
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(performFetch, 300);
     });
 
     // Initialer Aufruf
