@@ -66,9 +66,10 @@ import Footer from '../components/Footer.astro';
                                 <label>Preis bis (€)</label>
                                 <input type="number" id="max-price" placeholder="Max. Preis" min="0" />
                             </div>
-                            <div>
-                                <label id="dist-label">Renndistanz (km)</label>
-                                <input type="text" id="max-dist" placeholder="z.B. 42" />
+                            <div class="dist-filter">
+                                <label id="dist-label">Bis inkl. Distanz (km)</label>
+                                <input type="text" id="max-dist" placeholder="Sportart wählen" inputmode="decimal" pattern="[0-9]+([,.][0-9]+)?" disabled />
+                                <div id="distance-presets" class="distance-presets" aria-label="Distanz Schnellwahl"></div>
                             </div>
                         </div>
 
@@ -180,12 +181,12 @@ import Footer from '../components/Footer.astro';
         opacity: 0;
     }
     .drawer.open {
-        max-height: 600px; opacity: 1; padding-top: 20px;
+        max-height: 760px; opacity: 1; padding-top: 20px;
     }
 
     .f-section { margin-bottom: 18px; }
     .f-section label {
-        display: block; color: #444; font-size: 10px;
+        display: block; color: #00bcd4; font-size: 10px;
         text-transform: uppercase; font-weight: 900; margin-bottom: 8px;
         cursor: pointer;
     }
@@ -199,11 +200,44 @@ import Footer from '../components/Footer.astro';
 
     .loc-row, .grid-2 { display: flex; gap: 8px; }
     .grid-2 > div { flex: 1; }
+    .dist-filter { min-width: 0; }
 
     input[type="text"], input[type="number"], select {
         background: #1a1a1a; border: 1px solid rgba(255,255,255,0.08);
         color: white; padding: 12px; border-radius: 12px; width: 100%; outline: none; font-size: 16px;
         box-sizing: border-box;
+    }
+    input:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+
+    .distance-presets {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+        min-height: 0;
+    }
+    .distance-presets:empty { display: none; }
+    .distance-chip {
+        background: #111;
+        border: 1px solid rgba(255,255,255,0.08);
+        color: #8d8d8d;
+        border-radius: 999px;
+        padding: 7px 10px;
+        font-size: 0.68rem;
+        font-weight: 800;
+        line-height: 1;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: 0.2s ease;
+    }
+    .distance-chip:hover,
+    .distance-chip.active {
+        background: rgba(0,188,212,0.14);
+        border-color: rgba(0,188,212,0.7);
+        color: var(--cyan);
     }
 
     /* Geo-Status Hinweis */
@@ -353,6 +387,8 @@ import Footer from '../components/Footer.astro';
         .event-name { font-size: 0.95rem; }
         .price-val { font-size: 1.5rem; }
         .details-link { padding: 8px 16px; font-size: 0.7rem; }
+        .grid-2 { flex-direction: column; }
+        .drawer.open { max-height: 840px; }
     }
 </style>
 
@@ -371,9 +407,111 @@ import Footer from '../components/Footer.astro';
     const applyBtn = document.getElementById('apply-btn') as HTMLElement;
     const geoStatus = document.getElementById('geo-status') as HTMLElement;
     const filterBadge = document.getElementById('filter-badge') as HTMLElement;
+    const distInput = document.getElementById('max-dist') as HTMLInputElement;
+    const distLabel = document.getElementById('dist-label') as HTMLElement;
+    const distancePresets = document.getElementById('distance-presets') as HTMLElement;
 
     let activeCat = "";
+    let exactDistanceFilter: { value: number; tolerance: number } | null = null;
     let debounceTimer: ReturnType<typeof setTimeout>;
+
+    const distancePresetMap: Record<string, { label: string; value: number; tolerance?: number }[]> = {
+        Laufen: [
+            { label: '5 km', value: 5 },
+            { label: '10 km', value: 10 },
+            { label: 'Halbmarathon', value: 21.1 },
+            { label: 'Marathon', value: 42.2 }
+        ],
+        Radrennen: [
+            { label: 'Kurzstrecke', value: 60 },
+            { label: 'Jedermann', value: 100 },
+            { label: 'Gran Fondo', value: 160 },
+            { label: 'Radmarathon', value: 200 }
+        ],
+        Triathlon: [
+            { label: 'Sprint', value: 26, tolerance: 0.6 },
+            { label: 'Olympisch', value: 52, tolerance: 0.6 },
+            { label: 'Mitteldistanz', value: 113, tolerance: 0.6 },
+            { label: 'Langdistanz', value: 226, tolerance: 0.6 }
+        ]
+    };
+
+    function formatDistanceValue(value: number) {
+        return String(value).replace('.', ',');
+    }
+
+    function parseDistanceInput(value: string) {
+        return parseFloat(value.replace(',', '.'));
+    }
+
+    function setDistanceFilterValue(value: number | '') {
+        if (!distInput) return;
+        distInput.value = value === '' ? '' : String(value);
+        exactDistanceFilter = null;
+        updateDistancePresetState();
+        updateFilterBadge();
+    }
+
+    function updateDistancePresetState() {
+        if (!distancePresets || !distInput) return;
+        distancePresets.querySelectorAll<HTMLButtonElement>('.distance-chip').forEach((chip) => {
+            const value = parseFloat(chip.dataset.value || '');
+            chip.classList.toggle('active', exactDistanceFilter !== null && value === exactDistanceFilter.value);
+        });
+    }
+
+    function updateDistanceFilterUi() {
+        if (!distInput || !distLabel || !distancePresets) return;
+
+        distancePresets.innerHTML = '';
+
+        if (activeCat === 'Hyrox') {
+            distInput.disabled = true;
+            distInput.value = '';
+            distInput.placeholder = 'Nicht relevant für Hyrox';
+            distLabel.innerText = 'Distanz (km)';
+            exactDistanceFilter = null;
+            return;
+        }
+
+        if (!activeCat) {
+            distInput.disabled = true;
+            distInput.value = '';
+            distInput.placeholder = 'Sportart wählen';
+            distLabel.innerText = 'Bis inkl. Distanz (km)';
+            exactDistanceFilter = null;
+            return;
+        }
+
+        distInput.disabled = false;
+        distInput.placeholder = 'z.B. 42,2';
+        distLabel.innerText = 'Bis inkl. Distanz (km)';
+
+        const presets = distancePresetMap[activeCat] || [];
+        distancePresets.innerHTML = presets.map((preset) => `
+            <button class="distance-chip" type="button" data-value="${preset.value}" data-tolerance="${preset.tolerance ?? 0.05}" aria-label="Nur ${preset.label} mit ${formatDistanceValue(preset.value)} Kilometer">
+                ${preset.label}
+            </button>
+        `).join('');
+
+        distancePresets.querySelectorAll<HTMLButtonElement>('.distance-chip').forEach((chip) => {
+            chip.addEventListener('click', () => {
+                const value = parseFloat(chip.dataset.value || '');
+                if (!Number.isFinite(value)) return;
+                const tolerance = parseFloat(chip.dataset.tolerance || '0.05');
+                exactDistanceFilter = exactDistanceFilter?.value === value ? null : {
+                    value,
+                    tolerance: Number.isFinite(tolerance) ? tolerance : 0.05
+                };
+                distInput.value = '';
+                updateDistancePresetState();
+                updateFilterBadge();
+                performFetch();
+            });
+        });
+
+        updateDistancePresetState();
+    }
 
     // Filter-Toggle
     if (toggle && drawer) {
@@ -389,7 +527,8 @@ import Footer from '../components/Footer.astro';
         if (activeCat) count++;
         if ((document.getElementById('city-input') as HTMLInputElement).value) count++;
         if ((document.getElementById('max-price') as HTMLInputElement).value) count++;
-        if ((document.getElementById('max-dist') as HTMLInputElement).value) count++;
+        if (!(document.getElementById('max-dist') as HTMLInputElement).disabled && (document.getElementById('max-dist') as HTMLInputElement).value) count++;
+        if (exactDistanceFilter !== null) count++;
 
         if (filterBadge) {
             if (count > 0) {
@@ -490,13 +629,14 @@ import Footer from '../components/Footer.astro';
 
         let filtered = data || [];
 
-        // Renndistanz-Filter (clientseitig, da komplexere Logik)
-        if (distVal && activeCat !== 'Hyrox') {
-            const maxDist = parseFloat(distVal);
-            filtered = filtered.filter(e => {
-                if (activeCat === 'Triathlon') return (e.bike_dist ?? 999) <= maxDist;
-                return (e.distance_km ?? 999) <= maxDist;
-            });
+        // Distanz-Chips filtern exakt; das Eingabefeld filtert bis einschließlich km.
+        if (exactDistanceFilter !== null && activeCat && activeCat !== 'Hyrox') {
+            filtered = filtered.filter(e => Math.abs((e.distance_km ?? -999) - exactDistanceFilter!.value) <= exactDistanceFilter!.tolerance);
+        } else if (distVal && activeCat && activeCat !== 'Hyrox') {
+            const maxDist = parseDistanceInput(distVal);
+            if (Number.isFinite(maxDist)) {
+                filtered = filtered.filter(e => (e.distance_km ?? 999) <= maxDist);
+            }
         }
 
         // Umkreis-Filter (clientseitig mit Haversine)
@@ -606,29 +746,9 @@ import Footer from '../components/Footer.astro';
         document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
         pill.classList.add('active');
         activeCat = pill.dataset.cat || '';
+        exactDistanceFilter = null;
 
-        // Distanz-Label & Placeholder je Sportart anpassen
-        const distInput = document.getElementById('max-dist') as HTMLInputElement;
-        const distLabel = document.getElementById('dist-label') as HTMLElement;
-        if (distInput && distLabel) {
-            if (activeCat === 'Hyrox') {
-                distInput.disabled = true;
-                distInput.value = '';
-                distInput.placeholder = 'Nicht relevant für Hyrox';
-                distInput.style.opacity = '0.4';
-                distLabel.innerText = 'Renndistanz (km)';
-            } else if (activeCat === 'Triathlon') {
-                distInput.disabled = false;
-                distInput.placeholder = 'Max. Rad-Strecke (km)';
-                distInput.style.opacity = '1';
-                distLabel.innerText = 'Max. Rad-Strecke (km)';
-            } else {
-                distInput.disabled = false;
-                distInput.placeholder = 'z.B. 42';
-                distInput.style.opacity = '1';
-                distLabel.innerText = 'Renndistanz (km)';
-            }
-        }
+        updateDistanceFilterUi();
         performFetch();
     }));
 
@@ -639,19 +759,10 @@ import Footer from '../components/Footer.astro';
         (document.getElementById('max-price') as HTMLInputElement).value = '';
         (document.getElementById('range-select') as HTMLSelectElement).value = '50';
 
-        const distInput = document.getElementById('max-dist') as HTMLInputElement;
-        const distLabel = document.getElementById('dist-label') as HTMLElement;
-        if (distInput) {
-            distInput.value = '';
-            distInput.disabled = false;
-            distInput.placeholder = 'z.B. 42';
-            distInput.style.opacity = '1';
-        }
-        if (distLabel) distLabel.innerText = 'Renndistanz (km)';
-
         document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
         document.querySelector('.pill[data-cat=""]')?.classList.add('active');
         activeCat = '';
+        updateDistanceFilterUi();
         setGeoStatus('hidden', '');
         updateFilterBadge();
         performFetch();
@@ -670,6 +781,13 @@ import Footer from '../components/Footer.astro';
         debounceTimer = setTimeout(performFetch, 300);
     });
 
+    distInput?.addEventListener('input', () => {
+        exactDistanceFilter = null;
+        updateDistancePresetState();
+        updateFilterBadge();
+    });
+
     // Initialer Aufruf
+    updateDistanceFilterUi();
     performFetch();
 </script>
