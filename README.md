@@ -1,6 +1,6 @@
 # Startplatzbörse
 
-Monorepo für Website (Astro) und Mobile App (Expo).
+Monorepo für Website (Astro) und Mobile App (Expo)
 
 ## Struktur
 
