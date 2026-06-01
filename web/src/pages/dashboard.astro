@@ -1201,7 +1201,7 @@ container.style.overflow = 'hidden';
                 priceHtml = '<div style="display: flex; align-items: center; gap: 8px;"><span style="text-decoration: line-through; color: #888; font-size: 0.9em;">' + item.old_price + '€</span><div class="price-tag-new" style="color: #00bcd4; font-weight: bold;">' + item.price + '€</div></div>';
             }
 
-            return '<div class="glass-card" style="' + (isArchived ? 'opacity: 0.7;' : '') + '"><span class="eyebrow">' + item.category + '</span><h3 style="margin: 10px 0 5px 0;">' + item.event_name + '</h3><div style="margin-bottom: 10px;"><p style="color:#555; font-size:0.8rem; margin:0;">Event am: ' + new Date(item.event_date).toLocaleDateString() + '</p><p style="font-size:0.7rem; margin: 2px 0 0 0;">' + statusNotice + '</p></div>' + priceHtml + '<div class="card-footer-btns">' + (!isArchived ? '<button class="btn-dash-edit" onclick="window.openEditModal(\'' + item.id + '\', \'' + item.price + '\')">Bearbeiten</button><button class="btn-dash-delete" onclick="window.askDelete(\'' + item.id + '\', \'' + item.status + '\')">Löschen</button>' : '<button class="btn-dash-delete" style="width: 100%;" onclick="window.askDelete(\'' + item.id + '\', \'archived\')">Endgültig löschen</button>') + '</div></div>';
+            return '<div class="glass-card" style="' + (isArchived ? 'opacity: 0.7;' : '') + '"><span class="eyebrow">' + escapeHtmlAttr(item.category) + '</span><h3 style="margin: 10px 0 5px 0;">' + escapeHtmlAttr(item.event_name) + '</h3><div style="margin-bottom: 10px;"><p style="color:#555; font-size:0.8rem; margin:0;">Event am: ' + new Date(item.event_date).toLocaleDateString() + '</p><p style="font-size:0.7rem; margin: 2px 0 0 0;">' + statusNotice + '</p></div>' + priceHtml + '<div class="card-footer-btns">' + (!isArchived ? '<button class="btn-dash-edit" onclick="window.openEditModal(\'' + escapeHtmlAttr(item.id) + '\', \'' + escapeHtmlAttr(item.price) + '\')">Bearbeiten</button><button class="btn-dash-delete" onclick="window.askDelete(\'' + escapeHtmlAttr(item.id) + '\', \'' + escapeHtmlAttr(item.status) + '\')">Löschen</button>' : '<button class="btn-dash-delete" style="width: 100%;" onclick="window.askDelete(\'' + escapeHtmlAttr(item.id) + '\', \'archived\')">Endgültig löschen</button>') + '</div></div>';
         }).join('');
 
         // onclick im Markup ruft window.openEditModal bereits auf – keine doppelten Listener nötig.
@@ -1268,10 +1268,10 @@ container.style.overflow = 'hidden';
 
             return '<div class="glass-card watch-card listing-card-shell' + (isUnavailable ? ' is-unavailable' : '') + '">' +
                 heartButtonHtml(item.id) +
-                '<span class="eyebrow">' + item.category + '</span>' +
-                '<h3 style="margin:10px 0 5px 0;padding-right:44px;">' + item.event_name + '</h3>' +
-                '<p style="color:#555;font-size:0.8rem;margin:0;">' + item.location + ' · ' + eventDate + '</p>' +
-                '<p style="color:#666;font-size:0.75rem;margin:4px 0 0 0;">' + (item.distance || 'Startplatz') + '</p>' +
+                '<span class="eyebrow">' + escapeHtmlAttr(item.category) + '</span>' +
+                '<h3 style="margin:10px 0 5px 0;padding-right:44px;">' + escapeHtmlAttr(item.event_name) + '</h3>' +
+                '<p style="color:#555;font-size:0.8rem;margin:0;">' + escapeHtmlAttr(item.location) + ' · ' + eventDate + '</p>' +
+                '<p style="color:#666;font-size:0.75rem;margin:4px 0 0 0;">' + escapeHtmlAttr(item.distance || 'Startplatz') + '</p>' +
                 unavailableHtml +
                 priceHtml +
                 linkHtml +
@@ -1319,7 +1319,7 @@ container.style.overflow = 'hidden';
             const roleLabel = isSeller ? 'Anfrage von' : 'Anfrage an';
             const badgeLabel = isSeller ? 'role-seller' : 'role-buyer';
 
-            return '<div class="msg-card ' + roleClass + ' ' + (unreadCount > 0 ? 'unread-highlight' : '') + '" onclick="window.location.href=\'/chat?id=' + chat.id + '\'">' + (unreadCount > 0 ? '<span class="unread-dot"></span>' : '') + '<span class="role-badge ' + badgeLabel + '">' + roleLabel + ' ' + (partnerName || 'User') + '</span><h4 style="margin:5px 0; color:white; font-size: 1.1rem;">' + (chat.listings?.event_name || 'Event') + '</h4><div style="display:flex; justify-content: space-between; align-items: center; margin-top: 10px;"><span style="font-size:0.65rem; color:' + (unreadCount > 0 ? 'var(--cyan)' : '#555') + '; font-weight:' + (unreadCount > 0 ? '800' : '400') + ';">' + (unreadCount > 0 ? unreadCount + ' NEUE NACHRICHTEN' : 'Stand: ' + new Date(chat.updated_at).toLocaleDateString()) + '</span><span style="font-size:0.7rem; color:var(--cyan); font-weight:700;">Öffnen →</span></div></div>';
+            return '<div class="msg-card ' + roleClass + ' ' + (unreadCount > 0 ? 'unread-highlight' : '') + '" onclick="window.location.href=\'/chat?id=' + escapeHtmlAttr(chat.id) + '\'">' + (unreadCount > 0 ? '<span class="unread-dot"></span>' : '') + '<span class="role-badge ' + badgeLabel + '">' + roleLabel + ' ' + escapeHtmlAttr(partnerName || 'User') + '</span><h4 style="margin:5px 0; color:white; font-size: 1.1rem;">' + escapeHtmlAttr(chat.listings?.event_name || 'Event') + '</h4><div style="display:flex; justify-content: space-between; align-items: center; margin-top: 10px;"><span style="font-size:0.65rem; color:' + (unreadCount > 0 ? 'var(--cyan)' : '#555') + '; font-weight:' + (unreadCount > 0 ? '800' : '400') + ';">' + (unreadCount > 0 ? unreadCount + ' NEUE NACHRICHTEN' : 'Stand: ' + new Date(chat.updated_at).toLocaleDateString()) + '</span><span style="font-size:0.7rem; color:var(--cyan); font-weight:700;">Öffnen →</span></div></div>';
         }).join('');
 
         if (chatPill) {
