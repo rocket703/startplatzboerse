@@ -15,7 +15,9 @@ const supabase = createClient(
 
 const { data: item, error } = await supabase
   .from('listings')
-  .select('*')
+  .select(
+    'id, user_id, category, event_name, description, distance, distance_km, elevation_gain_m, elevation_loss_m, swim_dist, bike_dist, run_dist, event_date, event_url, plz, location, lat, lng, price, price_type, old_price, approved, status, created_at, listing_meta',
+  )
   .eq('id', id)
   .maybeSingle();
 
@@ -26,7 +28,7 @@ if (error) {
 // Verkäufer-Profil laden
 const sellerId = item?.user_id;
 const { data: seller } = sellerId ? await supabase
-  .from('profiles')
+  .from('profiles_public')
   .select('nickname, updated_at, avatar_url')
   .eq('id', sellerId)
   .single() : { data: null };
