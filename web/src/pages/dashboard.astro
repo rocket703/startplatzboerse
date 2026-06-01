@@ -1403,7 +1403,7 @@ container.style.overflow = 'hidden';
 
     const { data: currentItem, error } = await supabase
         .from('listings')
-        .select('price, price_type, description, street, plz, location, event_url, old_price')
+        .select('price, price_type, description, plz, location, event_url, old_price')
         .eq('id', id)
         .single();
 
@@ -1470,16 +1470,18 @@ container.style.overflow = 'hidden';
             return;
         }
 
-        /** @type {{ price: number; description: string; street: string|null; plz: string; location: string; event_url: string|null; price_type: 'fixed'|'vb'; old_price?: number | null }} */
+        /** @type {{ price: number; description: string; plz: string; location: string; event_url: string|null; price_type: 'fixed'|'vb'; old_price?: number | null; street?: string | null }} */
         let updateData = {
             price: newPrice,
             description: descriptionValue,
-            street: streetValue || null,
             plz: plzValue,
             location: locationValue,
             event_url: eventUrlValue || null,
             price_type: priceTypeValue,
         };
+        if (streetValue.trim()) {
+            updateData.street = streetValue.trim();
+        }
 
         if (!currentItem.old_price) {
             updateData.old_price = currentItem.price;

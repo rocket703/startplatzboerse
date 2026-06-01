@@ -10,8 +10,10 @@
 -- PROFILES
 -- =============================================================================
 
+-- security_invoker = false (Default): View läuft mit Owner-Rechten, damit anon die View lesen kann
+-- ohne direkten Zugriff auf die profiles-Tabelle.
 create or replace view public.profiles_public
-with (security_invoker = true) as
+with (security_invoker = false) as
 select
     id,
     nickname,
@@ -202,7 +204,9 @@ grant update (
     location,
     event_url,
     old_price,
-    status
+    status,
+    lat,
+    lng
 ) on table public.listings to authenticated;
 
 grant delete on table public.listings to authenticated;
