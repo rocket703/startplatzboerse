@@ -41,8 +41,6 @@ Thumbs.db
 .vscode/
 *.swp
 .cursor/
-.claude/
-
 # --- Optional: uncomment if native folders are regenerated via prebuild ---
 # /ios
 # /android
