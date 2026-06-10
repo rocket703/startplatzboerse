@@ -1,8 +1,23 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import nodemailer from 'npm:nodemailer@6';
 
-const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY');
+const SMTP_HOST = Deno.env.get('SMTP_HOST') ?? '';
+const SMTP_PORT = parseInt(Deno.env.get('SMTP_PORT') ?? '587');
+const SMTP_USER = Deno.env.get('SMTP_USER') ?? '';
+const SMTP_PASS = Deno.env.get('SMTP_PASS') ?? '';
+const SMTP_FROM = Deno.env.get('SMTP_FROM') ?? 'Startplatzbörse <info@startplatzboerse.com>';
+
+const transporter = nodemailer.createTransport({
+  host: SMTP_HOST,
+  port: SMTP_PORT,
+  secure: SMTP_PORT === 465,
+  auth: {
+    user: SMTP_USER,
+    pass: SMTP_PASS,
+  },
+});
 
 function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
@@ -199,39 +214,31 @@ async function handleChatNotification(supabase: SupabaseClient, record: ChatReco
   const recipientEmail = userData.user.email;
   const eventName = (convo.listings as { event_name?: string })?.event_name ?? 'Startplatz';
 
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${RESEND_API_KEY}`,
-    },
-    body: JSON.stringify({
-      from: 'Startplatzbörse <info@startplatzboerse.com>',
-      to: recipientEmail,
-      subject: `Neue Nachricht zu: ${eventName}`,
-      html: `
-          <div style="font-family: sans-serif; padding: 20px; color: #333; max-width: 600px; border: 1px solid #eee; border-radius: 10px;">
-            <h2 style="color: #00bcd4;">Neue Nachricht erhalten!</h2>
-            <p>Hallo,</p>
-            <p>du hast eine neue Nachricht bezüglich des Events <strong>${escapeHtml(eventName)}</strong> erhalten:</p>
-            <div style="background: #f9f9f9; padding: 15px; border-left: 4px solid #00bcd4; font-style: italic; margin: 20px 0;">
-              "${escapeHtml(record.content)}"
-            </div>
-            <p>Klicke auf den Button, um direkt zu antworten:</p>
-            <a href="https://startplatzboerse.vercel.app/chat?id=${record.conversation_id}"
-               style="background: #00bcd4; color: black; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; margin-top: 10px;">
-               Zum Chat wechseln
-            </a>
-            <p style="font-size: 0.8rem; color: #999; margin-top: 30px; border-top: 1px solid #eee; padding-top: 10px;">
-              Dies ist eine automatische Benachrichtigung von startplatzboerse.com
-            </p>
+  const smtpInfo = await transporter.sendMail({
+    from: SMTP_FROM,
+    to: recipientEmail,
+    subject: `Neue Nachricht zu: ${eventName}`,
+    html: `
+        <div style="font-family: sans-serif; padding: 20px; color: #333; max-width: 600px; border: 1px solid #eee; border-radius: 10px;">
+          <h2 style="color: #00bcd4;">Neue Nachricht erhalten!</h2>
+          <p>Hallo,</p>
+          <p>du hast eine neue Nachricht bezüglich des Events <strong>${escapeHtml(eventName)}</strong> erhalten:</p>
+          <div style="background: #f9f9f9; padding: 15px; border-left: 4px solid #00bcd4; font-style: italic; margin: 20px 0;">
+            "${escapeHtml(record.content)}"
           </div>
-        `,
-    }),
+          <p>Klicke auf den Button, um direkt zu antworten:</p>
+          <a href="https://startplatzboerse.vercel.app/chat?id=${record.conversation_id}"
+             style="background: #00bcd4; color: black; padding: 12px 25px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block; margin-top: 10px;">
+             Zum Chat wechseln
+          </a>
+          <p style="font-size: 0.8rem; color: #999; margin-top: 30px; border-top: 1px solid #eee; padding-top: 10px;">
+            Dies ist eine automatische Benachrichtigung von startplatzboerse.com
+          </p>
+        </div>
+      `,
   });
 
-  const resData = await res.json();
-  console.log('Resend API Antwort:', resData);
+  console.log('SMTP Antwort:', smtpInfo.messageId);
 
   const pushResult = await pushToUserDevices(
     supabase,
@@ -244,7 +251,7 @@ async function handleChatNotification(supabase: SupabaseClient, record: ChatReco
     },
   );
 
-  return new Response(JSON.stringify({ success: true, kind: 'chat', resend: resData, ...pushResult }), {
+  return new Response(JSON.stringify({ success: true, kind: 'chat', smtp: { messageId: smtpInfo.messageId }, ...pushResult }), {
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     status: 200,
   });

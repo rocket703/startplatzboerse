@@ -161,7 +161,7 @@ import FeedbackBanner from '../components/FeedbackBanner.astro';
                 .from('profiles')
                 .select('has_completed_onboarding')
                 .eq('id', authData.user.id)
-                .single();
+                .maybeSingle();
 
             if (profile?.has_completed_onboarding) {
                 const urlParams = new URLSearchParams(window.location.search);
@@ -218,7 +218,8 @@ import FeedbackBanner from '../components/FeedbackBanner.astro';
             first_name,
             last_name,
             registered_email: session.user.email,
-            has_completed_onboarding: true
+            has_completed_onboarding: true,
+            updated_at: new Date().toISOString(),
         });
 
         // Fehlerbehandlung beim Speichern
