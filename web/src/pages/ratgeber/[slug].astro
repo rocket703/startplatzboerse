@@ -2,17 +2,22 @@
 import { getEntry } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import Footer from '../../components/Footer.astro';
+import NotFoundPage from '../../components/NotFoundPage.astro';
 
 const { slug } = Astro.params;
 const entry = await getEntry('ratgeber', slug as string);
 
 if (!entry) {
-  return Astro.redirect('/404');
+  Astro.response.status = 404;
 }
 
-const { Content } = await entry.render();
+const rendered = entry ? await entry.render() : null;
+const Content = rendered?.Content;
 ---
 
+{!entry || !Content ? (
+  <NotFoundPage />
+) : (
 <Layout 
   title={entry.data.title}
   description={entry.data.teaser}
@@ -364,3 +369,4 @@ const { Content } = await entry.render();
     }
 }
 </style>
+)}

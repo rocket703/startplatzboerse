@@ -1,6 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
-import Footer from '../../components/Footer.astro'; 
+import NotFoundPage from '../../components/NotFoundPage.astro';
 import { createClient } from '@supabase/supabase-js';
 import { formatRunMetaDetail } from '../../lib/runListingBuild';
 
@@ -28,11 +28,11 @@ if (error) {
 }
 
 if (!item) {
-  return Astro.redirect('/404', 404);
+  Astro.response.status = 404;
 }
 
-// Verkäufer-Profil laden
-const sellerId = item.user_id;
+// Verkäufer-Profil laden (nur wenn Inserat existiert)
+const sellerId = item?.user_id;
 const { data: seller } = sellerId ? await supabase
   .from('profiles_public')
   .select('nickname, updated_at, avatar_url')
@@ -45,22 +45,22 @@ const memberSince = seller?.updated_at
 
 const backLabel = origin === 'search' ? "← Zurück zur Suche" : "← Zurück zur Übersicht";
 
-const pageTitle = item.event_name;
-const distanceLabel = item.distance === 'Freie Distanz' ? (
+const pageTitle = item?.event_name ?? '';
+const distanceLabel = !item ? '' : item.distance === 'Freie Distanz' ? (
   item.category === 'Triathlon' && (item.swim_dist || item.bike_dist || item.run_dist) ?
     `Freie Distanz – Schwimmen ${item.swim_dist ?? '?'} km · Rad ${item.bike_dist ?? '?'} km · Laufen ${item.run_dist ?? '?'} km` :
     item.distance_km ? `Freie Distanz (${item.distance_km} km)` :
     'Freie Distanz'
 ) : item.distance || 'K.A.';
 
-const runProfileDetail = formatRunMetaDetail({
+const runProfileDetail = item ? formatRunMetaDetail({
   listing_meta: item.listing_meta,
   distance_km: item.distance_km,
   elevation_gain_m: item.elevation_gain_m,
   elevation_loss_m: item.elevation_loss_m,
-});
+}) : null;
 
-const eventHost = item.event_url
+const eventHost = item?.event_url
   ? (() => {
       try {
         return new URL(item.event_url).hostname.replace(/^www\./, '');
@@ -147,12 +147,17 @@ function buildEventFacts(listing: NonNullable<typeof item>): EventFact[] {
   return facts;
 }
 
-const eventFacts = buildEventFacts(item);
-const priceTypeLabel = item.price_type === 'vb' ? 'Verhandlungsbasis' : 'Festpreis';
+const eventFacts = item ? buildEventFacts(item) : [];
+const priceTypeLabel = item?.price_type === 'vb' ? 'Verhandlungsbasis' : 'Festpreis';
 
-const seoDescription = `Sichere dir jetzt einen Startplatz für ${item.event_name} am ${new Date(item.event_date).toLocaleDateString('de-DE')} in ${item.location}. Preis: ${item.price}€. Sicherer Kauf via Startplatzbörse.`;
+const seoDescription = item
+  ? `Sichere dir jetzt einen Startplatz für ${item.event_name} am ${new Date(item.event_date).toLocaleDateString('de-DE')} in ${item.location}. Preis: ${item.price}€. Sicherer Kauf via Startplatzbörse.`
+  : '';
 ---
 
+{!item ? (
+  <NotFoundPage />
+) : (
 <Layout
   title={pageTitle}
   description={seoDescription}
@@ -796,3 +801,4 @@ const seoDescription = `Sichere dir jetzt einen Startplatz für ${item.event_nam
         .event-facts { grid-template-columns: 1fr; }
     }
 </style>
+)}
