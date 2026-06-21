@@ -32,12 +32,12 @@ if (!item) {
 }
 
 // Verkäufer-Profil laden
-const sellerId = item?.user_id;
+const sellerId = item.user_id;
 const { data: seller } = sellerId ? await supabase
   .from('profiles_public')
   .select('nickname, updated_at, avatar_url')
   .eq('id', sellerId)
-  .single() : { data: null };
+  .maybeSingle() : { data: null };
 
 const memberSince = seller?.updated_at
   ? new Date(seller.updated_at).toLocaleDateString('de-DE', { month: 'long', year: 'numeric' })
@@ -45,22 +45,22 @@ const memberSince = seller?.updated_at
 
 const backLabel = origin === 'search' ? "← Zurück zur Suche" : "← Zurück zur Übersicht";
 
-const pageTitle = item ? item.event_name : "Inserat nicht gefunden";
-const distanceLabel = item ? (
-  item.distance === 'Freie Distanz' ? (
-    item.category === 'Triathlon' && (item.swim_dist || item.bike_dist || item.run_dist) ?
-      `Freie Distanz – Schwimmen ${item.swim_dist ?? '?'} km · Rad ${item.bike_dist ?? '?'} km · Laufen ${item.run_dist ?? '?'} km` :
-      item.distance_km ? `Freie Distanz (${item.distance_km} km)` :
-      'Freie Distanz'
-  ) : item.distance || 'K.A.'
-) : 'K.A.';
-const runProfileDetail = item ? formatRunMetaDetail({
+const pageTitle = item.event_name;
+const distanceLabel = item.distance === 'Freie Distanz' ? (
+  item.category === 'Triathlon' && (item.swim_dist || item.bike_dist || item.run_dist) ?
+    `Freie Distanz – Schwimmen ${item.swim_dist ?? '?'} km · Rad ${item.bike_dist ?? '?'} km · Laufen ${item.run_dist ?? '?'} km` :
+    item.distance_km ? `Freie Distanz (${item.distance_km} km)` :
+    'Freie Distanz'
+) : item.distance || 'K.A.';
+
+const runProfileDetail = formatRunMetaDetail({
   listing_meta: item.listing_meta,
   distance_km: item.distance_km,
   elevation_gain_m: item.elevation_gain_m,
   elevation_loss_m: item.elevation_loss_m,
-}) : null;
-const eventHost = item?.event_url
+});
+
+const eventHost = item.event_url
   ? (() => {
       try {
         return new URL(item.event_url).hostname.replace(/^www\./, '');
@@ -147,12 +147,10 @@ function buildEventFacts(listing: NonNullable<typeof item>): EventFact[] {
   return facts;
 }
 
-const eventFacts = item ? buildEventFacts(item) : [];
-const priceTypeLabel = item?.price_type === 'vb' ? 'Verhandlungsbasis' : 'Festpreis';
+const eventFacts = buildEventFacts(item);
+const priceTypeLabel = item.price_type === 'vb' ? 'Verhandlungsbasis' : 'Festpreis';
 
-const seoDescription = item 
-  ? `Sichere dir jetzt einen Startplatz für ${item.event_name} am ${new Date(item.event_date).toLocaleDateString('de-DE')} in ${item.location}. Preis: ${item.price}€. Sicherer Kauf via Startplatzbörse.`
-  : "Details zum Startplatz auf der Startplatzbörse.";
+const seoDescription = `Sichere dir jetzt einen Startplatz für ${item.event_name} am ${new Date(item.event_date).toLocaleDateString('de-DE')} in ${item.location}. Preis: ${item.price}€. Sicherer Kauf via Startplatzbörse.`;
 ---
 
 <Layout
@@ -168,162 +166,154 @@ const seoDescription = item
                 {backLabel}
             </a>
 
-            {!item ? (
-                <div class="error-box card">
-                    <h2>Inserat nicht gefunden</h2>
-                    <p>Das Inserat existiert nicht oder wurde gelöscht.</p>
-                    <a href="/" class="btn-cyan-glow" style="display:inline-block; margin-top:20px;">Startseite</a>
-                </div>
-            ) : (
-                <div class="listing-layout">
-                    <section class="hero-card">
-                        <div class="hero-top">
-                            <span class="badge">{item.category}</span>
-                            <div class="header-actions-right">
-                                <button
-                                    type="button"
-                                    class="heart-btn"
-                                    data-watchlist-id={item.id}
-                                    aria-label="Merken"
-                                    aria-pressed="false"
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="heart-icon" aria-hidden="true">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                                    </svg>
-                                </button>
-                                <button id="share-btn" class="share-btn" aria-label="Inserat teilen">
-                                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-                                    Teilen
-                                </button>
-                            </div>
+            <div class="listing-layout">
+                <section class="hero-card">
+                    <div class="hero-top">
+                        <span class="badge">{item.category}</span>
+                        <div class="header-actions-right">
+                            <button
+                                type="button"
+                                class="heart-btn"
+                                data-watchlist-id={item.id}
+                                aria-label="Merken"
+                                aria-pressed="false"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="heart-icon" aria-hidden="true">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                                </svg>
+                            </button>
+                            <button id="share-btn" class="share-btn" aria-label="Inserat teilen">
+                                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                                Teilen
+                            </button>
                         </div>
-                        <h1 class="glow-title">{item.event_name}</h1>
-
-                        <ul class="event-facts">
-                            {eventFacts.map((fact) => (
-                                <li class="event-fact">
-                                    <span class="fact-icon" aria-hidden="true">
-                                        {fact.key === 'date' && (
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5a2.25 2.25 0 002.25-2.25m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5a2.25 2.25 0 0121 11.25v7.5" />
-                                            </svg>
-                                        )}
-                                        {fact.key === 'location' && (
-                                            <svg viewBox="0 0 24 24" fill="currentColor">
-                                                <path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
-                                            </svg>
-                                        )}
-                                        {fact.key === 'distance' && (
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
-                                            </svg>
-                                        )}
-                                        {fact.key === 'elevation' && (
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 20l9-16 9 16H3z" />
-                                            </svg>
-                                        )}
-                                        {fact.key === 'profile' && (
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25" />
-                                            </svg>
-                                        )}
-                                        {fact.key === 'swim' && (
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12c2.25-2.25 4.5-2.25 6.75 0s4.5 2.25 6.75 0 4.5-2.25 6.75 0M2.25 17c2.25-2.25 4.5-2.25 6.75 0s4.5 2.25 6.75 0 4.5-2.25 6.75 0" />
-                                            </svg>
-                                        )}
-                                        {fact.key === 'bike' && (
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                                <circle cx="5.5" cy="17.5" r="2.5" /><circle cx="18.5" cy="17.5" r="2.5" />
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 17.5h2l2.5-7h4l1.5 4H18" />
-                                            </svg>
-                                        )}
-                                        {fact.key === 'run' && (
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M13 5l2 2m-8 9.5a3.5 3.5 0 117 0 3.5 3.5 0 01-7 0zM6.5 20.5l2-4.5 3 1 2.5-3" />
-                                            </svg>
-                                        )}
-                                        {fact.key === 'website' && (
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253" />
-                                            </svg>
-                                        )}
-                                    </span>
-                                    <div class="fact-copy">
-                                        <span class="fact-label">{fact.label}</span>
-                                        {fact.href ? (
-                                            <a class="fact-value fact-link" href={fact.href} target="_blank" rel="noopener noreferrer">
-                                                {fact.value}
-                                            </a>
-                                        ) : fact.multiline ? (
-                                            <span class="fact-value fact-multiline">{fact.value}</span>
-                                        ) : (
-                                            <span class="fact-value">{fact.value}</span>
-                                        )}
-                                    </div>
-                                </li>
-                            ))}
-                        </ul>
-                    </section>
-
-                    <div class="detail-lower-grid">
-                        <div class="info-stack">
-                            <div class="card price-card">
-                                <span class="label">Preis</span>
-                                <div class="price-display">
-                                    <span class="main-price">{item.price}€</span>
-                                    {item.old_price && <span class="old-price">{item.old_price}€</span>}
-                                </div>
-                                <p class="price-note">{priceTypeLabel}</p>
-
-                                <div class="meta-list">
-                                    <div class="meta-row">
-                                        <span class="meta-key">Angebot</span>
-                                        <span class="meta-value">Startplatz</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="card description-box">
-                                <span class="label">Zusatzinfos</span>
-                                <p>{item.description || 'Keine weiteren Details vom Verkäufer hinterlegt.'}</p>
-                            </div>
-                        </div>
-
-                        <aside class="sidebar">
-                            {seller && (
-                                <div class="card seller-card-block">
-                                    <div class="seller-avatar-wrap">
-                                        {seller.avatar_url
-                                            ? <img src={seller.avatar_url} alt={seller.nickname ?? 'Verkäufer'} />
-                                            : <span>👤</span>
-                                        }
-                                    </div>
-                                    <div class="seller-info">
-                                        <p class="seller-name">{seller.nickname || 'Anonym'}</p>
-                                        {memberSince && <p class="seller-meta">Mitglied seit {memberSince}</p>}
-                                    </div>
-                                </div>
-                            )}
-
-                            <div class="card contact-card">
-                                <h3>Verkäufer kontaktieren</h3>
-                                <p>Sende eine Nachricht, um Details oder die Übergabe zu klären.</p>
-
-                                <form id="contact-form" data-seller-id={item.user_id}>
-                                    <input type="hidden" name="listing_id" value={item.id}>
-
-                                    <textarea name="message" placeholder="Hallo, ich interessiere mich für deinen Startplatz ..." class="input-field textarea" required></textarea>
-
-                                    <button type="submit" class="btn-cyan-glow" id="send-btn">Nachricht senden</button>
-                                </form>
-                                <p class="login-hint">🔒 Sicherer Chat via Startplatzbörse</p>
-                            </div>
-                        </aside>
                     </div>
+                    <h1 class="glow-title">{item.event_name}</h1>
+
+                    <ul class="event-facts">
+                        {eventFacts.map((fact) => (
+                            <li class="event-fact">
+                                <span class="fact-icon" aria-hidden="true">
+                                    {fact.key === 'date' && (
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5a2.25 2.25 0 002.25-2.25m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5a2.25 2.25 0 0121 11.25v7.5" />
+                                        </svg>
+                                    )}
+                                    {fact.key === 'location' && (
+                                        <svg viewBox="0 0 24 24" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M11.54 22.351l.07.04.028.016a.76.76 0 00.723 0l.028-.015.071-.041a16.975 16.975 0 001.144-.742 19.58 19.58 0 002.683-2.282c1.944-1.99 3.963-4.98 3.963-8.827a8.25 8.25 0 00-16.5 0c0 3.846 2.02 6.837 3.963 8.827a19.58 19.58 0 002.682 2.282 16.975 16.975 0 001.145.742zM12 13.5a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd" />
+                                        </svg>
+                                    )}
+                                    {fact.key === 'distance' && (
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                                        </svg>
+                                    )}
+                                    {fact.key === 'elevation' && (
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 20l9-16 9 16H3z" />
+                                        </svg>
+                                    )}
+                                    {fact.key === 'profile' && (
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 01-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0115 18.257V17.25m6-12V15a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 15V5.25m18 0A2.25 2.25 0 0018.75 3H5.25A2.25 2.25 0 003 5.25m18 0V12a2.25 2.25 0 01-2.25 2.25H5.25A2.25 2.25 0 013 12V5.25" />
+                                        </svg>
+                                    )}
+                                    {fact.key === 'swim' && (
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12c2.25-2.25 4.5-2.25 6.75 0s4.5 2.25 6.75 0 4.5-2.25 6.75 0M2.25 17c2.25-2.25 4.5-2.25 6.75 0s4.5 2.25 6.75 0 4.5-2.25 6.75 0" />
+                                        </svg>
+                                    )}
+                                    {fact.key === 'bike' && (
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <circle cx="5.5" cy="17.5" r="2.5" /><circle cx="18.5" cy="17.5" r="2.5" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M8 17.5h2l2.5-7h4l1.5 4H18" />
+                                        </svg>
+                                    )}
+                                    {fact.key === 'run' && (
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 5l2 2m-8 9.5a3.5 3.5 0 117 0 3.5 3.5 0 01-7 0zM6.5 20.5l2-4.5 3 1 2.5-3" />
+                                        </svg>
+                                    )}
+                                    {fact.key === 'website' && (
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253" />
+                                        </svg>
+                                    )}
+                                </span>
+                                <div class="fact-copy">
+                                    <span class="fact-label">{fact.label}</span>
+                                    {fact.href ? (
+                                        <a class="fact-value fact-link" href={fact.href} target="_blank" rel="noopener noreferrer">
+                                            {fact.value}
+                                        </a>
+                                    ) : fact.multiline ? (
+                                        <span class="fact-value fact-multiline">{fact.value}</span>
+                                    ) : (
+                                        <span class="fact-value">{fact.value}</span>
+                                    )}
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                </section>
+
+                <div class="detail-lower-grid">
+                    <div class="info-stack">
+                        <div class="card price-card">
+                            <span class="label">Preis</span>
+                            <div class="price-display">
+                                <span class="main-price">{item.price}€</span>
+                                {item.old_price && <span class="old-price">{item.old_price}€</span>}
+                            </div>
+                            <p class="price-note">{priceTypeLabel}</p>
+
+                            <div class="meta-list">
+                                <div class="meta-row">
+                                    <span class="meta-key">Angebot</span>
+                                    <span class="meta-value">Startplatz</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card description-box">
+                            <span class="label">Zusatzinfos</span>
+                            <p>{item.description || 'Keine weiteren Details vom Verkäufer hinterlegt.'}</p>
+                        </div>
+                    </div>
+
+                    <aside class="sidebar">
+                        {seller && (
+                            <div class="card seller-card-block">
+                                <div class="seller-avatar-wrap">
+                                    {seller.avatar_url
+                                        ? <img src={seller.avatar_url} alt={seller.nickname ?? 'Verkäufer'} />
+                                        : <span>👤</span>
+                                    }
+                                </div>
+                                <div class="seller-info">
+                                    <p class="seller-name">{seller.nickname || 'Anonym'}</p>
+                                    {memberSince && <p class="seller-meta">Mitglied seit {memberSince}</p>}
+                                </div>
+                            </div>
+                        )}
+
+                        <div class="card contact-card">
+                            <h3>Verkäufer kontaktieren</h3>
+                            <p>Sende eine Nachricht, um Details oder die Übergabe zu klären.</p>
+
+                            <form id="contact-form" data-seller-id={item.user_id}>
+                                <input type="hidden" name="listing_id" value={item.id}>
+
+                                <textarea name="message" placeholder="Hallo, ich interessiere mich für deinen Startplatz ..." class="input-field textarea" required></textarea>
+
+                                <button type="submit" class="btn-cyan-glow" id="send-btn">Nachricht senden</button>
+                            </form>
+                            <p class="login-hint">🔒 Sicherer Chat via Startplatzbörse</p>
+                        </div>
+                    </aside>
                 </div>
-            )}
+            </div>
         </div>
     </main>
     
