@@ -1,31 +1,30 @@
 ---
-// src/components/Infos.astro
 ---
 
 <section id="infos" class="section-wrapper">
     <div class="container">
         
         <div class="mission-box">
-    <span class="badge">Ein Herzensprojekt</span>
-    <h2>Von Sportler zu Sportler.</h2>
+    <span class="badge" data-i18n="infos.badge">Ein Herzensprojekt</span>
+    <h2 data-i18n="infos.title">Von Sportler zu Sportler.</h2>
     
     <div class="mission-text">
-        <p>
+        <p data-i18n="infos.p1">
             Hi, ich bin Dustin. Ich entwickle startplatzboerse.com gerade als kleines, privates Ein-Mann-Projekt, direkt aus der Community heraus.
         </p>
-            <h3>Die Idee</h3><br>
-        <p>
+            <h3 data-i18n="infos.ideaTitle">Die Idee</h3><br>
+        <p data-i18n="infos.ideaText">
             Es nervt, wenn teure Startplätze verfallen, nur weil jemand krank oder verletzt ist. Gleichzeitig suchen andere auf zuvielen Plattformen, in Facebook-Gruppen oder Chats nach genau 
             diesen Startplätzen – unübersichtlich und zu zeitaufwändig.
         </p>
-            <h3>Mein Ziel:</h3>
-        <p>
+            <h3 data-i18n="infos.goalTitle">Mein Ziel:</h3>
+        <p data-i18n="infos.goalText">
             Leere Startblöcke füllen und euch an die Startlinie bringen. Fair, transparent und direkt.
         </p>
     </div>
 
     <div style="text-align: center; margin-top: 35px;">
-        <a href="/ueber-uns" class="btn-mission-more" style="display: inline-block; padding: 14px 28px; border: 2px solid #00bcd4; color: #00bcd4; text-decoration: none; font-weight: bold; border-radius: 5px; font-size: 1rem; transition: all 0.3s ease;">
+        <a href="/ueber-uns" class="btn-mission-more" data-i18n="infos.moreAbout" style="display: inline-block; padding: 14px 28px; border: 2px solid #00bcd4; color: #00bcd4; text-decoration: none; font-weight: bold; border-radius: 5px; font-size: 1rem; transition: all 0.3s ease;">
             Mehr über das Projekt
         </a>
     </div>
@@ -33,7 +32,6 @@
 </section>
 
 <style>
-    /* --- VARIABLEN --- */
     :root {
         --h2-clamp: clamp(1.8rem, 8vw, 3rem);
         --p-clamp: clamp(0.95rem, 2.5vw, 1.15rem);
@@ -52,7 +50,6 @@
         margin: 0 auto; 
     }
 
-    /* --- MISSION BOX (Die große Box oben) --- */
     .mission-box {
         text-align: center;
         max-width: 800px;
@@ -86,7 +83,7 @@
     }
 
     .mission-text p {
-        color: #aaa; /* Etwas helleres Grau für bessere Lesbarkeit auf Schwarz */
+        color: #aaa;
         font-size: var(--p-clamp);
         line-height: 1.6;
         margin-bottom: 15px;
@@ -97,7 +94,6 @@
         font-weight: 700;
     }
 
-    /* --- GRID & CARDS (Die kleineren Karten darunter) --- */
     .grid {
         display: grid;
         grid-template-columns: 1fr;
@@ -105,7 +101,6 @@
     }
 
     .card {
-        /* HIER GEÄNDERT: Feste dunkle Farbe */
         background: var(--bg-card-dark);
         padding: clamp(30px, 5vw, 45px) clamp(20px, 4vw, 35px);
         border-radius: 24px;
@@ -134,7 +129,6 @@
     h3 { color: white; margin-bottom: 12px; font-size: 1.35rem; font-weight: 800; }
     .card p { font-size: 0.95rem; color: #888; line-height: 1.6; }
 
-    /* Desktop Ansicht */
     @media (min-width: 850px) {
         .grid { grid-template-columns: repeat(3, 1fr); gap: 30px; }
     }

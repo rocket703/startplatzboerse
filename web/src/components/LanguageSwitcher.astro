@@ -1,0 +1,225 @@
+---
+/** Kompakter Sprachschalter: nur aktive Flagge, Klick öffnet die anderen darunter. */
+const locales = [
+  { code: 'de', flag: '🇩🇪', label: 'Deutsch' },
+  { code: 'en', flag: '🇬🇧', label: 'English' },
+  { code: 'it', flag: '🇮🇹', label: 'Italiano' },
+] as const;
+---
+
+<div class="lang-switcher" data-lang-switcher>
+  <button
+    type="button"
+    class="lang-trigger"
+    data-lang-trigger
+    aria-haspopup="listbox"
+    aria-expanded="false"
+    aria-label="Language"
+  >
+    <span class="lang-flag" data-lang-trigger-flag aria-hidden="true">🇩🇪</span>
+  </button>
+
+  <div class="lang-menu" data-lang-menu role="listbox" hidden>
+    {locales.map((locale) => (
+      <button
+        type="button"
+        class="lang-btn"
+        role="option"
+        data-locale={locale.code}
+        aria-label={locale.label}
+        title={locale.label}
+      >
+        <span class="lang-flag" aria-hidden="true">{locale.flag}</span>
+        <span class="lang-label">{locale.label}</span>
+      </button>
+    ))}
+  </div>
+</div>
+
+<script>
+  import { getLocale, isLocale, setLocale } from '../i18n';
+
+  const FLAG_BY_LOCALE = {
+    de: '🇩🇪',
+    en: '🇬🇧',
+    it: '🇮🇹',
+  };
+
+  function syncSwitcher(root) {
+    const locale = getLocale();
+    const flag = FLAG_BY_LOCALE[locale] || FLAG_BY_LOCALE.de;
+    const triggerFlag = root.querySelector('[data-lang-trigger-flag]');
+    if (triggerFlag) triggerFlag.textContent = flag;
+
+    root.querySelectorAll('.lang-btn').forEach((btn) => {
+      const active = btn.getAttribute('data-locale') === locale;
+      btn.classList.toggle('is-active', active);
+      btn.setAttribute('aria-selected', active ? 'true' : 'false');
+    });
+  }
+
+  function closeSwitcher(root) {
+    root.classList.remove('is-open');
+    const trigger = root.querySelector('[data-lang-trigger]');
+    const menu = root.querySelector('[data-lang-menu]');
+    if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    if (menu) menu.hidden = true;
+  }
+
+  function openSwitcher(root) {
+    document.querySelectorAll('[data-lang-switcher].is-open').forEach((other) => {
+      if (other !== root) closeSwitcher(other);
+    });
+    root.classList.add('is-open');
+    const trigger = root.querySelector('[data-lang-trigger]');
+    const menu = root.querySelector('[data-lang-menu]');
+    if (trigger) trigger.setAttribute('aria-expanded', 'true');
+    if (menu) menu.hidden = false;
+  }
+
+  function toggleSwitcher(root) {
+    if (root.classList.contains('is-open')) closeSwitcher(root);
+    else openSwitcher(root);
+  }
+
+  function initSwitcher(root) {
+    if (root.dataset.langReady === '1') {
+      syncSwitcher(root);
+      return;
+    }
+    root.dataset.langReady = '1';
+    syncSwitcher(root);
+
+    root.querySelector('[data-lang-trigger]')?.addEventListener('click', (event) => {
+      event.stopPropagation();
+      toggleSwitcher(root);
+    });
+
+    root.querySelectorAll('.lang-btn').forEach((btn) => {
+      btn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const next = btn.getAttribute('data-locale');
+        if (!isLocale(next)) return;
+        setLocale(next, true);
+        closeSwitcher(root);
+      });
+    });
+  }
+
+  function boot() {
+    document.querySelectorAll('[data-lang-switcher]').forEach(initSwitcher);
+  }
+
+  boot();
+  document.addEventListener('astro:page-load', boot);
+
+  window.addEventListener('spb:localechange', () => {
+    document.querySelectorAll('[data-lang-switcher]').forEach(syncSwitcher);
+  });
+
+  document.addEventListener('click', () => {
+    document.querySelectorAll('[data-lang-switcher].is-open').forEach(closeSwitcher);
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    document.querySelectorAll('[data-lang-switcher].is-open').forEach(closeSwitcher);
+  });
+</script>
+
+<style>
+  .lang-switcher {
+    position: relative;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    z-index: 20;
+  }
+
+  .lang-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    line-height: 1;
+  }
+
+  .lang-trigger:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.22);
+    transform: scale(1.04);
+  }
+
+  .lang-trigger:focus-visible {
+    outline: 2px solid var(--cyan, #00bcd4);
+    outline-offset: 2px;
+  }
+
+  .lang-flag {
+    font-size: 1.2rem;
+    line-height: 1;
+  }
+
+  .lang-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 148px;
+    padding: 6px;
+    border-radius: 14px;
+    background: rgba(28, 28, 28, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  .lang-menu[hidden] {
+    display: none;
+  }
+
+  .lang-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 8px 10px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: #ddd;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .lang-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+  }
+
+  .lang-btn.is-active {
+    background: rgba(0, 188, 212, 0.15);
+    color: #fff;
+  }
+
+  .lang-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .lang-btn:focus-visible {
+    outline: 2px solid var(--cyan, #00bcd4);
+    outline-offset: 1px;
+  }
+</style>

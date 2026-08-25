@@ -8,9 +8,9 @@ import SupportChatPanel from '../components/SupportChatPanel.astro';
     <main class="page-wrapper">
         <div class="form-wrapper">
             <div class="container">
-                <div class="heading">Kontakt</div>
+                <div class="heading" data-i18n="contact.title">Kontakt</div>
 
-                <p class="info-text">
+                <p class="info-text" data-i18n="contact.intro">
                     Hast du Fragen zur Plattform, einen Bug gefunden oder Feedback?
                     Wähle, wie du uns erreichen möchtest – per Formular oder im Live-Chat.
                 </p>
@@ -23,6 +23,7 @@ import SupportChatPanel from '../components/SupportChatPanel.astro';
                         role="tab"
                         aria-selected="true"
                         aria-controls="panel-form"
+                        data-i18n="contact.formTab"
                     >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path d="M4 4h16v16H4zM22 6l-10 7L2 6" stroke-linecap="round" stroke-linejoin="round" />
@@ -36,6 +37,7 @@ import SupportChatPanel from '../components/SupportChatPanel.astro';
                         role="tab"
                         aria-selected="false"
                         aria-controls="panel-chat"
+                        data-i18n="contact.chatTab"
                     >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                             <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke-linecap="round" stroke-linejoin="round" />
@@ -45,19 +47,19 @@ import SupportChatPanel from '../components/SupportChatPanel.astro';
                 </div>
 
                 <div id="panel-form" class="contact-panel" role="tabpanel">
-                    <p class="panel-hint">Schreib uns eine E-Mail über das Formular – auch ohne Konto.</p>
+                    <p class="panel-hint" data-i18n="contact.formHint">Schreib uns eine E-Mail über das Formular – auch ohne Konto.</p>
 
                     <form action="https://api.web3forms.com/submit" method="POST" class="form" id="contact-form">
                         <input type="hidden" name="access_key" value="e69583c0-8243-43fb-a59d-1f81a16ed571">
                         <input type="hidden" name="from_name" value="Startplatzboerse Kontakt">
                         <input type="checkbox" name="botcheck" class="hidden" style="display: none;">
 
-                        <input required class="input" type="text" name="name" placeholder="Dein Name">
-                        <input required class="input" type="email" name="email" placeholder="Deine E-Mail Adresse">
-                        <input required class="input" type="text" name="subject" placeholder="Betreff">
-                        <textarea required class="input textarea" name="message" rows="5" placeholder="Deine Nachricht..."></textarea>
+                        <input required class="input" type="text" name="name" placeholder="Dein Name" data-i18n-placeholder="contact.namePh">
+                        <input required class="input" type="email" name="email" placeholder="Deine E-Mail Adresse" data-i18n-placeholder="contact.emailPh">
+                        <input required class="input" type="text" name="subject" placeholder="Betreff" data-i18n-placeholder="contact.subjectPh">
+                        <textarea required class="input textarea" name="message" rows="5" placeholder="Deine Nachricht..." data-i18n-placeholder="contact.messagePh"></textarea>
 
-                        <button class="login-button" type="submit" id="submit-btn">Nachricht senden</button>
+                        <button class="login-button" type="submit" id="submit-btn" data-i18n="contact.send">Nachricht senden</button>
                         <p id="result" class="form-result" style="display:none;"></p>
                     </form>
                 </div>
@@ -72,23 +74,26 @@ import SupportChatPanel from '../components/SupportChatPanel.astro';
     <Footer />
 </Layout>
 
-<script is:inline>
-    const form = document.getElementById('contact-form');
+<script>
+    import { t } from '../i18n';
+
+    const form = document.getElementById('contact-form') as HTMLFormElement | null;
     const result = document.getElementById('result');
     const btn = document.getElementById('submit-btn');
 
-    form.addEventListener('submit', function(e) {
+    form?.addEventListener('submit', function(e) {
         e.preventDefault();
+        if (!form || !result || !btn) return;
 
         const formData = new FormData(form);
         const object = Object.fromEntries(formData);
         const json = JSON.stringify(object);
 
-        result.innerHTML = 'Einen Moment...';
+        result.innerHTML = t('contact.wait');
         result.style.display = 'block';
         result.style.color = '#999';
         btn.disabled = true;
-        btn.innerHTML = 'Sende...';
+        btn.innerHTML = t('contact.sending');
 
         fetch('https://api.web3forms.com/submit', {
             method: 'POST',
@@ -100,28 +105,28 @@ import SupportChatPanel from '../components/SupportChatPanel.astro';
         })
         .then(async (response) => {
             if (response.status == 200) {
-                result.innerHTML = 'Danke! Deine Nachricht wurde gesendet.';
+                result.innerHTML = t('contact.success');
                 result.style.color = 'var(--cyan)';
-                btn.innerHTML = 'Gesendet ✓';
+                btn.innerHTML = t('contact.sent');
                 form.reset();
             } else {
-                result.innerHTML = 'Ups, da lief was schief.';
+                result.innerHTML = t('contact.error');
                 result.style.color = '#ff4444';
                 btn.disabled = false;
-                btn.innerHTML = 'Nachricht senden';
+                btn.innerHTML = t('contact.send');
             }
         })
         .catch(() => {
-            result.innerHTML = 'Verbindungsfehler.';
+            result.innerHTML = t('contact.connectionError');
             result.style.color = '#ff4444';
             btn.disabled = false;
-            btn.innerHTML = 'Nachricht senden';
+            btn.innerHTML = t('contact.send');
         })
         .then(function() {
             setTimeout(() => {
                 result.style.display = 'none';
                 btn.disabled = false;
-                btn.innerHTML = 'Nachricht senden';
+                btn.innerHTML = t('contact.send');
             }, 5000);
         });
     });

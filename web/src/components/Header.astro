@@ -1,18 +1,22 @@
 ---
 // src/components/Header.astro
+import LanguageSwitcher from './LanguageSwitcher.astro';
 ---
 
 <header class="header-wrapper">
     
     <div class="mobile-bar">
         <a href="/" class="logo mobile-logo">startplatzboerse<span>.com</span></a>
-        
-        <div class="burger-wrapper" id="burger">
-            <button class="menu__icon">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
+
+        <div class="mobile-bar-actions">
+            <LanguageSwitcher />
+            <div class="burger-wrapper" id="burger">
+                <button class="menu__icon" type="button" data-i18n-aria="nav.menu" aria-label="Menü">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -20,28 +24,29 @@
         <a href="/" class="dock-logo">startplatzboerse<span>.com</span></a>
         
         <div class="dock-links">
-            <a href="/suche">Inserate</a>
-            <a href="/ueber-uns">Über uns</a>
-            <a href="/ratgeber">Ratgeber</a>
-            <a href="/#faq">FAQ</a>
-            <a href="/kontakt">Kontakt</a>
+            <a href="/suche" data-i18n="nav.listings">Inserate</a>
+            <a href="/ueber-uns" data-i18n="nav.about">Über uns</a>
+            <a href="/ratgeber" data-i18n="nav.guide">Ratgeber</a>
+            <a href="/#faq" data-i18n="nav.faq">FAQ</a>
+            <a href="/kontakt" data-i18n="nav.contact">Kontakt</a>
         </div>
 
         <div class="auth-container">
-            <a href="/login" class="dock-btn" id="login-desktop">Anmelden</a>
-            <a href="/dashboard" class="dock-btn dash-btn" id="dash-desktop" style="display: none;">👤 Mein Konto</a>
+            <LanguageSwitcher />
+            <a href="/login" class="dock-btn" id="login-desktop" data-i18n="nav.login">Anmelden</a>
+            <a href="/dashboard" class="dock-btn dash-btn" id="dash-desktop" style="display: none;">👤 <span data-i18n="nav.account">Mein Konto</span></a>
         </div>
     </nav>
 
     <div class="mobile-menu-overlay" id="menu">
         <nav class="mobile-links">
-            <a href="/suche">Inserate</a>
-            <a href="/ueber-uns">Über uns</a>
-            <a href="/ratgeber">Ratgeber</a>
-            <a href="/#faq">FAQ</a>
-            <a href="/kontakt">Kontakt</a>
-            <a href="/login" class="btn-highlight" id="login-mobile">Anmelden</a>
-            <a href="/dashboard" class="btn-highlight dash-btn" id="dash-mobile" style="display: none;">👤 Mein Konto</a>
+            <a href="/suche" data-i18n="nav.listings">Inserate</a>
+            <a href="/ueber-uns" data-i18n="nav.about">Über uns</a>
+            <a href="/ratgeber" data-i18n="nav.guide">Ratgeber</a>
+            <a href="/#faq" data-i18n="nav.faq">FAQ</a>
+            <a href="/kontakt" data-i18n="nav.contact">Kontakt</a>
+            <a href="/login" class="btn-highlight" id="login-mobile" data-i18n="nav.login">Anmelden</a>
+            <a href="/dashboard" class="btn-highlight dash-btn" id="dash-mobile" style="display: none;">👤 <span data-i18n="nav.account">Mein Konto</span></a>
         </nav>
     </div>
 
@@ -133,6 +138,19 @@
         background: linear-gradient(to bottom, rgba(50,50,50,0.95) 0%, rgba(50,50,50,0) 100%);
     }
 
+    .mobile-bar-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .auth-container {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-shrink: 0;
+    }
+
     .burger-wrapper {
         border-radius: 16px; border: 1px solid rgba(255,255,255,0.1);
         background: rgba(74, 74, 74, 0.4); backdrop-filter: blur(15px);
@@ -169,32 +187,52 @@
             display: flex; 
             align-items: center; 
             justify-content: space-between; 
+            flex-wrap: nowrap;
             position: fixed; 
             top: 25px; 
             left: 50%; 
             transform: translateX(-50%); 
             z-index: 1000;
-            width: auto; 
-            min-width: 1050px; 
-            padding: 12px 12px 12px 40px; 
+            width: min(1050px, calc(100vw - 40px));
+            min-width: 0;
+            max-width: calc(100vw - 40px);
+            box-sizing: border-box;
+            padding: 10px 12px 10px 28px; 
             border-radius: 100px;
-            gap: 60px; background: rgba(36, 36, 36, 0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            gap: 20px;
+            background: rgba(36, 36, 36, 0.75); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
             animation: floatDown 1s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
         }
 
-        .dock-logo { margin-right: auto; padding-right: 20px; }
+        .dock-logo {
+            margin-right: 0;
+            padding-right: 8px;
+            flex-shrink: 0;
+            font-size: 1.15rem;
+        }
+
+        .dock-links {
+            display: flex;
+            flex-wrap: nowrap;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
         .dock-links a { 
             color: var(--text-muted, #aaa); 
-            font-size: 0.95rem; 
+            font-size: 0.88rem; 
             font-weight: 500; 
             text-decoration: none; 
-            padding: 8px 16px; 
+            padding: 8px 10px; 
             border-radius: 20px; 
             transition: 0.3s; 
             white-space: nowrap; 
+            flex-shrink: 0;
         }
-        .dock-links a { color: var(--text-muted, #aaa); font-size: 0.95rem; font-weight: 500; text-decoration: none; padding: 8px 16px; border-radius: 20px; transition: 0.3s; }
         
         .dock-links a:hover,
         .dock-links a.nav-active { 
@@ -208,11 +246,25 @@
             font-weight: 700;
         }
 
+        .auth-container {
+            gap: 8px;
+        }
+
+        .auth-container :global(.lang-trigger) {
+            width: 34px;
+            height: 34px;
+        }
+
+        .auth-container :global(.lang-flag) {
+            font-size: 1.1rem;
+        }
+
         .dock-btn {
-            background: var(--cyan); color: black; padding: 12px 28px; border-radius: 50px;
-            font-weight: 700; font-size: 0.9rem; text-decoration: none; transition: 0.3s;
+            background: var(--cyan); color: black; padding: 10px 20px; border-radius: 50px;
+            font-weight: 700; font-size: 0.85rem; text-decoration: none; transition: 0.3s;
             box-shadow: 0 4px 15px rgba(0, 188, 212, 0.25); white-space: nowrap;
             display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
         }
         .dock-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0, 188, 212, 0.4); }
 

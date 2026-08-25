@@ -46,6 +46,17 @@ const listings = (listingsRaw ?? []).map((item) => ({
   profiles: { nickname: nicknameByUserId[item.user_id] ?? 'Gast' },
 }));
 
+const { data: statsRows } = await supabase.rpc('get_homepage_stats');
+const rawStats = (statsRows?.[0] ?? {}) as Record<string, unknown>;
+const homepageStats = {
+  listings_count: Number(rawStats.listings_count ?? 0),
+  users_count: Number(rawStats.users_count ?? 0),
+  // Fallback 18, solange Migration noch nicht deployed ist (alte RPC ohne sold_count)
+  sold_count: Number(rawStats.sold_count ?? 18),
+};
+const formatStat = (value: unknown) =>
+  (Number.isFinite(Number(value)) ? Number(value) : 0).toLocaleString('de-DE');
+
   // ARTIKEL AUF STARTSEITE ALDEN UND SORTIEREN
  const allRatgeber = await getCollection('ratgeber');
 
@@ -60,22 +71,37 @@ const ratgeberTeaser = allRatgeber
 <Layout title="Startplätze kaufen & verkaufen">
     
     <div class="hero">
-        <div class="hero-content">
-            <div class="hero-badges">
-                <SocialShare />
-                <WhatsNew />
-            </div>
+        <div class="hero-utility-bar">
+            <SocialShare />
+            <WhatsNew />
+        </div>
 
-            <h1>Dein Rennen.<br> <span class="text-cyan">Mein Startplatz.</span></h1>
+        <div class="hero-content">
+            <h1><span data-i18n="home.heroLine1">Dein Rennen.</span><br> <span class="text-cyan" data-i18n="home.heroLine2">Mein Startplatz.</span></h1>
+
+            <div class="stats-row">
+                <div class="stat-card">
+                    <span class="stat-number">{formatStat(homepageStats.users_count)}</span>
+                    <span class="stat-label" data-i18n="home.statUsers">Registrierte Nutzer</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">{formatStat(homepageStats.listings_count)}</span>
+                    <span class="stat-label" data-i18n="home.statListings">Inserierte Startplätze</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">{formatStat(homepageStats.sold_count)}</span>
+                    <span class="stat-label" data-i18n="home.statSold">Verkaufte Startplätze</span>
+                </div>
+            </div>
             
-            <p class="hero-sub">
+            <p class="hero-sub" data-i18n-html="home.heroSub">
                 Die neue Plattform für Lauf, Rad, Triathlon & Hyrox.<br>
                 Fair. Transparent. <br> <strong>Von privat an privat.</strong>
             </p>
             
             <div class="btn-group">
-                <a href="#listings" class="btn-primary">Startplatz finden</a>
-                <a href="/inserieren" class="btn-secondary">Platz inserieren</a>
+                <a href="#listings" class="btn-primary" data-i18n="home.findSpot">Startplatz finden</a>
+                <a href="/inserieren" class="btn-secondary" data-i18n="home.listSpot">Platz inserieren</a>
             </div>
         </div>
     </div>
@@ -92,8 +118,8 @@ const ratgeberTeaser = allRatgeber
                     </svg>
                     <div class="icon-glow"></div>
                 </div>
-                <h3>Echte Community</h3>
-                <p>Von Privat an Privat. Du kaufst direkt von anderen Athleten. Wir stellen die Technik bereit, damit ihr euch findet. Ohne Zwischenhändler.</p>
+                <h3 data-i18n="home.trustCommunityTitle">Echte Community</h3>
+                <p data-i18n="home.trustCommunityText">Von Privat an Privat. Du kaufst direkt von anderen Athleten. Wir stellen die Technik bereit, damit ihr euch findet. Ohne Zwischenhändler.</p>
             </div>
 
             <div class="trust-card">
@@ -103,8 +129,8 @@ const ratgeberTeaser = allRatgeber
                     </svg>
                     <div class="icon-glow"></div>
                 </div>
-                <h3>Faire Abwicklung</h3>
-                <p>Direkte Kommunikation zwischen dem Verkäufer und dir. Seid fair zu einander und gestaltet so ein positives Erlebnis für uns Alle.</p>
+                <h3 data-i18n="home.trustFairTitle">Faire Abwicklung</h3>
+                <p data-i18n="home.trustFairText">Direkte Kommunikation zwischen dem Verkäufer und dir. Seid fair zu einander und gestaltet so ein positives Erlebnis für uns Alle.</p>
             </div>
 
             <div class="trust-card">
@@ -114,8 +140,8 @@ const ratgeberTeaser = allRatgeber
                     </svg>
                     <div class="icon-glow"></div>
                 </div>
-                <h3>Einfach & Schnell</h3>
-                <p>In 2 Minuten inseriert, blitzschnell gefunden. Egal ob Last-Minute oder lang geplanter Start. Hier wird jeder fündig.</p>
+                <h3 data-i18n="home.trustFastTitle">Einfach & Schnell</h3>
+                <p data-i18n="home.trustFastText">In 2 Minuten inseriert, blitzschnell gefunden. Egal ob Last-Minute oder lang geplanter Start. Hier wird jeder fündig.</p>
             </div>
 
         </div>
@@ -126,8 +152,8 @@ const ratgeberTeaser = allRatgeber
     <div class="container">
         <div class="section-header">
             <div class="header-title">
-                <span class="badge">Aktuell</span>
-                <h2>Neueste Inserate</h2>
+                <span class="badge" data-i18n="home.listingsBadge">Aktuell</span>
+                <h2 data-i18n="home.listingsTitle">Neueste Inserate</h2>
             </div>
             </div>
 
@@ -149,11 +175,11 @@ const ratgeberTeaser = allRatgeber
         </div>
             
         {(!listings || listings.length === 0) && (
-            <p class="no-listings">Aktuell keine Startplätze verfügbar. Inseriere den ersten!</p>
+            <p class="no-listings" data-i18n="home.noListings">Aktuell keine Startplätze verfügbar. Inseriere den ersten!</p>
         )}
 
         <div class="section-footer">
-            <a href="/suche" class="view-all">Alle anzeigen →</a>
+            <a href="/suche" class="view-all" data-i18n="home.viewAll">Alle anzeigen →</a>
         </div>
     </div> 
 </section>
@@ -164,8 +190,8 @@ const ratgeberTeaser = allRatgeber
     <div class="container">
         <div class="section-header">
             <div class="header-title">
-                <span class="badge">Wissen & Tipps</span>
-                <h2>Ratgeber</h2>
+                <span class="badge" data-i18n="home.guideBadge">Wissen & Tipps</span>
+                <h2 data-i18n="home.guideTitle">Ratgeber</h2>
             </div>
             </div>
 
@@ -176,14 +202,14 @@ const ratgeberTeaser = allRatgeber
                     <div class="ratgeber-content">
                         <h3>{artikel.data.title}</h3>
                         <p>{artikel.data.teaser}</p>
-                        <span class="read-more">Artikel lesen →</span>
+                        <span class="read-more" data-i18n="home.readArticle">Artikel lesen →</span>
                     </div>
                 </a>
             ))}
         </div>
 
         <div class="section-footer">
-             <a href="/ratgeber" class="view-all">Alle anzeigen →</a>
+             <a href="/ratgeber" class="view-all" data-i18n="home.viewAll">Alle anzeigen →</a>
         </div>
     </div>
 </section>
@@ -213,8 +239,9 @@ const ratgeberTeaser = allRatgeber
     .hero {
         min-height: 85vh;
         display: flex;
+        flex-direction: column;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start;
         text-align: center;
         /* Nahtloser Übergang von Hellgrau zu deinem Seiten-Grau */
         background: linear-gradient(
@@ -223,7 +250,7 @@ const ratgeberTeaser = allRatgeber
          #383838 60%,
         var(--bg-actual) 100%
         );
-        padding: 120px 20px 80px;
+        padding: 100px 20px 80px;
         margin: 0;
         border: none;
     }
@@ -231,18 +258,72 @@ const ratgeberTeaser = allRatgeber
     .hero-content {
         max-width: 900px;
         z-index: 10;
-    }
-
-    .hero-badges {
+        margin: 0 auto;
+        width: 100%;
+        flex: 1;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        gap: 0;
-        margin-bottom: 2rem;
+        justify-content: center;
     }
 
-    .hero-badges :global(.badge-container) {
-        margin-bottom: 0;
+    /* Gleiche Außenbreite wie Desktop-Dock — Social links, „Was ist neu?“ rechts bündig */
+    .hero-utility-bar {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        width: 100%;
+        max-width: 1050px;
+        margin: 0 auto 2rem;
+        padding: 0;
+        z-index: 10;
+        flex-shrink: 0;
+        box-sizing: border-box;
+    }
+
+    .hero-utility-bar :global(.badge-container),
+    .hero-utility-bar :global(.whats-new-trigger-wrap) {
+        margin: 0;
+        flex-shrink: 0;
+    }
+
+    .hero-utility-bar :global(.whats-new-trigger-wrap) {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    @media (min-width: 900px) {
+        .hero {
+            padding-top: 96px;
+        }
+
+        .hero-utility-bar {
+            width: min(1050px, calc(100vw - 40px));
+            max-width: calc(100vw - 40px);
+            justify-content: center;
+            gap: clamp(100px, 16vw, 240px);
+            padding: 0;
+        }
+    }
+
+    @media (max-width: 899px) {
+        .hero-utility-bar {
+            padding: 0 5px;
+        }
+    }
+
+    @media (max-width: 520px) {
+        .hero-utility-bar {
+            flex-direction: row;
+            align-items: center;
+            gap: 10px;
+            padding: 0 5px;
+        }
+
+        .hero-utility-bar :global(.whats-new-pill) {
+            width: auto;
+        }
     }
 
     .beta-badge {
@@ -271,6 +352,96 @@ const ratgeberTeaser = allRatgeber
     .text-cyan { 
         color: var(--cyan); 
         text-shadow: 0 0 40px rgba(0, 188, 212, 0.3); 
+    }
+
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        width: 100%;
+        max-width: 760px;
+        margin: 0 auto 36px;
+    }
+
+    @property --stat-card-angle {
+        syntax: '<angle>';
+        initial-value: 0deg;
+        inherits: false;
+    }
+
+    .stat-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        min-width: 0;
+        padding: 16px 12px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        backdrop-filter: blur(10px);
+        overflow: hidden;
+    }
+
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: conic-gradient(
+            from var(--stat-card-angle),
+            transparent 0%,
+            transparent 85%,
+            rgba(0, 188, 212, 0.9) 93%,
+            transparent 100%
+        );
+        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+        animation: stat-card-spin 6s linear infinite;
+    }
+
+    @keyframes stat-card-spin {
+        to {
+            --stat-card-angle: 360deg;
+        }
+    }
+
+    .stat-number,
+    .stat-label {
+        position: relative;
+        z-index: 1;
+    }
+
+    .stat-number {
+        color: var(--cyan);
+        font-size: clamp(1.4rem, 4vw, 2rem);
+        font-weight: 900;
+        line-height: 1.1;
+    }
+
+    .stat-label {
+        color: #888;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        text-align: center;
+        line-height: 1.35;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .stat-card::before {
+            animation: none;
+            background: rgba(0, 188, 212, 0.35);
+            -webkit-mask: none;
+            mask: none;
+            padding: 0;
+            border: 1px solid rgba(0, 188, 212, 0.35);
+        }
     }
 
     .hero-sub {
@@ -396,182 +567,11 @@ const ratgeberTeaser = allRatgeber
         h2 { font-size: 2.2rem; }
         
         .hero { min-height: 70vh; padding-top: 80px; }
-    }
 
-    /* --- VARIABLEN & RESET --- */
-    :root {
-        --bg-actual: #323232; 
-        --cyan: #00bcd4;
-        --text-muted: #aaa;
-    }
-
-    :global(body) {
-        background-color: var(--bg-actual);
-        margin: 0;
-        padding: 0;
-    }
-
-    /* --- HERO SEKTION --- */
-    .hero {
-        min-height: 85vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        background: linear-gradient(to bottom, #454545 0%, #383838 60%, var(--bg-actual) 100%);
-        padding: 120px 20px 80px;
-        margin: 0;
-        border: none;
-    }
-
-    .hero-content {
-        max-width: 900px;
-        z-index: 10;
-    }
-
-    .hero-badges {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0;
-        margin-bottom: 2rem;
-    }
-
-    .hero-badges :global(.badge-container) {
-        margin-bottom: 0;
-    }
-
-    .beta-badge {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: #888;
-        font-size: 0.75rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-        padding: 8px 20px;
-        border-radius: 50px;
-        display: inline-block;
-        margin-bottom: 25px;
-    }
-
-    h1 {
-        font-size: clamp(2.8rem, 9vw, 5.5rem);
-        font-weight: 900;
-        line-height: 1.05;
-        margin-bottom: 30px;
-        letter-spacing: -3px;
-        color: white;
-    }
-
-    .text-cyan { 
-        color: var(--cyan); 
-        text-shadow: 0 0 40px rgba(0, 188, 212, 0.3); 
-    }
-
-    .hero-sub {
-        font-size: 1.3rem;
-        color: var(--text-muted);
-        max-width: 650px;
-        margin: 0 auto 50px;
-        line-height: 1.6;
-    }
-
-    /* --- HERO BUTTONS --- */
-    .btn-group { 
-        display: flex; 
-        gap: 20px; 
-        justify-content: center; 
-        flex-wrap: wrap; 
-        align-items: center; 
-    }
-
-    .btn-primary, .btn-secondary {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        box-sizing: border-box; 
-        min-height: 64px;       
-        padding: 0 38px;
-        border-radius: 50px; 
-        text-decoration: none;
-        font-size: 1.1rem;
-        transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-    }
-
-    .btn-primary {
-        background: var(--cyan); 
-        color: white; 
-        font-weight: 700;
-        border: 5px solid transparent;
-        box-shadow: 0 10px 20px rgba(0, 188, 212, 0.2);
-    }
-
-    .btn-primary:hover { 
-        transform: translateY(-3px); 
-        box-shadow: 0 15px 30px rgba(0, 188, 212, 0.4); 
-    }
-
-    .btn-secondary {
-        background: rgba(255, 255, 255, 0.03); 
-        color: white; 
-        font-weight: 600;
-        border: 1px solid rgba(255,255,255,0.1); 
-    }
-
-    .btn-secondary:hover { 
-        background: rgba(255,255,255,0.08); 
-        border-color: white; 
-    }
-
-    /* --- CONTAINER & LISTINGS PREVIEW --- */
-    .container { 
-        max-width: 1200px; 
-        margin: 0 auto;
-        padding: 0 20px;
-    }
-
-    .listings-preview {
-        padding: 80px 0 100px;
-        background-color: var(--bg-actual);
-    }
-    
-    .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-        margin-bottom: 60px;
-    }
-
-    .badge { 
-        color: var(--cyan); 
-        font-weight: 800; 
-        text-transform: uppercase; 
-        font-size: 0.8rem; 
-        letter-spacing: 1px; 
-    }
-
-    h2 { 
-        font-size: 2.8rem; 
-        color: white; 
-        font-weight: 900; 
-        margin-top: 10px; 
-        letter-spacing: -1px; 
-    }
-
-    .view-all { 
-        color: var(--cyan); 
-        text-decoration: none; 
-        font-weight: 600; 
-        transition: 0.3s; 
-    }
-
-    .view-all:hover { opacity: 0.8; }
-
-    .event-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr); 
-        gap: 30px; 
+        .stats-row {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
     }
 
     /* --- CSS FÜR DAS NEUE LAUNCH BANNER --- */

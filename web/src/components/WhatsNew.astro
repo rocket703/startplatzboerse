@@ -1,40 +1,15 @@
 ---
 const updates = [
-    {
-        title: 'Merkliste',
-        description:
-            'Startplätze mit dem Herz merken und jederzeit in deinem Dashboard wiederfinden – auch ohne sofort zu kaufen.',
-        status: 'live',
-    },
-    {
-        title: 'Support-Chat',
-        description:
-            'Direkter Draht zum Team wie in der App – jetzt auch auf der Kontaktseite im Web verfügbar.',
-        status: 'live',
-    },
-    {
-        title: 'Neue Suche',
-        description:
-            'Filter, Umkreis und Distanz-Vorgaben – die durchdachte Suche aus der App, jetzt auf der Website.',
-        status: 'live',
-    },
-    {
-        title: 'Neues Dashboard',
-        description:
-            'Übersichtlicher, klarer und schneller: deine Inserate, Merkliste und Nachrichten an einem Ort.',
-        status: 'live',
-    },
-    {
-        title: 'Bearbeitung verbessert',
-        description:
-            'Eigene Inserate kannst du jetzt wie in der App bearbeiten: Preis + Festpreis/VB, Beschreibung, Adresse und Event-Website.',
-        status: 'live',
-    },
-];
+    { key: 'watchlist', status: 'live' },
+    { key: 'supportChat', status: 'live' },
+    { key: 'search', status: 'live' },
+    { key: 'dashboard', status: 'live' },
+    { key: 'edit', status: 'live' },
+] as const;
 ---
 
 <div class="whats-new-trigger-wrap">
-    <button type="button" class="whats-new-pill" id="whats-new-open" aria-haspopup="dialog" aria-controls="whats-new-dialog">
+    <button type="button" class="whats-new-pill" id="whats-new-open" aria-haspopup="dialog" aria-controls="whats-new-dialog" data-i18n="whatsNew.open">
         Was ist neu?
     </button>
 </div>
@@ -53,10 +28,10 @@ const updates = [
         <header class="whats-new-header">
             <div>
                 <p class="whats-new-kicker">Version 2.0.1</p>
-                <h2 id="whats-new-title">Was ist neu?</h2>
-                <p class="whats-new-lead">Die wichtigsten Neuerungen auf einen Blick.</p>
+                <h2 id="whats-new-title" data-i18n="whatsNew.title">Was ist neu?</h2>
+                <p class="whats-new-lead" data-i18n="whatsNew.lead">Die wichtigsten Neuerungen auf einen Blick.</p>
             </div>
-            <button type="button" class="whats-new-close" id="whats-new-close" aria-label="Schließen">
+            <button type="button" class="whats-new-close" id="whats-new-close" data-i18n-aria="whatsNew.close" aria-label="Schließen">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                     <path d="M18 6L6 18M6 6l12 12" stroke-linecap="round" />
                 </svg>
@@ -73,21 +48,21 @@ const updates = [
                     </span>
                     <div class="whats-new-item-body">
                         <div class="whats-new-item-top">
-                            <h3>{item.title}</h3>
+                            <h3 data-i18n={`whatsNew.items.${item.key}.title`}></h3>
                             {item.status === 'soon' ? (
-                                <span class="whats-new-tag soon">Demnächst</span>
+                                <span class="whats-new-tag soon" data-i18n="whatsNew.tagSoon">Demnächst</span>
                             ) : (
-                                <span class="whats-new-tag live">Neu</span>
+                                <span class="whats-new-tag live" data-i18n="whatsNew.tagLive">Neu</span>
                             )}
                         </div>
-                        <p>{item.description}</p>
+                        <p data-i18n={`whatsNew.items.${item.key}.description`}></p>
                     </div>
                 </li>
             ))}
         </ul>
 
         <footer class="whats-new-footer">
-            <button type="button" class="whats-new-cta" id="whats-new-dismiss">Alles klar</button>
+            <button type="button" class="whats-new-cta" id="whats-new-dismiss" data-i18n="whatsNew.dismiss">Alles klar</button>
         </footer>
     </div>
 </div>
@@ -95,8 +70,8 @@ const updates = [
 <style>
     .whats-new-trigger-wrap {
         display: flex;
-        justify-content: center;
-        margin-top: 0.65rem;
+        justify-content: flex-end;
+        margin-top: 0;
     }
 
     .whats-new-pill {

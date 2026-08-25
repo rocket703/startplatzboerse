@@ -88,6 +88,19 @@ import Popup from '../components/Popup.astro';
             </div>
         </Popup>
 
+        <Popup id="archive-popup" title="Inserat archivieren">
+            <p style="color: #ccc; margin-bottom: 20px; line-height: 1.55;">
+                Das Inserat wird aus der öffentlichen Suche entfernt, bleibt aber in deinem Archiv erhalten.
+                <br><br>
+                <strong style="color: #fff;">Wurde der Startplatz über die Startplatzbörse verkauft?</strong>
+            </p>
+            <div class="archive-popup-btns">
+                <button type="button" id="archive-sold-yes" class="btn-action-main">Ja, verkauft</button>
+                <button type="button" id="archive-sold-no" class="btn-archive-neutral">Nein, anderer Grund</button>
+                <button type="button" class="btn-close-modal" onclick="document.getElementById('archive-popup').style.display='none'">Abbrechen</button>
+            </div>
+        </Popup>
+
         <div id="edit-modal" class="modal-overlay" style="display:none;">
             <div class="modal-content glass-card">
                 <h3 style="margin-bottom: 20px;">Inserat bearbeiten</h3>
@@ -507,6 +520,12 @@ import Popup from '../components/Popup.astro';
     .btn-close-modal:hover { background: var(--bg-card); color: white; }
     .btn-action-main { flex: 1.5; padding: 16px; border-radius: 14px; background: var(--cyan); border: none; color: #000; font-weight: 900; cursor: pointer; transition: 0.2s; }
     .btn-action-main:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0, 188, 212, 0.3); }
+    .archive-popup-btns { display: flex; flex-direction: column; gap: 10px; }
+    .archive-popup-btns .btn-action-main,
+    .archive-popup-btns .btn-archive-neutral,
+    .archive-popup-btns .btn-close-modal { width: 100%; flex: none; }
+    .btn-archive-neutral { padding: 16px; border-radius: 14px; background: #444; border: none; color: #fff; font-weight: 800; cursor: pointer; transition: 0.2s; }
+    .btn-archive-neutral:hover { background: #555; }
 
     #new-price { background: transparent; border: none; color: white; font-size: 4rem; font-weight: 900; width: 100%; text-align: center; outline: none; }
     #new-price::-webkit-outer-spin-button, #new-price::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
@@ -1335,54 +1354,70 @@ container.style.overflow = 'hidden';
         deleteId = id;
         const isAlreadyArchived = currentStatus === 'archived';
         const confirmBtn = document.getElementById('confirm-action-btn');
-        if (!confirmBtn) return;
+        const archivePopup = document.getElementById('archive-popup');
+        const archiveYesBtn = document.getElementById('archive-sold-yes');
+        const archiveNoBtn = document.getElementById('archive-sold-no');
 
         if (!isAlreadyArchived) {
-            showPopup(
-                "Inserat archivieren", 
-                "Das Inserat wird aus der öffentlichen Suche entfernt, bleibt aber in deinem Archiv erhalten.", 
-                true
-            );
-            confirmBtn.innerText = "Jetzt archivieren";
-            confirmBtn.style.backgroundColor = "#444";
-            confirmBtn.onclick = async () => {
-                confirmBtn.disabled = true;
-                confirmBtn.innerText = "Wird archiviert...";
-                const { error } = await supabase
-                    .from('listings')
-                    .update({ status: 'archived' })
-                    .eq('id', deleteId);
-                if (!error) {
-                    location.reload();
-                } else {
-                    alert("Fehler beim Archivieren: " + error.message);
-                    confirmBtn.disabled = false;
-                }
-            };
-        } else {
-            showPopup(
-                "Endgültig löschen", 
-                "Möchtest du dieses Inserat wirklich unwiderruflich aus deinem Konto entfernen? Diese Aktion kann nicht rückgängig gemacht werden.", 
-                true
-            );
-            confirmBtn.innerText = "Unwiderruflich löschen";
-            confirmBtn.style.backgroundColor = "#ff4d4d";
-            confirmBtn.onclick = async () => {
-                confirmBtn.disabled = true;
-                confirmBtn.innerText = "Lösche...";
-                const { error } = await supabase
-                    .from('listings')
-                    .delete()
-                    .eq('id', deleteId);
-                if (!error) {
-                    location.reload();
-                } else {
-                    alert("Fehler beim Löschen: " + error.message);
-                    confirmBtn.disabled = false;
-                }
-            };
+            if (archivePopup) {
+                archivePopup.style.display = 'flex';
+            }
+            return;
         }
+
+        if (!confirmBtn) return;
+
+        showPopup(
+            "Endgültig löschen", 
+            "Möchtest du dieses Inserat wirklich unwiderruflich aus deinem Konto entfernen? Diese Aktion kann nicht rückgängig gemacht werden.", 
+            true
+        );
+        confirmBtn.innerText = "Unwiderruflich löschen";
+        confirmBtn.style.backgroundColor = "#ff4d4d";
+        confirmBtn.onclick = async () => {
+            confirmBtn.disabled = true;
+            confirmBtn.innerText = "Lösche...";
+            const { error } = await supabase
+                .from('listings')
+                .delete()
+                .eq('id', deleteId);
+            if (!error) {
+                location.reload();
+            } else {
+                alert("Fehler beim Löschen: " + error.message);
+                confirmBtn.disabled = false;
+            }
+        };
     };
+
+    async function archiveListingWithSoldFlag(soldViaPlatform) {
+        const yesBtn = document.getElementById('archive-sold-yes');
+        const noBtn = document.getElementById('archive-sold-no');
+        if (yesBtn) yesBtn.disabled = true;
+        if (noBtn) noBtn.disabled = true;
+
+        const { error } = await supabase
+            .from('listings')
+            .update({ status: 'archived', sold_via_platform: soldViaPlatform })
+            .eq('id', deleteId);
+
+        if (!error) {
+            location.reload();
+            return;
+        }
+
+        alert("Fehler beim Archivieren: " + error.message);
+        if (yesBtn) yesBtn.disabled = false;
+        if (noBtn) noBtn.disabled = false;
+    }
+
+    document.getElementById('archive-sold-yes')?.addEventListener('click', () => {
+        archiveListingWithSoldFlag(true);
+    });
+
+    document.getElementById('archive-sold-no')?.addEventListener('click', () => {
+        archiveListingWithSoldFlag(false);
+    });
     
 // Öffnet das Bearbeitungsmodal und lädt die aktuellen Daten (App-Style).
     /** @param {string} id @param {string} price */

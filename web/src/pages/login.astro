@@ -8,50 +8,50 @@ import FeedbackBanner from '../components/FeedbackBanner.astro';
     <main class="login-container">
         <div class="login-card">
             <div class="login-header">
-                <span class="badge" id="top-badge">Sicherer Zugang</span>
-                <h1 id="main-title">Willkommen zurück</h1>
-                <p id="status-text">Gib deine E-Mail ein, um dich anzumelden oder ein Konto zu erstellen.</p>
+                <span class="badge" id="top-badge" data-i18n="login.badge">Sicherer Zugang</span>
+                <h1 id="main-title" data-i18n="login.titleWelcome">Willkommen zurück</h1>
+                <p id="status-text" data-i18n="login.statusEmail">Gib deine E-Mail ein, um dich anzumelden oder ein Konto zu erstellen.</p>
             </div>
 
             <div id="step-email">
                 <div class="input-group">
-                    <label>E-Mail Adresse</label>
-                    <input type="email" id="email" placeholder="name@beispiel.de" required maxlength="50" />
+                    <label data-i18n="login.emailLabel">E-Mail Adresse</label>
+                    <input type="email" id="email" placeholder="name@beispiel.de" data-i18n-placeholder="login.emailPlaceholder" required maxlength="50" />
                 </div>
-                <button id="btn-send-code" class="btn-primary">Code anfordern</button>
+                <button id="btn-send-code" class="btn-primary" data-i18n="login.sendCode">Code anfordern</button>
             </div>
 
             <div id="step-code" style="display: none;">
                 <div class="input-group">
-                    <label>6-stelliger Code</label>
-                    <input type="text" id="otp-code" placeholder="123456" maxlength="6" autocomplete="one-time-code" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
+                    <label data-i18n="login.codeLabel">6-stelliger Code</label>
+                    <input type="text" id="otp-code" placeholder="123456" data-i18n-placeholder="login.codePlaceholder" maxlength="6" autocomplete="one-time-code" oninput="this.value = this.value.replace(/[^0-9]/g, '')" />
                 </div>
-                <button id="btn-verify" class="btn-primary">Anmelden & Weiter</button>
-                <button id="btn-back" class="btn-link">Andere E-Mail nutzen</button>
+                <button id="btn-verify" class="btn-primary" data-i18n="login.verify">Anmelden & Weiter</button>
+                <button id="btn-back" class="btn-link" data-i18n="login.backEmail">Andere E-Mail nutzen</button>
             </div>
 
            <div id="step-register" style="display: none;">
     <div class="input-group">
-        <label>Vorname</label>
-        <input type="text" id="vorname" placeholder="Dein Vorname" maxlength="30" />
+        <label data-i18n="login.firstName">Vorname</label>
+        <input type="text" id="vorname" placeholder="Dein Vorname" data-i18n-placeholder="login.firstPlaceholder" maxlength="30" />
     </div>
     <div class="input-group">
-        <label>Nachname</label>
-        <input type="text" id="nachname" placeholder="Dein Nachname" maxlength="30" />
+        <label data-i18n="login.lastName">Nachname</label>
+        <input type="text" id="nachname" placeholder="Dein Nachname" data-i18n-placeholder="login.lastPlaceholder" maxlength="30" />
     </div>
     <div class="input-group">
-        <label>Nickname</label>
-        <input type="text" id="nickname" placeholder="3-20 Zeichen" maxlength="20" />
+        <label data-i18n="login.nickname">Nickname</label>
+        <input type="text" id="nickname" placeholder="3-20 Zeichen" data-i18n-placeholder="login.nickPlaceholder" maxlength="20" />
     </div>
 
     <div class="checkbox-group">
     <input type="checkbox" id="agb-consent" />
-    <label for="agb-consent" class="agb-label">
+    <label for="agb-consent" class="agb-label" data-i18n-html="login.agbConsent">
         Ich stimme den <a href="/agb" class="agb-link" target="_blank">AGB</a> zu.
     </label>
 </div>  
 
-    <button id="btn-complete-profile" class="btn-primary">Profil speichern & Starten</button>
+    <button id="btn-complete-profile" class="btn-primary" data-i18n="login.saveProfile">Profil speichern & Starten</button>
 </div>
             
             <FeedbackBanner id="error-msg" />
@@ -65,6 +65,7 @@ import FeedbackBanner from '../components/FeedbackBanner.astro';
     import { createClient } from '@supabase/supabase-js';
     import { hideFeedback, showFeedbackError } from '../lib/feedback-banner';
     import { flushPendingWatchlist } from '../lib/watchlist';
+    import { t } from '../i18n';
 
     // Supabase-Client starten
     const supabase = createClient(
@@ -100,12 +101,12 @@ import FeedbackBanner from '../components/FeedbackBanner.astro';
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
         // Validierung der E-Mail
-        if (!email) return showError("Bitte E-Mail Adresse eingeben.");
-        if (!emailRegex.test(email)) return showError("Das ist keine gültige E-Mail Adresse.");
+        if (!email) return showError(t('login.errEmail'));
+        if (!emailRegex.test(email)) return showError(t('login.errEmailInvalid'));
 
         // Button deaktivieren, um Mehrfachklicks zu verhindern
         const btn = e.target;
-        btn.innerText = "Sende...";
+        btn.innerText = t('login.sending');
         btn.disabled = true;
 
         // Anfrage an Supabase senden
@@ -113,13 +114,13 @@ import FeedbackBanner from '../components/FeedbackBanner.astro';
 
         if (error) {
             showError("Fehler: " + error.message);
-            btn.innerText = "Code anfordern"; // Reset Button
+            btn.innerText = t('login.sendCode'); // Reset Button
             btn.disabled = false;
         } else {
             // UI umschalten: Email-Feld weg, Code-Feld her
             if(stepEmail) stepEmail.style.display = 'none';
             if(stepCode) stepCode.style.display = 'block';
-            if(statusText) statusText.innerText = `Code gesendet an: ${email}`;
+            if(statusText) statusText.innerText = t('login.codeSentTo', { email });
             otpInput.focus();
         }
     });
@@ -130,10 +131,10 @@ import FeedbackBanner from '../components/FeedbackBanner.astro';
         const email = emailInput.value.trim();
         const token = otpInput.value.trim();
 
-        if (token.length < 6) return showError("Der Code muss 6-stellig sein.");
+        if (token.length < 6) return showError(t('login.errCodeLength'));
 
         const btn = e.target;
-        btn.innerText = "Prüfe...";
+        btn.innerText = t('login.checking');
         btn.disabled = true;
 
         // Versuch 1: Login als bestehender User ('email')
@@ -152,8 +153,8 @@ import FeedbackBanner from '../components/FeedbackBanner.astro';
 
         // Ergebnis prüfen
         if (authError || !authData.user) {
-            showError("Code ungültig oder abgelaufen.");
-            btn.innerText = "Anmelden & Weiter";
+            showError(t('login.errCode'));
+            btn.innerText = t('login.verify');
             btn.disabled = false;
         } else {
             // Prüfen, ob der User schon ein Profil hat
@@ -171,8 +172,8 @@ import FeedbackBanner from '../components/FeedbackBanner.astro';
                 // Neuer User -> UI umschalten zum Profil-Erstellen
                 if(stepCode) stepCode.style.display = 'none';
                 if(stepRegister) stepRegister.style.display = 'block';
-                if(mainTitle) mainTitle.innerText = "Willkommen!";
-                if(statusText) statusText.innerText = "Erstelle kurz dein Profil.";
+                if(mainTitle) mainTitle.innerText = t('login.welcome');
+                if(statusText) statusText.innerText = t('login.createProfile');
             }
         }
     });
@@ -194,7 +195,7 @@ import FeedbackBanner from '../components/FeedbackBanner.astro';
         const agbCheckbox = document.getElementById('agb-consent');
         
         if (!agbCheckbox || !agbCheckbox.checked) {
-             return showError("Bitte stimme den AGB zu, um fortzufahren.");
+             return showError(t('login.errAgb'));
         }
         // +++ ENDE NEU +++
 
@@ -203,12 +204,12 @@ import FeedbackBanner from '../components/FeedbackBanner.astro';
         const nameRegex = /^[a-zA-ZÀ-ÿ\s\-]{2,30}$/;
 
         // Eingaben validieren
-        if (!nameRegex.test(first_name)) return showError("Vorname ungültig (Nur Buchstaben, 2-30 Zeichen).");
-        if (!nameRegex.test(last_name)) return showError("Nachname ungültig (Nur Buchstaben, 2-30 Zeichen).");
-        if (!nicknameRegex.test(nickname)) return showError("Nickname ungültig: 3-20 Zeichen, nur Buchstaben, Zahlen & Unterstrich.");
+        if (!nameRegex.test(first_name)) return showError(t('login.errFirstName'));
+        if (!nameRegex.test(last_name)) return showError(t('login.errLastName'));
+        if (!nicknameRegex.test(nickname)) return showError(t('login.errNickname'));
 
         const btn = e.target;
-        btn.innerText = "Speichere...";
+        btn.innerText = t('login.saving');
         btn.disabled = true;
 
         // Daten in Supabase 'profiles' Tabelle speichern
@@ -229,7 +230,7 @@ import FeedbackBanner from '../components/FeedbackBanner.astro';
             } else {
                 showError("Fehler: " + error.message);
             }
-            btn.innerText = "Profil speichern & Starten";
+            btn.innerText = t('login.saveProfile');
             btn.disabled = false;
         } else {
             const urlParams = new URLSearchParams(window.location.search);
@@ -243,7 +244,7 @@ import FeedbackBanner from '../components/FeedbackBanner.astro';
         hideError();
         if(stepEmail) stepEmail.style.display = 'block';
         if(stepCode) stepCode.style.display = 'none';
-        if(statusText) statusText.innerText = "Gib deine E-Mail ein, um dich anzumelden.";
+        if(statusText) statusText.innerText = t('login.statusEmail');
     });
 </script>
 
