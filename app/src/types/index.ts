@@ -20,6 +20,7 @@ export type Listing = {
   elevation_gain_m?: number | null;
   elevation_loss_m?: number | null;
   listing_meta?: Record<string, unknown> | null;
+  sold_via_platform?: boolean | null;
   swim_dist: number | null;
   bike_dist: number | null;
   run_dist: number | null;

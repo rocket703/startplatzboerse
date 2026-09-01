@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { t } from '../i18n';
 
 const PENDING_WATCHLIST_KEY = 'spb_pending_watchlist';
 
@@ -162,7 +163,8 @@ export function syncHeartButtons(ids: Set<string>, root: ParentNode = document) 
         const saved = ids.has(id);
         btn.classList.toggle('is-saved', saved);
         btn.setAttribute('aria-pressed', saved ? 'true' : 'false');
-        btn.setAttribute('aria-label', saved ? 'Aus Merkliste entfernen' : 'Merken');
+        btn.setAttribute('aria-label', saved ? t('eventCard.unsave') : t('eventCard.save'));
+        btn.setAttribute('data-i18n-aria', saved ? 'eventCard.unsave' : 'eventCard.save');
     });
 }
 
@@ -170,7 +172,7 @@ export const HEART_ICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" fill="non
 
 export function heartButtonHtml(listingId: string): string {
     const safeId = String(listingId).replace(/"/g, '');
-    return `<button type="button" class="heart-corner heart-btn" data-watchlist-id="${safeId}" aria-label="Merken" aria-pressed="false">${HEART_ICON_SVG}</button>`;
+    return `<button type="button" class="heart-corner heart-btn" data-watchlist-id="${safeId}" data-i18n-aria="eventCard.save" aria-label="${t('eventCard.save')}" aria-pressed="false">${HEART_ICON_SVG}</button>`;
 }
 
 let delegationBound = false;

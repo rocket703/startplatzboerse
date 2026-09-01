@@ -3,6 +3,7 @@ import { getEntry } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import Footer from '../../components/Footer.astro';
 import NotFoundPage from '../../components/NotFoundPage.astro';
+import { ratgeberArticleKey } from '../../i18n';
 
 const { slug } = Astro.params;
 const entry = await getEntry('ratgeber', slug as string);
@@ -13,6 +14,7 @@ if (!entry) {
 
 const rendered = entry ? await entry.render() : null;
 const Content = rendered?.Content;
+const articleKey = entry ? ratgeberArticleKey(entry) : '';
 ---
 
 {!entry || !Content ? (
@@ -31,22 +33,30 @@ const Content = rendered?.Content;
       <span class="badge-cyan">{entry.data.category || 'Ratgeber'}</span>
       {entry.data.readingTime && <span class="read-time">{entry.data.readingTime}</span>}
     </div>
-    <h1>{entry.data.title}</h1>
+    <h1 data-i18n={`ratgeber.articles.${articleKey}.title`}>{entry.data.title}</h1>
   </div>
 </header>
 
     <section class="article-body">
       <div class="container container-narrow">
+        <aside
+          class="article-lang-notice"
+          data-i18n="ratgeber.germanOnly"
+          data-hide-if-locale="de"
+        >
+          Dieser Artikel ist nur auf Deutsch verfügbar.
+        </aside>
+
         <div class="prose">
           <Content />
         </div>
 
         <div class="article-cta">
-          <h3>Dein Plan hat sich geändert?</h3>
-          <p>Lass dein Ticket nicht verfallen. Inseriere es jetzt kostenlos in der Community.</p>
+          <h3 data-i18n="ratgeber.articleCtaTitle">Dein Plan hat sich geändert?</h3>
+          <p data-i18n="ratgeber.articleCtaP">Lass dein Ticket nicht verfallen. Inseriere es jetzt kostenlos in der Community.</p>
           <div class="cta-actions">
-            <a href="/inserieren" class="btn-primary">Startplatz inserieren</a>
-            <a href="/" class="btn-ghost">Zur Übersicht</a>
+            <a href="/inserieren" class="btn-primary" data-i18n="ratgeber.articleCtaBtn">Startplatz inserieren</a>
+            <a href="/" class="btn-ghost" data-i18n="ratgeber.articleCtaBack">Zur Übersicht</a>
           </div>
         </div>
       </div>
@@ -73,6 +83,17 @@ const Content = rendered?.Content;
 
   .container-narrow {
     max-width: 880px; 
+  }
+
+  .article-lang-notice {
+    margin: 0 0 28px;
+    padding: 14px 18px;
+    border-radius: 12px;
+    background: rgba(0, 188, 212, 0.08);
+    border: 1px solid rgba(0, 188, 212, 0.25);
+    color: #b8e8ef;
+    font-size: 0.92rem;
+    line-height: 1.5;
   }
 
   /* --- 2. HERO SEKTION --- */

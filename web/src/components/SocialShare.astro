@@ -4,81 +4,70 @@ const igLink = "https://www.instagram.com/startplatzboerse?igsh=eDN6ZWxuNXRoeWFh
 ---
 
 <div class="badge-container">
-  <div class="social-badge">
-    <span class="badge-text">Folge uns:</span>
-    <div class="icon-group">
-      <a href={fbLink} target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
-      <a href={igLink} target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
-    </div>
+  <div class="icon-group" aria-label="Social">
+    <a href={fbLink} target="_blank" rel="noopener noreferrer" class="social-icon social-fb" aria-label="Facebook">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+        <path fill="currentColor" d="M14.5 8.5V6.8c0-.7.1-1.1 1.1-1.1H17V3h-2.3C11.9 3 11 4.5 11 6.6v1.9H9v2.8h2V21h3.5v-9.7h2.3l.5-2.8h-2.8z"/>
+      </svg>
+    </a>
+    <a href={igLink} target="_blank" rel="noopener noreferrer" class="social-icon social-ig" aria-label="Instagram">
+      <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false">
+        <path fill="currentColor" d="M12 7.2A4.8 4.8 0 1 0 12 16.8 4.8 4.8 0 0 0 12 7.2zm0 7.9a3.1 3.1 0 1 1 0-6.2 3.1 3.1 0 0 1 0 6.2zM17.5 6.9a1.12 1.12 0 1 1-2.24 0 1.12 1.12 0 0 1 2.24 0z"/>
+        <path fill="currentColor" d="M12 2.2c2.7 0 3.05.01 4.12.06 1.05.05 1.77.22 2.39.46.64.25 1.18.58 1.72 1.12.54.54.87 1.08 1.12 1.72.24.62.41 1.34.46 2.39.05 1.07.06 1.42.06 4.12s-.01 3.05-.06 4.12c-.05 1.05-.22 1.77-.46 2.39a4.86 4.86 0 0 1-1.12 1.72 4.86 4.86 0 0 1-1.72 1.12c-.62.24-1.34.41-2.39.46-1.07.05-1.42.06-4.12.06s-3.05-.01-4.12-.06c-1.05-.05-1.77-.22-2.39-.46a4.86 4.86 0 0 1-1.72-1.12 4.86 4.86 0 0 1-1.12-1.72c-.24-.62-.41-1.34-.46-2.39C2.21 15.05 2.2 14.7 2.2 12s.01-3.05.06-4.12c.05-1.05.22-1.77.46-2.39.25-.64.58-1.18 1.12-1.72.54-.54 1.08-.87 1.72-1.12.62-.24 1.34-.41 2.39-.46C8.95 2.21 9.3 2.2 12 2.2zm0 1.7c-2.67 0-2.98.01-4.03.06-.97.04-1.5.21-1.85.34-.47.18-.8.4-1.15.75-.35.35-.57.68-.75 1.15-.14.35-.3.88-.34 1.85-.05 1.05-.06 1.36-.06 4.03s.01 2.98.06 4.03c.04.97.21 1.5.34 1.85.18.47.4.8.75 1.15.35.35.68.57 1.15.75.35.14.88.3 1.85.34 1.05.05 1.36.06 4.03.06s2.98-.01 4.03-.06c.97-.04 1.5-.21 1.85-.34.47-.18.8-.4 1.15-.75.35-.35.57-.68.75-1.15.14-.35.3-.88.34-1.85.05-1.05.06-1.36.06-4.03s-.01-2.98-.06-4.03c-.04-.97-.21-1.5-.34-1.85a3.1 3.1 0 0 0-.75-1.15 3.1 3.1 0 0 0-1.15-.75c-.35-.14-.88-.3-1.85-.34-1.05-.05-1.36-.06-4.03-.06z"/>
+      </svg>
+    </a>
   </div>
 </div>
 
 <style>
   .badge-container {
     display: flex;
-    justify-content: center;
-    margin-bottom: 2rem; /* Perfekter Abstand zur Überschrift */
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  }
-
-  .social-badge {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: rgba(255, 255, 255, 0.03); /* Sehr dezenter, heller Hintergrund */
-    border: 1px solid rgba(255, 255, 255, 0.08); /* Feiner Rahmen */
-    border-radius: 40px; /* Die Pillen-Form */
-    padding: 6px 8px 6px 16px;
-    backdrop-filter: blur(10px); /* Moderner Glassmorphism-Touch */
-  }
-
-  .badge-text {
-    color: #888888;
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    font-weight: 600;
+    justify-content: flex-start;
+    margin: 0;
   }
 
   .icon-group {
     display: flex;
-    gap: 6px;
+    align-items: center;
+    gap: 10px;
   }
 
-  .icon-group a {
-    display: flex;
+  .social-icon {
+    display: inline-flex;
     justify-content: center;
     align-items: center;
-    width: 32px; /* Perfekte Größe für den Finger auf dem Handy */
-    height: 32px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.05);
-    color: #b0b0b0;
+    color: #ffffff !important;
     text-decoration: none;
-    font-size: 0.9rem;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
   }
 
-  /* Der Glow-Effekt in deiner Brandfarbe */
-  .icon-group a:hover,
-  .icon-group a:active {
-    background: #00bcd4;
-    color: #1a1a1a; /* Dunkles Icon auf hellem Cyan */
-    transform: scale(1.1);
-    box-shadow: 0 0 12px rgba(0, 188, 212, 0.4); /* Sanftes Leuchten */
+  .social-icon svg {
+    display: block;
   }
 
-  /* Mobile Optimierung */
+  .social-fb {
+    background: #1877f2 !important;
+    box-shadow: 0 4px 14px rgba(24, 119, 242, 0.45);
+  }
+
+  .social-ig {
+    background: linear-gradient(45deg, #f58529 0%, #dd2a7b 45%, #8134af 75%, #515bd4 100%) !important;
+    box-shadow: 0 4px 14px rgba(221, 42, 123, 0.45);
+  }
+
+  .social-icon:hover,
+  .social-icon:active {
+    transform: scale(1.08);
+    filter: brightness(1.1);
+  }
+
   @media (max-width: 480px) {
-    .badge-container {
-      margin-bottom: 1.5rem;
-    }
-    .social-badge {
-      padding: 5px 6px 5px 14px;
-    }
-    .icon-group a {
-      width: 36px; /* Auf dem Handy minimal größer für bessere Touch-Bedienung */
-      height: 36px;
+    .social-icon {
+      width: 40px;
+      height: 40px;
     }
   }
 </style>

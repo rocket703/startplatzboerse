@@ -13,10 +13,10 @@ import Footer from '../components/Footer.astro';
                         <svg class="icon-s" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                             <circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path>
                         </svg>
-                        <input type="text" id="main-search" placeholder="Event suchen..." autocomplete="off" />
+                        <input type="text" id="main-search" placeholder="Event suchen..." data-i18n-placeholder="search.placeholder" autocomplete="off" />
                     </div>
                     
-                    <button id="filter-toggle" class="t-btn" aria-label="Filter öffnen">
+                    <button id="filter-toggle" class="t-btn" aria-label="Filter öffnen" data-i18n-aria="search.openFilters">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block; width: 24px; height: 24px;">
                             <line x1="4" y1="21" x2="4" y2="14"></line>
                             <line x1="4" y1="10" x2="4" y2="3"></line>
@@ -36,26 +36,26 @@ import Footer from '../components/Footer.astro';
                     <div class="drawer-content">
                         
                         <div class="f-section">
-                            <label>Sportart</label>
+                            <label data-i18n="search.sport">Sportart</label>
                             <div class="p-scroll">
-                                <button class="pill active" data-cat="">Alle</button>
-                                <button class="pill" data-cat="Radrennen">Radrennen</button>
-                                <button class="pill" data-cat="Laufen">Laufen</button>
-                                <button class="pill" data-cat="Triathlon">Triathlon</button>
-                                <button class="pill" data-cat="Hyrox">Hyrox</button>
+                                <button class="pill active" data-cat="" data-i18n="search.all">Alle</button>
+                                <button class="pill" data-cat="Radrennen" data-i18n="search.cycling">Radrennen</button>
+                                <button class="pill" data-cat="Laufen" data-i18n="search.running">Laufen</button>
+                                <button class="pill" data-cat="Triathlon" data-i18n="search.triathlon">Triathlon</button>
+                                <button class="pill" data-cat="Hyrox" data-i18n="search.hyrox">Hyrox</button>
                             </div>
                         </div>
 
                         <div class="f-section">
-                            <label>Standort & Umkreis</label>
+                            <label data-i18n="search.location">Standort & Umkreis</label>
                             <div class="loc-row">
-                                <input type="text" id="city-input" placeholder="Stadt eingeben..." />
+                                <input type="text" id="city-input" placeholder="Stadt eingeben..." data-i18n-placeholder="search.cityPlaceholder" />
                                 <select id="range-select">
-                                    <option value="0">Nur Ort</option>
-                                    <option value="25">+25 km</option>
-                                    <option value="50" selected>+50 km</option>
-                                    <option value="100">+100 km</option>
-                                    <option value="200">+200 km</option>
+                                    <option value="0" data-i18n="search.rangeOnly">Nur Ort</option>
+                                    <option value="25" data-i18n="search.range25">+25 km</option>
+                                    <option value="50" selected data-i18n="search.range50">+50 km</option>
+                                    <option value="100" data-i18n="search.range100">+100 km</option>
+                                    <option value="200" data-i18n="search.range200">+200 km</option>
                                 </select>
                             </div>
                             <p id="geo-status" class="geo-status" style="display:none;"></p>
@@ -63,25 +63,25 @@ import Footer from '../components/Footer.astro';
 
                         <div class="f-section grid-2">
                             <div>
-                                <label>Preis bis (€)</label>
-                                <input type="number" id="max-price" placeholder="Max. Preis" min="0" />
+                                <label data-i18n="search.priceMax">Preis bis (€)</label>
+                                <input type="number" id="max-price" placeholder="Max. Preis" data-i18n-placeholder="search.pricePlaceholder" min="0" />
                             </div>
                             <div class="dist-filter">
-                                <label id="dist-label">Bis inkl. Distanz (km)</label>
-                                <input type="text" id="max-dist" placeholder="Sportart wählen" inputmode="decimal" pattern="[0-9]+([,.][0-9]+)?" disabled />
+                                <label id="dist-label" data-i18n="search.distLabel">Bis inkl. Distanz (km)</label>
+                                <input type="text" id="max-dist" placeholder="Sportart wählen" data-i18n-placeholder="search.distPlaceholder" inputmode="decimal" pattern="[0-9]+([,.][0-9]+)?" disabled />
                                 <div id="distance-presets" class="distance-presets" aria-label="Distanz Schnellwahl"></div>
                             </div>
                         </div>
 
                         <div class="f-actions">
-                            <button id="reset-btn" class="r-btn">Zurücksetzen</button>
-                            <button id="apply-btn" class="a-btn">Anwenden</button>
+                            <button id="reset-btn" class="r-btn" data-i18n="search.reset">Zurücksetzen</button>
+                            <button id="apply-btn" class="a-btn" data-i18n="search.apply">Anwenden</button>
                         </div>
                     </div>
                 </div>
 
                 <div class="status-line">
-                    <span id="res-count">Events werden geladen...</span>
+                    <span id="res-count" data-i18n="search.loading">Events werden geladen...</span>
                 </div>
             </div>
         </div>
@@ -422,6 +422,7 @@ import Footer from '../components/Footer.astro';
         SEARCH_DISTANCE_CHIPS,
     } from '../constants/listingOptions';
     import { heartButtonHtml, initWatchlistUi, loadWatchlistIds, syncHeartButtons } from '../lib/watchlist';
+    import { t, applyI18n } from '../i18n';
 
     const supabase = createClient(import.meta.env.PUBLIC_SUPABASE_URL, import.meta.env.PUBLIC_SUPABASE_ANON_KEY);
 
@@ -441,6 +442,16 @@ import Footer from '../components/Footer.astro';
     let activeCat = "";
     let activeDistanceChipLabel: string | null = null;
     let debounceTimer: ReturnType<typeof setTimeout>;
+    let lastResultCount: number | null = null;
+
+    function setResultCountText(count: number) {
+        const countDisplay = document.getElementById('res-count');
+        if (!countDisplay) return;
+        lastResultCount = count;
+        countDisplay.innerText = count === 1
+            ? t('search.foundOne', { n: count })
+            : t('search.foundMany', { n: count });
+    }
 
     function formatDistanceValue(value: number) {
         return String(value).replace('.', ',');
@@ -475,7 +486,7 @@ import Footer from '../components/Footer.astro';
             distInput.disabled = true;
             distInput.value = '';
             distInput.placeholder = 'Nicht relevant für Hyrox';
-            distLabel.innerText = 'Distanz (km)';
+            distLabel.innerText = t('search.distLabel');
             activeDistanceChipLabel = null;
             return;
         }
@@ -483,15 +494,15 @@ import Footer from '../components/Footer.astro';
         if (!activeCat) {
             distInput.disabled = true;
             distInput.value = '';
-            distInput.placeholder = 'Sportart wählen';
-            distLabel.innerText = 'Bis inkl. Distanz (km)';
+            distInput.placeholder = t('search.distPlaceholder');
+            distLabel.innerText = t('search.distLabel');
             activeDistanceChipLabel = null;
             return;
         }
 
         distInput.disabled = false;
         distInput.placeholder = 'z.B. 42,2';
-        distLabel.innerText = 'Bis inkl. Distanz (km)';
+        distLabel.innerText = t('search.distLabel');
 
         const presets = SEARCH_DISTANCE_CHIPS[activeCat] || [];
         distancePresets.innerHTML = presets.map((preset) => {
@@ -595,7 +606,7 @@ import Footer from '../components/Footer.astro';
         if (!grid) return;
 
         const countDisplay = document.getElementById('res-count');
-        if (countDisplay) countDisplay.innerText = 'Suche läuft...';
+        if (countDisplay) countDisplay.innerText = t('search.loading');
 
         const searchVal = (document.getElementById('main-search') as HTMLInputElement).value.trim();
         const cityVal = (document.getElementById('city-input') as HTMLInputElement).value.trim();
@@ -632,7 +643,7 @@ import Footer from '../components/Footer.astro';
         const { data, error } = await query.order('created_at', { ascending: false });
 
         if (error) {
-            if (countDisplay) countDisplay.innerText = 'Fehler beim Laden.';
+            if (countDisplay) countDisplay.innerText = t('search.errorLoad');
             console.error('Supabase Fehler:', error);
             return;
         }
@@ -690,15 +701,14 @@ import Footer from '../components/Footer.astro';
 
     async function renderGrid(data: any[], showDistance = false) {
         if (!grid) return;
-        const countDisplay = document.getElementById('res-count');
 
         if (!data || data.length === 0) {
             grid.innerHTML = `
                 <div class="empty-state">
                     <div style="font-size: 2rem;">🔍</div>
-                    <p>Keine passenden Startplätze gefunden.<br>Versuch andere Filter oder einen größeren Umkreis.</p>
+                    <p>${t('search.empty')}</p>
                 </div>`;
-            if (countDisplay) countDisplay.innerText = 'Keine Ergebnisse';
+            setResultCountText(0);
             return;
         }
 
@@ -727,28 +737,26 @@ import Footer from '../components/Footer.astro';
                             <span class="meta-value">${e.location}${distBadge}</span>
                         </div>
                         <div class="meta-item">
-                            <span class="meta-label">Datum:</span>
+                            <span class="meta-label">${t('eventCard.date')}</span>
                             <span class="meta-value">${new Date(e.event_date).toLocaleDateString('de-DE')}</span>
                         </div>
                     </div>
                     <div class="meta-row">
-                        <span class="meta-label">Distanz:</span>
+                        <span class="meta-label">${t('eventCard.distance')}</span>
                         ${distanceAnzeige}
                     </div>
                 </div>
                 <div class="c-bottom">
                     <div class="price-box">
                         <div class="price-val">${e.price}€</div>
-                        <div class="price-type">${e.price_type === 'vb' ? 'VB' : 'Festpreis'}</div>
+                        <div class="price-type">${e.price_type === 'vb' ? t('eventCard.vb') : t('eventCard.fixed')}</div>
                     </div>
-                    <a href="/listing/${e.id}?from=search" class="details-link">Details →</a>
+                    <a href="/listing/${e.id}?from=search" class="details-link">${t('eventCard.details')} →</a>
                 </div>
             </div>`;
         }).join('');
 
-        if (countDisplay) {
-            countDisplay.innerText = `${data.length} aktive Event${data.length !== 1 ? 's' : ''} gefunden`;
-        }
+        setResultCountText(data.length);
 
         const ids = await loadWatchlistIds();
         syncHeartButtons(ids, grid);
@@ -800,6 +808,14 @@ import Footer from '../components/Footer.astro';
         activeDistanceChipLabel = null;
         updateDistancePresetState();
         updateFilterBadge();
+    });
+
+    window.addEventListener('spb:localechange', () => {
+        applyI18n();
+        updateDistanceFilterUi();
+        if (lastResultCount !== null) {
+            setResultCountText(lastResultCount);
+        }
     });
 
     // Initialer Aufruf

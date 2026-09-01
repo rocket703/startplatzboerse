@@ -44,5 +44,5 @@ Thumbs.db
 # --- Editors / deploy / local AI ---
 **/.idea/
 **/.cursor/
-**/.claude/
 **/.vercel/
+backups/

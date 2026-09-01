@@ -100,8 +100,10 @@ export function DashboardScreen({
     text: string;
     onConfirm?: () => void;
     onCancel?: () => void;
+    onSecondary?: () => void;
     confirmText?: string;
     cancelText?: string;
+    secondaryText?: string;
   }>({ visible: false, type: 'error', title: '', text: '' });
 
   const [settingsVisible, setSettingsVisible] = useState(false);
@@ -431,8 +433,11 @@ export function DashboardScreen({
     } finally { setUploading(false); }
   }
 
-  async function archiveListing(listingId: string) {
-    const { error } = await supabase.from('listings').update({ status: 'archived' }).eq('id', listingId);
+  async function archiveListing(listingId: string, soldViaPlatform: boolean) {
+    const { error } = await supabase
+      .from('listings')
+      .update({ status: 'archived', sold_via_platform: soldViaPlatform })
+      .eq('id', listingId);
     if (error) {
       setPopup({
         visible: true,
@@ -464,14 +469,20 @@ export function DashboardScreen({
       visible: true,
       type: 'warning',
       title: 'Inserat archivieren?',
-      text: 'Dein Inserat wird aus der Suche entfernt, bleibt aber in deinem Dashboard sichtbar.',
-      confirmText: 'Archivieren',
+      text: 'Das Inserat wird aus der Suche entfernt.\n\nWurde der Startplatz über die Startplatzbörse verkauft?',
+      confirmText: 'Ja, verkauft',
+      secondaryText: 'Nein, anderer Grund',
       cancelText: 'Abbrechen',
+      showCancel: true,
       onConfirm: () => {
         setPopup(p => ({ ...p, visible: false }));
-        archiveListing(listingId);
+        archiveListing(listingId, true);
       },
-      onCancel: () => setPopup(p => ({ ...p, visible: false }))
+      onSecondary: () => {
+        setPopup(p => ({ ...p, visible: false }));
+        archiveListing(listingId, false);
+      },
+      onCancel: () => setPopup(p => ({ ...p, visible: false })),
     });
   }
 
@@ -1093,8 +1104,10 @@ export function DashboardScreen({
         text={popup.text}
         confirmText={popup.confirmText}
         cancelText={popup.cancelText}
+        secondaryText={popup.secondaryText}
         onConfirm={popup.onConfirm || (() => setPopup(p => ({ ...p, visible: false })))}
         onCancel={popup.onCancel}
+        onSecondary={popup.onSecondary}
         showCancel={!!popup.onCancel}
       />
     </View>

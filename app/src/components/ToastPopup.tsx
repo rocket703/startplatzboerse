@@ -10,8 +10,10 @@ type ToastPopupProps = {
   text: string;
   confirmText?: string;
   cancelText?: string;
+  secondaryText?: string;
   onConfirm: () => void;
   onCancel?: () => void;
+  onSecondary?: () => void;
   showCancel?: boolean;
 };
 
@@ -22,8 +24,10 @@ export function ToastPopup({
   text,
   confirmText,
   cancelText,
+  secondaryText,
   onConfirm,
   onCancel,
+  onSecondary,
   showCancel = false,
 }: ToastPopupProps) {
   if (!visible) return null;
@@ -58,10 +62,16 @@ export function ToastPopup({
           <Text style={styles.title}>{title}</Text>
           <Text style={styles.text}>{text}</Text>
 
-          <View style={styles.buttonContainer}>
+          <View style={[styles.buttonContainer, onSecondary ? styles.buttonContainerStacked : null]}>
             {showCancel && onCancel ? (
               <Pressable style={styles.cancelButton} onPress={onCancel}>
                 <Text style={styles.cancelText}>{cancelText || 'Abbrechen'}</Text>
+              </Pressable>
+            ) : null}
+
+            {onSecondary ? (
+              <Pressable style={styles.secondaryButton} onPress={onSecondary}>
+                <Text style={styles.secondaryText}>{secondaryText || 'Nein'}</Text>
               </Pressable>
             ) : null}
 
@@ -132,6 +142,9 @@ const styles = StyleSheet.create({
     width: '100%',
     gap: 12,
   },
+  buttonContainerStacked: {
+    flexDirection: 'column',
+  },
   cancelButton: {
     flex: 1,
     height: 46,
@@ -139,6 +152,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#2c2c2e',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  secondaryButton: {
+    width: '100%',
+    height: 46,
+    borderRadius: 12,
+    backgroundColor: '#383838',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  secondaryText: {
+    color: '#f0f0f0',
+    fontSize: 15,
+    fontWeight: '700',
   },
   confirmButton: {
     flex: 1,
