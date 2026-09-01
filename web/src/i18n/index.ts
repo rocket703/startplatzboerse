@@ -139,6 +139,8 @@ export function applyI18n(root: ParentNode = document): void {
 
   document.documentElement.lang = locale;
   document.documentElement.dataset.locale = locale;
+  document.documentElement.classList.remove('i18n-blocking');
+  document.documentElement.classList.add('i18n-ready');
 }
 
 export function setLocale(locale: Locale, persist = true): void {

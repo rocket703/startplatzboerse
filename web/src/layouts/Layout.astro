@@ -43,6 +43,43 @@ const {
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;900&display=swap" rel="stylesheet">
+
+        {/* Verhindert DE-Aufflackern: Locale aus Storage/Browser vor dem ersten Paint setzen */}
+        <script is:inline>
+            (function () {
+                var STORAGE_KEY = 'spb_locale';
+                var stored = localStorage.getItem(STORAGE_KEY);
+                var locale = null;
+                if (stored === 'de' || stored === 'en' || stored === 'it') {
+                    locale = stored;
+                } else {
+                    var langs =
+                        navigator.languages && navigator.languages.length
+                            ? navigator.languages
+                            : [navigator.language || ''];
+                    for (var i = 0; i < langs.length; i++) {
+                        var primary = String(langs[i] || '').toLowerCase().split('-')[0];
+                        if (primary === 'en' || primary === 'it' || primary === 'de') {
+                            locale = primary;
+                            break;
+                        }
+                    }
+                }
+                locale = locale || 'de';
+                document.documentElement.lang = locale;
+                document.documentElement.dataset.locale = locale;
+                if (locale !== 'de') {
+                    document.documentElement.classList.add('i18n-blocking');
+                }
+            })();
+        </script>
+        <style is:global>
+            html.i18n-blocking [data-i18n],
+            html.i18n-blocking [data-i18n-html],
+            html.i18n-blocking [data-i18n-placeholder] {
+                visibility: hidden;
+            }
+        </style>
     </head>
     <body>
         <Header />
