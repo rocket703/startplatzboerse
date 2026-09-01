@@ -48,15 +48,27 @@ export function getLocale(): Locale {
   return detectBrowserLocale();
 }
 
+function resolveMessage(
+  key: string,
+  locale: Locale,
+): string | undefined {
+  const value =
+    getByPath(messages[locale], key) ??
+    getByPath(messages[DEFAULT_LOCALE], key);
+  return typeof value === 'string' ? value : undefined;
+}
+
+/** Content entry id (filename), not frontmatter slug — matches ratgeber.articles.* keys. */
+export function ratgeberArticleKey(entry: { id: string }): string {
+  return entry.id.replace(/^ratgeber\//, '').replace(/\.md$/, '');
+}
+
 export function t(
   key: string,
   vars?: Record<string, string | number>,
   locale: Locale = getLocale(),
 ): string {
-  const raw =
-    getByPath(messages[locale], key) ??
-    getByPath(messages[DEFAULT_LOCALE], key) ??
-    key;
+  const raw = resolveMessage(key, locale) ?? key;
 
   if (!vars) return raw;
   return Object.entries(vars).reduce(
@@ -71,7 +83,8 @@ export function applyI18n(root: ParentNode = document): void {
   root.querySelectorAll<HTMLElement>('[data-i18n]').forEach((el) => {
     const key = el.getAttribute('data-i18n');
     if (!key) return;
-    const value = t(key, undefined, locale);
+    const value = resolveMessage(key, locale);
+    if (value === undefined) return;
     if (el.childElementCount === 0) {
       el.textContent = value;
     } else {
@@ -92,7 +105,9 @@ export function applyI18n(root: ParentNode = document): void {
   root.querySelectorAll<HTMLElement>('[data-i18n-html]').forEach((el) => {
     const key = el.getAttribute('data-i18n-html');
     if (!key) return;
-    el.innerHTML = t(key, undefined, locale);
+    const value = resolveMessage(key, locale);
+    if (value === undefined) return;
+    el.innerHTML = value;
   });
 
   root.querySelectorAll<HTMLElement>('[data-i18n-placeholder]').forEach((el) => {
@@ -111,6 +126,15 @@ export function applyI18n(root: ParentNode = document): void {
     const key = el.getAttribute('data-i18n-title');
     if (!key) return;
     el.setAttribute('title', t(key, undefined, locale));
+  });
+
+  root.querySelectorAll<HTMLElement>('[data-hide-if-locale]').forEach((el) => {
+    const hideLocales =
+      el.getAttribute('data-hide-if-locale')?.split(',').map((s) => s.trim()) ??
+      [];
+    const hide = hideLocales.includes(locale);
+    el.hidden = hide;
+    el.style.display = hide ? 'none' : '';
   });
 
   document.documentElement.lang = locale;

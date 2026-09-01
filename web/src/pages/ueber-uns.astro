@@ -5,53 +5,42 @@ import Footer from '../components/Footer.astro';
 
 <Layout 
     title="Über das Projekt" 
-    description="Die Geschichte hinter der Startplatzbörse. Erfahre, wie aus dem Chaos in Facebook-Gruppen die Vision für die größte Plattform für Ausdauersportler wurde."
+    description="Die Geschichte hinter der Startplatzbörse — ein Ein-Mann-Projekt von Dustin für die Ausdauersport-Community."
 >
     <main class="about-page">
-        <div class="container">
-            <div class="hero-section text-center">
-                <span class="badge" data-i18n="about.badge">Die Story</span>
-                <h1 class="glow-title" data-i18n-html="about.title">Von einer Idee <br>zur <span class="text-cyan">Wirklichkeit.</span></h1>
-            </div>
+        <div class="about-shell">
+            <figure class="about-photo">
+                <img
+                    src="/img/profil.webp"
+                    alt="Dustin beim Triathlon"
+                    width="480"
+                    height="560"
+                    loading="lazy"
+                />
+            </figure>
 
-            <div class="about-grid">
-                <div class="image-box card text-center">
-                    <div class="placeholder-img">
-                        <img src="img/profil.webp" alt="Dustin, der Gründer der Startplatzbörse" style="width: 100%; border-radius: 12px;">
-                    </div>
-                </div>
+            <div class="about-copy">
+                <p class="about-kicker" data-i18n="about.badge">Ein Herzensprojekt</p>
+                <h1 class="about-title" data-i18n="about.title">Von Sportler zu Sportler.</h1>
 
-                <div class="content-box card">
-                    <h2 style="margin-top:0;" data-i18n="about.hi">Hi, ich bin Dustin.</h2>
+                <div class="about-text">
+                    <p class="about-hi" data-i18n="about.hi">Hi,</p>
                     <p data-i18n="about.p1">
-                        Triathlet, Ausdauersportler und der Kopf hinter dieser Plattform. Wie so oft entstehen die besten Ideen aus purer Frustration – und bei mir war das nicht anders.
+                        ich bin Dustin. Ich mache Triathlon und Ausdauersport – und habe startplatzboerse.com als Ein-Mann-Projekt aus der Sport-Community heraus aufgebaut.
                     </p>
-                    
-                    <h3 data-i18n="about.painTitle">Der Schmerz vor dem Startschuss</h3>
-                    <p data-i18n="about.painP1">
-                        Ich habe selbst schon mehrfach das durchgemacht, was fast jeder von uns kennt: Du trainierst monatelang hart für ein Event, und dann kommt eine Verletzung, eine Erkältung oder einfach das Leben dazwischen. Der Startplatz für 150€ oder mehr droht ungenutzt zu verfallen.
+                    <p data-i18n="about.p2">
+                        Mehrfach hatte ich selbst einen Startplatz, den ich nicht nutzen konnte. Die Weitergabe lief meist über Facebook, Instagram oder WhatsApp – unübersichtlich, schnell untergegangen und oft einfach umständlich.
                     </p>
-                    <p data-i18n="about.painP2">
-                    Also fängt das ewige Tippen an. Man postet in Facebook-Gruppen oder fragt auf Instagram rum. Aber mal ehrlich: Im normalen Feed gehen solche Posts einfach wahnsinnig schnell unter. Es ist super mühsam, im Kommentar-Chaos den Überblick zu behalten oder auf die Schnelle eine sichere Übergabe zu organisieren. Da dachte ich mir: Das muss doch entspannter gehen!</p>
-
-                    <h3 data-i18n="about.birthTitle">Die Geburt der Startplatzbörse</h3>
-                    <p data-i18n="about.birthP1">
-                        Warum gab es keinen zentralen, einfachen Ort, an dem sich Sportler einfach und fair vernetzen können? Da es diesen Ort nicht gab, habe ich beschlossen, ihn selbst zu bauen. Ein Herzensprojekt, direkt aus der Community heraus.
+                    <p data-i18n="about.p3">Ich dachte mir: Das muss doch einfacher gehen.</p>
+                    <p data-i18n="about.p4">
+                        Deshalb gibt es jetzt einen festen Ort dafür: startplatzboerse.com – fair, transparent und ohne Gebühren. Von Sportler zu Sportler.
                     </p>
-
-                    <div class="vision-box">
-                        <h3>🚀 <span data-i18n="about.visionTitle">Unsere Vision</span></h3>
-                        <p data-i18n="about.visionP1">
-                            Wir bauen hier kein abgehobenes Tech-Startup, sondern wollen einfach ein echtes Problem lösen. Das Ziel ist simpel: Die Startplatzbörse soll der Ort werden, an dem Sportler als erstes nachschauen, wenn sie einen Startplatz suchen oder abgeben müssen. Kein Stress, keine Wucherpreise – einfach eine faire Plattform von Sportler zu Sportler.                        </p>
-                        <p data-i18n="about.visionP2">
-Am Ende geht es nur um eins: Dass bezahlte Startnummern auch genutzt werden und wir uns in der Community gegenseitig supporten. Die Weitergabe soll einfach und fair ablaufen – ohne nervige Umwege. Von Sportlern für Sportler.                        </p>
-                    </div>
-
-                    <div class="cta-section text-center" style="margin-top: 40px;">
-                        <p style="color: #ccc; font-weight: bold;" data-i18n="about.glad">Schön, dass du Teil dieser Reise bist!</p>
-                        <a href="/inserieren" class="btn-cyan-glow" style="display: inline-block; padding: 16px 32px; text-decoration: none;" data-i18n="about.cta">Werde Teil der Vision</a>
-                    </div>
+                    <p data-i18n="about.p5">
+                        Wenn du selbst einmal einen Startplatz abgeben möchtest oder einen suchst: Schön, dass du da bist.
+                    </p>
                 </div>
+
+                <a href="/inserieren" class="about-cta" data-i18n="about.cta">Platz inserieren</a>
             </div>
         </div>
     </main>
@@ -59,55 +48,106 @@ Am Ende geht es nur um eins: Dass bezahlte Startnummern auch genutzt werden und 
     <Footer />
 </Layout>
 
-<style>
-    .about-page { 
-        background: var(--bg-body); 
-        min-height: 100vh; 
-        padding: 100px 15px 80px; 
-        color: white; 
-        line-height: 1.6;
+<style is:global>
+    .about-page {
+        background: var(--bg-body);
+        min-height: 100vh;
+        padding: clamp(110px, 12vw, 150px) 20px clamp(64px, 8vw, 96px);
     }
 
-    .container { max-width: 1000px; margin: 0 auto; }
-    .text-center { text-align: center; }
-    .text-cyan { color: var(--cyan); }
-    
-    .hero-section { margin-bottom: 50px; }
-    .badge { color: var(--cyan); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; font-size: 0.8rem; background: rgba(0, 188, 212, 0.1); padding: 5px 12px; border-radius: 20px; }
-    
-    .glow-title { font-size: 2.5rem; font-weight: 900; margin: 15px 0 0 0; line-height: 1.2; }
-    @media (min-width: 768px) { .glow-title { font-size: 4rem; } }
-
-    .about-grid { display: grid; grid-template-columns: 1fr; gap: 30px; }
-    /* Desktop: Bild links, Text rechts */
-    @media (min-width: 850px) { .about-grid { grid-template-columns: 320px 1fr; align-items: start; } }
-
-    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 30px; }
-
-    
-    h2 { font-size: 2rem; margin-bottom: 20px; font-weight: 900; }
-    h3 { font-size: 1.3rem; margin: 35px 0 10px 0; color: #fff; font-weight: 800; }
-    p { color: #aaa; font-size: 1.05rem; margin-bottom: 15px; }
-    strong { color: #fff; }
-
-    .vision-box { 
-        margin-top: 40px; 
-        padding: 30px; 
-        background: linear-gradient(145deg, var(--bg-card), var(--bg-card)); 
-        border-left: 4px solid var(--cyan); 
-        border-radius: 16px; 
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    .about-shell {
+        max-width: 1040px;
+        margin: 0 auto;
+        display: grid;
+        gap: clamp(28px, 5vw, 48px);
+        align-items: start;
     }
-    .vision-box h3 { margin-top: 0; color: var(--cyan); font-size: 1.5rem; }
-    .vision-box p { color: #ccc; margin-bottom: 10px; }
 
-    .btn-cyan-glow { background: var(--cyan); color: black; border: none; border-radius: 14px; font-weight: 900; cursor: pointer; transition: 0.3s; font-size: 1.1rem; }
-    .btn-cyan-glow:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0, 188, 212, 0.2); }
-
-    /* NEU: Mehr Luft nach oben auf dem Desktop */
-    @media (min-width: 900px) {
-        .about-page { 
-            padding-top: 160px; 
+    @media (min-width: 860px) {
+        .about-shell {
+            grid-template-columns: minmax(260px, 360px) 1fr;
+            gap: clamp(32px, 4vw, 56px);
         }
+    }
+
+    .about-photo {
+        margin: 0;
+        border-radius: 24px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+        background: var(--bg-card);
+    }
+
+    .about-photo img {
+        display: block;
+        width: 100%;
+        height: auto;
+        min-height: 280px;
+        max-height: 520px;
+        object-fit: cover;
+        object-position: center 20%;
+    }
+
+    .about-copy {
+        background: var(--bg-card);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 24px;
+        padding: clamp(28px, 5vw, 44px);
+    }
+
+    .about-kicker {
+        margin: 0 0 14px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--cyan);
+    }
+
+    .about-title {
+        margin: 0 0 24px;
+        font-size: clamp(1.85rem, 4.5vw, 2.75rem);
+        font-weight: 900;
+        line-height: 1.08;
+        letter-spacing: -0.03em;
+        color: #fff;
+    }
+
+    .about-text p {
+        margin: 0 0 16px;
+        color: var(--text-secondary);
+        font-size: clamp(1rem, 2.2vw, 1.08rem);
+        line-height: 1.65;
+    }
+
+    .about-text .about-hi {
+        margin-bottom: 4px;
+        color: #fff;
+        font-weight: 600;
+    }
+
+    .about-text p:last-child {
+        margin-bottom: 0;
+    }
+
+    .about-cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 32px;
+        padding: 14px 28px;
+        border-radius: 14px;
+        background: var(--cyan);
+        color: #000 !important;
+        font-weight: 800;
+        font-size: 1rem;
+        text-decoration: none !important;
+        transition: filter 0.2s ease, transform 0.15s ease;
+    }
+
+    .about-cta:hover {
+        filter: brightness(1.08);
+        transform: translateY(-1px);
     }
 </style>

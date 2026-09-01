@@ -31,6 +31,16 @@ export const messages: Record<Locale, MessageTree> = {
       tagLive: 'Neu',
       tagSoon: 'Demnächst',
       items: {
+        stats: {
+          title: 'Community-Kennzahlen',
+          description:
+            'Oben auf der Startseite siehst du jetzt live: registrierte Nutzer, inserierte Startplätze und erfolgreich vermittelte Plätze.',
+        },
+        languages: {
+          title: 'Englisch & Italienisch',
+          description:
+            'Die Website gibt es jetzt auch auf English und Italiano — oben rechts die Flagge wählen und loslegen. Noch nicht alles ist übersetzt (z. B. Ratgeber-Artikel bleiben auf Deutsch).',
+        },
         watchlist: {
           title: 'Merkliste',
           description:
@@ -41,20 +51,10 @@ export const messages: Record<Locale, MessageTree> = {
           description:
             'Direkter Draht zum Team wie in der App – jetzt auch auf der Kontaktseite im Web verfügbar.',
         },
-        search: {
-          title: 'Neue Suche',
-          description:
-            'Filter, Umkreis und Distanz-Vorgaben – die durchdachte Suche aus der App, jetzt auf der Website.',
-        },
         dashboard: {
           title: 'Neues Dashboard',
           description:
             'Übersichtlicher, klarer und schneller: deine Inserate, Merkliste und Nachrichten an einem Ort.',
-        },
-        edit: {
-          title: 'Bearbeitung verbessert',
-          description:
-            'Eigene Inserate kannst du jetzt wie in der App bearbeiten: Preis + Festpreis/VB, Beschreibung, Adresse und Event-Website.',
         },
       },
     },
@@ -63,7 +63,7 @@ export const messages: Record<Locale, MessageTree> = {
       heroLine2: 'Mein Startplatz.',
       statUsers: 'Registrierte Nutzer',
       statListings: 'Inserierte Startplätze',
-      statSold: 'Verkaufte Startplätze',
+      statSold: 'Erfolgreich vermittelt',
       heroSub:
         'Die neue Plattform für Lauf, Rad, Triathlon & Hyrox.<br>Fair. Transparent. <br> <strong>Von privat an privat.</strong>',
       findSpot: 'Startplatz finden',
@@ -211,25 +211,58 @@ export const messages: Record<Locale, MessageTree> = {
       sent: 'Gesendet ✓',
     },
     about: {
-      badge: 'Die Story',
-      title: 'Von einer Idee <br>zur <span class="text-cyan">Wirklichkeit.</span>',
-      hi: 'Hi, ich bin Dustin.',
-      p1: 'Triathlet, Ausdauersportler und der Kopf hinter dieser Plattform. Wie so oft entstehen die besten Ideen aus purer Frustration – und bei mir war das nicht anders.',
-      painTitle: 'Der Schmerz vor dem Startschuss',
-      painP1:
-        'Ich habe selbst schon mehrfach das durchgemacht, was fast jeder von uns kennt: Du trainierst monatelang hart für ein Event, und dann kommt eine Verletzung, eine Erkältung oder einfach das Leben dazwischen. Der Startplatz für 150€ oder mehr droht ungenutzt zu verfallen.',
-      painP2:
-        'Also fängt das ewige Tippen an. Man postet in Facebook-Gruppen oder fragt auf Instagram rum. Aber mal ehrlich: Im normalen Feed gehen solche Posts einfach wahnsinnig schnell unter. Es ist super mühsam, im Kommentar-Chaos den Überblick zu behalten oder auf die Schnelle eine sichere Übergabe zu organisieren. Da dachte ich mir: Das muss doch entspannter gehen!',
-      birthTitle: 'Die Geburt der Startplatzbörse',
-      birthP1:
-        'Warum gab es keinen zentralen, einfachen Ort, an dem sich Sportler einfach und fair vernetzen können? Da es diesen Ort nicht gab, habe ich beschlossen, ihn selbst zu bauen. Ein Herzensprojekt, direkt aus der Community heraus.',
-      visionTitle: 'Unsere Vision',
-      visionP1:
-        'Wir bauen hier kein abgehobenes Tech-Startup, sondern wollen einfach ein echtes Problem lösen. Das Ziel ist simpel: Die Startplatzbörse soll der Ort werden, an dem Sportler als erstes nachschauen, wenn sie einen Startplatz suchen oder abgeben müssen. Kein Stress, keine Wucherpreise – einfach eine faire Plattform von Sportler zu Sportler.',
-      visionP2:
-        'Am Ende geht es nur um eins: Dass bezahlte Startnummern auch genutzt werden und wir uns in der Community gegenseitig supporten. Die Weitergabe soll einfach und fair ablaufen – ohne nervige Umwege. Von Sportlern für Sportler.',
-      glad: 'Schön, dass du Teil dieser Reise bist!',
-      cta: 'Werde Teil der Vision',
+      badge: 'Ein Herzensprojekt',
+      title: 'Von Sportler zu Sportler.',
+      hi: 'Hi,',
+      p1: 'ich bin Dustin. Ich mache Triathlon und Ausdauersport – und habe startplatzboerse.com als Ein-Mann-Projekt aus der Sport-Community heraus aufgebaut.',
+      p2: 'Mehrfach hatte ich selbst einen Startplatz, den ich nicht nutzen konnte. Die Weitergabe lief meist über Facebook, Instagram oder WhatsApp – unübersichtlich, schnell untergegangen und oft einfach umständlich.',
+      p3: 'Ich dachte mir: Das muss doch einfacher gehen.',
+      p4: 'Deshalb gibt es jetzt einen festen Ort dafür: startplatzboerse.com – fair, transparent und ohne Gebühren. Von Sportler zu Sportler.',
+      p5: 'Wenn du selbst einmal einen Startplatz abgeben möchtest oder einen suchst: Schön, dass du da bist.',
+      cta: 'Platz inserieren',
+    },
+    ratgeber: {
+      indexBadge: 'Wissen & Inspiration',
+      indexTitle: 'Der Ratgeber',
+      indexSub: 'Tipps rund um Training und Wettkampf — geschrieben für unsere Community.',
+      readNow: 'Jetzt lesen →',
+      germanOnly: '',
+      articleCtaTitle: 'Dein Plan hat sich geändert?',
+      articleCtaP: 'Lass dein Ticket nicht verfallen. Inseriere es jetzt kostenlos in der Community.',
+      articleCtaBtn: 'Startplatz inserieren',
+      articleCtaBack: 'Zur Übersicht',
+      articles: {
+        'einstieg-ausdauertraining': {
+          title: 'Dein erster Schritt. Und warum er langsamer sein sollte als du denkst.',
+          teaser:
+            'Wie du ins Ausdauertraining einsteigst ohne dich kaputtzumachen — was die aktuelle Sportwissenschaft wirklich empfiehlt.',
+          category: 'Einstieg & Grundlagen',
+        },
+        'uebertraining-erkennen': {
+          title: 'Wann hört dein Körper auf zu reden und fängt an zu schreien?',
+          teaser:
+            'Die Warnsignale für Übertraining, die echten Ursachen – und wie du deinen Startplatz trotzdem rettest, wenn der Körper streikt.',
+          category: 'Training & Gesundheit',
+        },
+        ernaehrung: {
+          title: 'Du bist nicht müde. Du bist nur schlecht betankt.',
+          teaser:
+            'Vor dem Training, während des Rennens, danach: Was dein Körper wirklich braucht — und warum Ernährung das unterschätzteste Training überhaupt ist.',
+          category: 'Ernährung & Energie',
+        },
+        ausdauerblog: {
+          title: 'Laufen in der Lebensmitte: Was wirklich funktioniert.',
+          teaser:
+            'Claudia hat dreimal angefangen zu laufen — und dreimal aufgehört. Nicht weil sie zu schwach war. Sondern weil die Programme nie für jemanden wie sie gemacht waren.',
+          category: 'Laufen mit 40+',
+        },
+        wettkampf: {
+          title: 'Die ersten fünf Kilometer werden dein Rennen entscheiden. Nicht die letzten.',
+          teaser:
+            'Du hast Wochen trainiert, der Startplatz liegt bereit — und dann verlierst du das Rennen in den ersten Kilometern.',
+          category: 'Wettkampf & Renntag',
+        },
+      },
     },
     notFound: {
       subtitle: 'Huch! Hier ist kein Zieleinlauf.',
@@ -277,6 +310,16 @@ export const messages: Record<Locale, MessageTree> = {
       tagLive: 'New',
       tagSoon: 'Coming soon',
       items: {
+        stats: {
+          title: 'Community stats',
+          description:
+            'At the top of the homepage you now see live numbers: registered users, listed start spots and successfully matched spots.',
+        },
+        languages: {
+          title: 'English & Italian',
+          description:
+            'The site is now available in German, English and Italian — pick your flag in the top right. Not everything is translated yet (e.g. guide articles stay in German).',
+        },
         watchlist: {
           title: 'Watchlist',
           description:
@@ -287,20 +330,10 @@ export const messages: Record<Locale, MessageTree> = {
           description:
             'A direct line to the team, just like in the app — now also available on the contact page on the web.',
         },
-        search: {
-          title: 'New search',
-          description:
-            'Filters, radius and distance presets — the thoughtful search from the app, now on the website.',
-        },
         dashboard: {
           title: 'New dashboard',
           description:
             'Clearer, cleaner and faster: your listings, watchlist and messages in one place.',
-        },
-        edit: {
-          title: 'Editing improved',
-          description:
-            'You can now edit your own listings like in the app: price + fixed/negotiable, description, address and event website.',
         },
       },
     },
@@ -457,25 +490,58 @@ export const messages: Record<Locale, MessageTree> = {
       sent: 'Sent ✓',
     },
     about: {
-      badge: 'The story',
-      title: 'From an idea <br>to <span class="text-cyan">reality.</span>',
-      hi: 'Hi, I’m Dustin.',
-      p1: 'Triathlete, endurance athlete and the person behind this platform. As so often, the best ideas come from pure frustration — and it was no different for me.',
-      painTitle: 'The pain before the start gun',
-      painP1:
-        'I’ve been through what almost all of us know: you train hard for months, then an injury, a cold or life gets in the way. A start spot worth €150 or more is about to go unused.',
-      painP2:
-        'So the endless typing begins. You post in Facebook groups or ask around on Instagram. But honestly: in a normal feed those posts sink insanely fast. It’s exhausting to keep track in comment chaos or arrange a safe handoff quickly. I thought: there has to be a calmer way!',
-      birthTitle: 'The birth of the Startplatzbörse',
-      birthP1:
-        'Why was there no central, simple place where athletes could connect easily and fairly? Since that place didn’t exist, I decided to build it myself. A passion project, straight from the community.',
-      visionTitle: 'Our vision',
-      visionP1:
-        'We’re not building a flashy tech startup — we just want to solve a real problem. The goal is simple: the Startplatzbörse should be the first place athletes check when they need a start spot or have one to pass on. No stress, no price gouging — just a fair platform from athlete to athlete.',
-      visionP2:
-        'In the end it’s about one thing: paid race numbers actually get used, and we support each other in the community. Passing them on should be simple and fair — without annoying detours. By athletes, for athletes.',
-      glad: 'Glad you’re part of this journey!',
-      cta: 'Become part of the vision',
+      badge: 'A passion project',
+      title: 'Athlete to athlete.',
+      hi: 'Hi,',
+      p1: 'I’m Dustin. I do triathlon and endurance sports — and built startplatzboerse.com as a one-person project from the sports community.',
+      p2: 'More than once I had a start spot I couldn’t use myself. Passing it on usually meant Facebook, Instagram or WhatsApp — messy, easy to miss, and often just awkward.',
+      p3: 'I thought: there has to be an easier way.',
+      p4: 'That’s why there’s now a dedicated place for it: startplatzboerse.com — fair, transparent and free of charge. Athlete to athlete.',
+      p5: 'If you want to pass on a start spot or are looking for one: glad you’re here.',
+      cta: 'List a spot',
+    },
+    ratgeber: {
+      indexBadge: 'Tips & knowledge',
+      indexTitle: 'Guides',
+      indexSub: 'Training and race-day tips — written for our community.',
+      readNow: 'Read now →',
+      germanOnly: 'This article is available in German only.',
+      articleCtaTitle: 'Plans changed?',
+      articleCtaP: 'Don’t let your entry go unused. List it free in the community.',
+      articleCtaBtn: 'List a start spot',
+      articleCtaBack: 'Back to overview',
+      articles: {
+        'einstieg-ausdauertraining': {
+          title: 'Your first step — and why it should be slower than you think.',
+          teaser:
+            'How to get into endurance training without burning out — what sports science actually recommends.',
+          category: 'Getting started',
+        },
+        'uebertraining-erkennen': {
+          title: 'When your body stops whispering and starts shouting.',
+          teaser:
+            'Warning signs of overtraining, real causes — and how to save your start spot when your body says no.',
+          category: 'Training & health',
+        },
+        ernaehrung: {
+          title: 'You’re not tired. You’re just under-fuelled.',
+          teaser:
+            'Before, during and after training: what your body really needs — and why nutrition is the most underrated part of training.',
+          category: 'Nutrition & energy',
+        },
+        ausdauerblog: {
+          title: 'Running in midlife: what actually works.',
+          teaser:
+            'Claudia started running three times — and quit three times. Not because she was weak. Because the plans weren’t made for someone like her.',
+          category: 'Running 40+',
+        },
+        wettkampf: {
+          title: 'The first five kilometres decide your race. Not the last.',
+          teaser:
+            'You trained for weeks, your start spot is booked — and then you lose the race in the opening kilometres.',
+          category: 'Race day',
+        },
+      },
     },
     notFound: {
       subtitle: 'Oops! No finish line here.',
@@ -523,6 +589,16 @@ export const messages: Record<Locale, MessageTree> = {
       tagLive: 'Nuovo',
       tagSoon: 'In arrivo',
       items: {
+        stats: {
+          title: 'Numeri della community',
+          description:
+            'In cima alla homepage vedi ora in tempo reale: utenti registrati, posti inseriti e posti venduti con successo.',
+        },
+        languages: {
+          title: 'Inglese e italiano',
+          description:
+            'Il sito è ora disponibile anche in tedesco, inglese e italiano — scegli la bandiera in alto a destra. Non tutto è già tradotto (es. gli articoli della guida restano in tedesco).',
+        },
         watchlist: {
           title: 'Lista preferiti',
           description:
@@ -533,20 +609,10 @@ export const messages: Record<Locale, MessageTree> = {
           description:
             'Contatto diretto con il team come nell’app — ora anche sulla pagina Contatti del sito.',
         },
-        search: {
-          title: 'Nuova ricerca',
-          description:
-            'Filtri, raggio e preset di distanza — la ricerca pensata dell’app, ora sul sito.',
-        },
         dashboard: {
           title: 'Nuova dashboard',
           description:
             'Più chiara, ordinata e veloce: i tuoi annunci, la lista preferiti e i messaggi in un unico posto.',
-        },
-        edit: {
-          title: 'Modifica migliorata',
-          description:
-            'Ora puoi modificare i tuoi annunci come nell’app: prezzo + fisso/trattabile, descrizione, indirizzo e sito dell’evento.',
         },
       },
     },
@@ -703,25 +769,58 @@ export const messages: Record<Locale, MessageTree> = {
       sent: 'Inviato ✓',
     },
     about: {
-      badge: 'La storia',
-      title: 'Da un’idea <br>alla <span class="text-cyan">realtà.</span>',
-      hi: 'Ciao, sono Dustin.',
-      p1: 'Triatleta, atleta di endurance e la mente dietro questa piattaforma. Come spesso succede, le migliori idee nascono dalla pura frustrazione — e per me non è stato diverso.',
-      painTitle: 'Il dolore prima dello start',
-      painP1:
-        'Ho vissuto più volte ciò che quasi tutti conosciamo: ti alleni duramente per mesi, poi arriva un infortunio, un raffreddore o semplicemente la vita. Un posto gara da 150€ o più rischia di andare sprecato.',
-      painP2:
-        'Così inizia la digitatura infinita. Pubblichi nei gruppi Facebook o chiedi su Instagram. Ma onestamente: nel feed normale quei post spariscono in un attimo. È faticoso tenere il filo nel caos dei commenti o organizzare in fretta un passaggio sicuro. Ho pensato: deve esserci un modo più rilassato!',
-      birthTitle: 'La nascita della Startplatzbörse',
-      birthP1:
-        'Perché non c’era un posto centrale e semplice dove gli atleti potessero connettersi in modo equo? Dato che non esisteva, ho deciso di costruirlo io. Un progetto di cuore, direttamente dalla community.',
-      visionTitle: 'La nostra visione',
-      visionP1:
-        'Non stiamo costruendo una tech startup altisonante — vogliamo solo risolvere un problema reale. L’obiettivo è semplice: la Startplatzbörse deve diventare il primo posto dove gli atleti guardano quando cercano o devono cedere un posto gara. Niente stress, niente prezzi gonfiati — solo una piattaforma equa da atleta ad atleta.',
-      visionP2:
-        'Alla fine conta una sola cosa: che i numeri di gara pagati vengano usati e che nella community ci supportiamo a vicenda. Il passaggio deve essere semplice e corretto — senza giri inutili. Da atleti per atleti.',
-      glad: 'Bello che tu faccia parte di questo viaggio!',
-      cta: 'Diventa parte della visione',
+      badge: 'Un progetto di cuore',
+      title: 'Da atleta ad atleta.',
+      hi: 'Ciao,',
+      p1: 'sono Dustin. Faccio triathlon e sport di endurance — e ho creato startplatzboerse.com come progetto da una sola persona, dalla community sportiva.',
+      p2: 'Più volte ho avuto un posto gara che non potevo usare. Cederlo significava di solito Facebook, Instagram o WhatsApp — confusione, facile da perdere di vista e spesso semplicemente scomodo.',
+      p3: 'Ho pensato: deve esserci un modo più semplice.',
+      p4: 'Ecco perché ora c’è un posto fisso per questo: startplatzboerse.com — equo, trasparente e senza commissioni. Da atleta ad atleta.',
+      p5: 'Se vuoi cedere un posto gara o ne cerchi uno: bello che tu sia qui.',
+      cta: 'Inserisci un posto',
+    },
+    ratgeber: {
+      indexBadge: 'Consigli e ispirazione',
+      indexTitle: 'Guide',
+      indexSub: 'Consigli su allenamento e gara — scritti per la nostra community.',
+      readNow: 'Leggi ora →',
+      germanOnly: 'Questo articolo è disponibile solo in tedesco.',
+      articleCtaTitle: 'I piani sono cambiati?',
+      articleCtaP: 'Non lasciare scadere il pettorale. Inseriscilo gratis nella community.',
+      articleCtaBtn: 'Inserisci posto gara',
+      articleCtaBack: 'Torna alla panoramica',
+      articles: {
+        'einstieg-ausdauertraining': {
+          title: 'Il tuo primo passo — e perché dovrebbe essere più lento di quanto pensi.',
+          teaser:
+            'Come iniziare l’allenamento di resistenza senza esagerare — cosa consiglia davvero la scienza dello sport.',
+          category: 'Primi passi',
+        },
+        'uebertraining-erkennen': {
+          title: 'Quando il corpo smette di sussurrare e inizia a urlare.',
+          teaser:
+            'I segnali di sovrallenamento, le cause reali — e come salvare il posto gara quando il corpo dice basta.',
+          category: 'Allenamento e salute',
+        },
+        ernaehrung: {
+          title: 'Non sei stanco. Sei solo mal rifornito.',
+          teaser:
+            'Prima, durante e dopo l’allenamento: cosa serve davvero al corpo — e perché la nutrizione è l’allenamento più sottovalutato.',
+          category: 'Nutrizione ed energia',
+        },
+        ausdauerblog: {
+          title: 'Correre a metà vita: cosa funziona davvero.',
+          teaser:
+            'Claudia ha iniziato a correre tre volte — e ha mollato tre volte. Non perché fosse debole. Perché i programmi non erano fatti per lei.',
+          category: 'Corsa 40+',
+        },
+        wettkampf: {
+          title: 'I primi cinque chilometri decidono la gara. Non gli ultimi.',
+          teaser:
+            'Ti sei allenato per settimane, il posto è prenotato — e poi perdi la gara nei primi chilometri.',
+          category: 'Giorno di gara',
+        },
+      },
     },
     notFound: {
       subtitle: 'Ops! Qui non c’è nessun traguardo.',
