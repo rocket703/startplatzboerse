@@ -1,0 +1,253 @@
+---
+/** Temporärer Hinweis bei Server-/Auth-Störungen. Entfernen, sobald alles wieder läuft. */
+---
+
+<div class="outage-overlay" id="outage-overlay" hidden>
+    <div
+        class="outage-dialog"
+        id="outage-dialog"
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="outage-title"
+        aria-describedby="outage-body"
+        tabindex="-1"
+    >
+        <div class="outage-dialog-glow" aria-hidden="true"></div>
+
+        <header class="outage-header">
+            <div class="outage-icon" aria-hidden="true">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+            </div>
+            <div>
+                <p class="outage-kicker">Aktuelle Störung</p>
+                <h2 id="outage-title">Anmeldung vorübergehend nicht möglich</h2>
+            </div>
+        </header>
+
+        <div class="outage-body" id="outage-body">
+            <p>
+                Unser Serveranbieter hat derzeit technische Probleme. Deshalb funktionieren
+                <strong>Anmeldung und Registrierung</strong> gerade nicht.
+            </p>
+            <p>
+                Wir entschuldigen uns für die Unannehmlichkeiten und arbeiten mit Hochdruck an einer Lösung.
+            </p>
+            <p class="outage-thanks">Danke für euer Verständnis!</p>
+        </div>
+
+        <footer class="outage-footer">
+            <button type="button" class="outage-cta" id="outage-dismiss">Verstanden</button>
+        </footer>
+    </div>
+</div>
+
+<style>
+    .outage-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(10, 10, 10, 0.72);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+
+    .outage-overlay[hidden] {
+        display: none;
+    }
+
+    @keyframes outage-slide-up {
+        from {
+            opacity: 0;
+            transform: translateY(16px) scale(0.97);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .outage-dialog {
+        position: relative;
+        width: 100%;
+        max-width: 440px;
+        overflow: hidden;
+        background: linear-gradient(180deg, #2b2b2b 0%, #262626 100%);
+        border: 1px solid rgba(255, 140, 0, 0.28);
+        border-radius: 24px;
+        box-shadow:
+            0 24px 80px rgba(0, 0, 0, 0.55),
+            0 0 0 1px rgba(255, 140, 0, 0.1),
+            0 0 40px rgba(255, 140, 0, 0.12);
+        animation: outage-slide-up 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .outage-dialog-glow {
+        position: absolute;
+        top: -70px;
+        right: -30px;
+        width: 180px;
+        height: 180px;
+        background: radial-gradient(circle, rgba(255, 140, 0, 0.22) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .outage-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 24px 24px 12px;
+    }
+
+    .outage-icon {
+        flex-shrink: 0;
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #1a0d00;
+        background: linear-gradient(135deg, #ffb347 0%, var(--orange) 52%, #e67a00 100%);
+        box-shadow: 0 4px 18px var(--orange-glow);
+    }
+
+    .outage-kicker {
+        font-size: 0.65rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--orange);
+        margin: 0 0 6px;
+    }
+
+    .outage-header h2 {
+        font-size: 1.25rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        color: white;
+        margin: 0;
+        line-height: 1.3;
+    }
+
+    .outage-body {
+        padding: 4px 24px 8px;
+    }
+
+    .outage-body p {
+        margin: 0 0 12px;
+        font-size: 0.95rem;
+        line-height: 1.55;
+        color: #c8c8c8;
+    }
+
+    .outage-body strong {
+        color: #fff;
+        font-weight: 700;
+    }
+
+    .outage-thanks {
+        color: var(--cyan) !important;
+        font-weight: 600;
+        margin-bottom: 0 !important;
+    }
+
+    .outage-footer {
+        padding: 16px 24px 24px;
+    }
+
+    .outage-cta {
+        width: 100%;
+        border: none;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 0.95rem;
+        font-weight: 800;
+        color: #1a0d00;
+        background: linear-gradient(135deg, #ffb347 0%, var(--orange) 52%, #e67a00 100%);
+        padding: 14px 20px;
+        border-radius: 999px;
+        box-shadow:
+            0 2px 14px var(--orange-glow),
+            inset 0 1px 0 rgba(255, 255, 255, 0.35);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .outage-cta:hover {
+        transform: translateY(-1px);
+        box-shadow:
+            0 6px 22px rgba(255, 140, 0, 0.5),
+            inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    }
+
+    @media (max-width: 480px) {
+        .outage-header h2 {
+            font-size: 1.1rem;
+        }
+
+        .outage-body p {
+            font-size: 0.9rem;
+        }
+    }
+</style>
+
+<script>
+    function initOutageNotice() {
+        const overlay = document.getElementById('outage-overlay');
+        const dialog = document.getElementById('outage-dialog');
+        const dismiss = document.getElementById('outage-dismiss');
+        if (!overlay || !dialog || !dismiss) return;
+
+        const STORAGE_KEY = 'spb_outage_dismissed_v1';
+        // Auf der Login-Seite immer zeigen (Auth-kritisch); Startseite einmal pro Session
+        const isLoginPage = window.location.pathname.startsWith('/login');
+
+        function close() {
+            overlay.hidden = true;
+            document.body.style.overflow = '';
+            if (!isLoginPage) {
+                try {
+                    sessionStorage.setItem(STORAGE_KEY, '1');
+                } catch {
+                    /* ignore */
+                }
+            }
+        }
+
+        function open() {
+            overlay.hidden = false;
+            document.body.style.overflow = 'hidden';
+            dialog.focus();
+        }
+
+        dismiss.onclick = close;
+        overlay.onclick = (e) => {
+            if (e.target === overlay) close();
+        };
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !overlay.hidden) close();
+        });
+
+        if (isLoginPage) {
+            open();
+            return;
+        }
+
+        let dismissed = false;
+        try {
+            dismissed = sessionStorage.getItem(STORAGE_KEY) === '1';
+        } catch {
+            dismissed = false;
+        }
+
+        if (!dismissed) open();
+    }
+
+    initOutageNotice();
+    document.addEventListener('astro:page-load', initOutageNotice);
+</script>

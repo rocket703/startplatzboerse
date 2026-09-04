@@ -3,6 +3,7 @@ import Layout from '../layouts/Layout.astro';
 import Newsletter from '../components/Newsletter.astro';
 import SocialShare from '../components/SocialShare.astro';
 import WhatsNew from '../components/WhatsNew.astro';
+import ServerOutageNotice from '../components/ServerOutageNotice.astro';
 import Footer from '../components/Footer.astro';
 import Infos from '../components/Infos.astro';
 import Faq from '../components/Faq.astro';
@@ -220,6 +221,9 @@ const ratgeberTeaser = allRatgeber
     <Faq />
 
     <Footer />
+
+    {/* Temporär: Serverstörung Auth — entfernen, sobald Anmeldung wieder geht */}
+    <ServerOutageNotice />
 
 </Layout>
 
