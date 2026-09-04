@@ -1,7 +1,14 @@
 ---
-/** Temporärer Hinweis bei Server-/Auth-Störungen. Entfernen, sobald alles wieder läuft. */
+/**
+ * Hinweis bei Server-/Auth-Störungen (Startseite + Login).
+ *
+ * Einschalten:  OUTAGE_NOTICE_ENABLED = true
+ * Ausschalten: OUTAGE_NOTICE_ENABLED = false
+ */
+const OUTAGE_NOTICE_ENABLED = false;
 ---
 
+{OUTAGE_NOTICE_ENABLED && (
 <div class="outage-overlay" id="outage-overlay" hidden>
     <div
         class="outage-dialog"
@@ -42,7 +49,9 @@
         </footer>
     </div>
 </div>
+)}
 
+{OUTAGE_NOTICE_ENABLED && (
 <style>
     .outage-overlay {
         position: fixed;
@@ -195,7 +204,9 @@
         }
     }
 </style>
+)}
 
+{OUTAGE_NOTICE_ENABLED && (
 <script>
     function initOutageNotice() {
         const overlay = document.getElementById('outage-overlay');
@@ -251,3 +262,4 @@
     initOutageNotice();
     document.addEventListener('astro:page-load', initOutageNotice);
 </script>
+)}
