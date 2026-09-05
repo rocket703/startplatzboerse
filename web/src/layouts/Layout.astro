@@ -7,9 +7,15 @@ const {
   title, 
   description = "Die größte Community für Startplätze. Kaufe & verkaufe Tickets für Marathon, Triathlon und Radrennen sicher und unkompliziert.",
   image = "/og-default.png", 
-  canonicalURL = Astro.url.href,
+  canonicalURL: canonicalURLProp,
   ogType = "website" // NEU: Standard ist "website"
 } = Astro.props;
+
+/** Immer Produktions-Origin — Astro.url ist unter Vercel SSR oft https://localhost */
+const siteOrigin = Astro.site ?? new URL('https://startplatzboerse.com');
+const pageURL = new URL(Astro.url.pathname, siteOrigin).href;
+const canonicalURL = canonicalURLProp ?? pageURL;
+const absoluteImage = new URL(image, siteOrigin).href;
 ---
 
 <!DOCTYPE html>
@@ -25,16 +31,16 @@ const {
         <link rel="canonical" href={canonicalURL} />
 
         <meta property="og:type" content={ogType} />
-        <meta property="og:url" content={Astro.url.href} />
+        <meta property="og:url" content={canonicalURL} />
         <meta property="og:title" content={`${title} | Startplatzbörse`} />
         <meta property="og:description" content={description} />
-        <meta property="og:image" content={new URL(image, Astro.url)} />
+        <meta property="og:image" content={absoluteImage} />
 
         <meta property="twitter:card" content="summary_large_image" />
-        <meta property="twitter:url" content={Astro.url.href} />
+        <meta property="twitter:url" content={canonicalURL} />
         <meta property="twitter:title" content={`${title} | Startplatzbörse`} />
         <meta property="twitter:description" content={description} />
-        <meta property="twitter:image" content={new URL(image, Astro.url)} />
+        <meta property="twitter:image" content={absoluteImage} />
 
         <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
