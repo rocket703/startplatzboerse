@@ -99,6 +99,21 @@ import ServerOutageNotice from '../components/ServerOutageNotice.astro';
         hideFeedback(errorDisplay);
     }
 
+    /** Nur relative Pfade der eigenen Seite — blockiert Open Redirects (https://…, //…). */
+    function getSafeRedirect(fallback = '/dashboard'): string {
+        const raw = new URLSearchParams(window.location.search).get('redirect');
+        if (!raw) return fallback;
+        const path = raw.trim();
+        if (!path.startsWith('/') || path.startsWith('//') || path.includes('\\')) return fallback;
+        try {
+            const resolved = new URL(path, window.location.origin);
+            if (resolved.origin !== window.location.origin) return fallback;
+            return `${resolved.pathname}${resolved.search}${resolved.hash}`;
+        } catch {
+            return fallback;
+        }
+    }
+
     // --- SCHRITT 1: LOGIN-CODE ANFORDERN ---
     document.getElementById('btn-send-code')?.addEventListener('click', async (e) => {
         hideError(); // Alte Fehler ausblenden
@@ -171,9 +186,8 @@ import ServerOutageNotice from '../components/ServerOutageNotice.astro';
                 .maybeSingle();
 
             if (profile?.has_completed_onboarding) {
-                const urlParams = new URLSearchParams(window.location.search);
                 await flushPendingWatchlist();
-                window.location.href = urlParams.get('redirect') || '/dashboard';
+                window.location.href = getSafeRedirect();
             } else {
                 // Neuer User -> UI umschalten zum Profil-Erstellen
                 if(stepCode) stepCode.style.display = 'none';
@@ -239,9 +253,8 @@ import ServerOutageNotice from '../components/ServerOutageNotice.astro';
             btn.innerText = t('login.saveProfile');
             btn.disabled = false;
         } else {
-            const urlParams = new URLSearchParams(window.location.search);
             await flushPendingWatchlist();
-            window.location.href = urlParams.get('redirect') || '/dashboard';
+            window.location.href = getSafeRedirect();
         }
     });
 
