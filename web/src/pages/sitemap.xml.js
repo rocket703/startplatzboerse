@@ -8,10 +8,12 @@ export async function GET() {
         import.meta.env.PUBLIC_SUPABASE_ANON_KEY
     );
 
-    // 2. Alle aktuellen Inserat-IDs aus der Datenbank holen
+    // 2. Nur freigegebene, aktive Inserate (sonst Soft-404s in der Sitemap)
     const { data: listings, error } = await supabase
         .from('listings')
-        .select('id');
+        .select('id')
+        .eq('approved', true)
+        .eq('status', 'active');
 
     if (error) {
         console.error('Sitemap DB Error:', error);

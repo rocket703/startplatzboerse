@@ -429,6 +429,15 @@ import Footer from '../components/Footer.astro';
 
     const supabase = createClient(import.meta.env.PUBLIC_SUPABASE_URL, import.meta.env.PUBLIC_SUPABASE_ANON_KEY);
 
+    function escapeHtml(value: unknown): string {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     initWatchlistUi();
 
     const toggle = document.getElementById('filter-toggle') as HTMLElement;
@@ -716,28 +725,36 @@ import Footer from '../components/Footer.astro';
         }
 
         grid.innerHTML = data.map(e => {
-            let distanceAnzeige = `<span class="meta-value">${e.distance || 'N/A'}</span>`;
+            const id = escapeHtml(e.id);
+            const eventName = escapeHtml(e.event_name);
+            const category = escapeHtml(e.category);
+            const location = escapeHtml(e.location);
+            const distance = escapeHtml(e.distance || 'N/A');
+            const price = escapeHtml(e.price);
+            const priceType = e.price_type === 'vb' ? t('eventCard.vb') : t('eventCard.fixed');
+
+            let distanceAnzeige = `<span class="meta-value">${distance}</span>`;
             if (e.category === 'Triathlon' && e.swim_dist !== null) {
-                distanceAnzeige = `<span class="meta-value" style="font-size:0.85em;"> ${e.swim_dist}km ·  ${e.bike_dist}km ·  ${e.run_dist}km</span>`;
+                distanceAnzeige = `<span class="meta-value" style="font-size:0.85em;"> ${escapeHtml(e.swim_dist)}km ·  ${escapeHtml(e.bike_dist)}km ·  ${escapeHtml(e.run_dist)}km</span>`;
             }
 
             // Entfernung zum gesuchten Ort anzeigen (nur bei Umkreissuche)
             const distBadge = showDistance && e._distanceKm !== undefined
-                ? `<span class="distance-badge">~${e._distanceKm} km entfernt</span>`
+                ? `<span class="distance-badge">~${escapeHtml(e._distanceKm)} km entfernt</span>`
                 : '';
 
             return `
             <div class="e-card listing-card-shell">
                 ${heartButtonHtml(e.id)}
                 <div class="c-top">
-                    <div class="event-name">${e.event_name}</div>
-                    <div class="sport-badge">${e.category}</div>
+                    <div class="event-name">${eventName}</div>
+                    <div class="sport-badge">${category}</div>
                 </div>
                 <div class="c-meta">
                     <div class="meta-row split">
                         <div class="meta-item">
                             <span class="meta-label">Ort:</span>
-                            <span class="meta-value">${e.location}${distBadge}</span>
+                            <span class="meta-value">${location}${distBadge}</span>
                         </div>
                         <div class="meta-item">
                             <span class="meta-label">${t('eventCard.date')}</span>
@@ -751,10 +768,10 @@ import Footer from '../components/Footer.astro';
                 </div>
                 <div class="c-bottom">
                     <div class="price-box">
-                        <div class="price-val">${e.price}€</div>
-                        <div class="price-type">${e.price_type === 'vb' ? t('eventCard.vb') : t('eventCard.fixed')}</div>
+                        <div class="price-val">${price}€</div>
+                        <div class="price-type">${escapeHtml(priceType)}</div>
                     </div>
-                    <a href="/listing/${e.id}?from=search" class="details-link">${t('eventCard.details')} →</a>
+                    <a href="/listing/${id}?from=search" class="details-link">${escapeHtml(t('eventCard.details'))} →</a>
                 </div>
             </div>`;
         }).join('');
