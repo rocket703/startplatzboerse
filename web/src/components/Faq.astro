@@ -1,37 +1,31 @@
 ---
+import { messages } from '../i18n/messages';
+
 const faqKeys = [1, 2, 3, 4, 5, 6, 7, 8] as const;
+const faqDe = messages.de.faq as Record<string, string>;
 ---
 
 <section id="faq" class="section-wrapper">
     <div class="container">
         
         <div class="header-center">
-            <span class="badge" data-i18n="faq.badge">Wissen</span>
-            <h2 data-i18n="faq.title">Häufige Fragen</h2>
-            <p class="subtitle" data-i18n="faq.subtitle">Alles, was du über den Ablauf wissen musst.</p>
+            <span class="badge" data-i18n="faq.badge">{faqDe.badge}</span>
+            <h2 data-i18n="faq.title">{faqDe.title}</h2>
+            <p class="subtitle" data-i18n="faq.subtitle">{faqDe.subtitle}</p>
         </div>
 
         <div class="faq-list">
             {faqKeys.map((n) => (
                 <div class="faq-item">
                     <button class="faq-question" type="button">
-                        <span data-i18n={`faq.q${n}`}>
-                          {n === 1 && 'Was ist Startplatzboerse.com?'}
-                          {n === 2 && 'Kostet die Nutzung wirklich nichts?'}
-                          {n === 3 && 'Wie kann ich einen Startplatz verkaufen?'}
-                          {n === 4 && 'Wie kaufe ich einen Startplatz?'}
-                          {n === 5 && 'Ist der Kauf sicher?'}
-                          {n === 6 && 'Fallen Ummeldegebühren an?'}
-                          {n === 7 && 'Welche Events finde ich hier?'}
-                          {n === 8 && 'Ich habe noch eine Frage.'}
-                        </span>
+                        <span data-i18n={`faq.q${n}`}>{faqDe[`q${n}`]}</span>
                         <span class="icon">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                         </span>
                     </button>
                     <div class="faq-answer">
                         <div class="answer-content">
-                            <p data-i18n-html={`faq.a${n}`}></p>
+                            <p data-i18n-html={`faq.a${n}`} set:html={faqDe[`a${n}`]}></p>
                         </div>
                     </div>
                 </div>
